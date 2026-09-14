@@ -1,0 +1,14 @@
+services:
+  api:
+    environment:
+      ENABLE_COLMAP: '1'
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    command: ["python3", "-m", "app.worker"]
+    gpus: all
+    environment:
+      ENABLE_COLMAP: '1'
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility

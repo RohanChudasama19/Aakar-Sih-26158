@@ -1,0 +1,27 @@
+{
+  "mission_name": "Synthetic campus \u00b7 smoke test",
+  "drone_model": "Synthetic perspective camera",
+  "camera_sensor": "Pinhole, zero distortion",
+  "video_file": "sample.mp4",
+  "video_resolution": [
+    640,
+    480
+  ],
+  "video_fps": 10,
+  "video_duration_sec": 6.0,
+  "home_point": {
+    "latitude": 22.946345152373976,
+    "longitude": 72.36706816800034,
+    "altitude_m": 50.0
+  },
+  "start_time_utc": "2026-01-01T00:00:00Z",
+  "end_time_utc": "2026-01-01T00:00:06+00:00",
+  "camera_intrinsics": {
+    "focal_length_mm": 5.5,
+    "sensor_width_mm": 6.4,
+    "sensor_height_mm": 4.8,
+    "image_width_px": 640,
+    "image_height_px": 480
+  },
+  "synthetic": true
+}

@@ -1,0 +1,201 @@
+{
+  "application": "AeroRecon",
+  "build_tier": "reduced_fidelity_reference_implementation",
+  "mission": "Synthetic campus \u00b7 smoke test",
+  "synthetic_input": true,
+  "status": "completed_with_limitations",
+  "processing_time_sec": 12.835,
+  "video_duration_sec": 6.0,
+  "engine": "opencv_incremental_sfm",
+  "hardware": {
+    "cpu": "x86_64",
+    "gpu_assumption_for_target": "RTX 4090-class, 24 GB VRAM",
+    "benchmark_verified": false
+  },
+  "targets": {
+    "processing_time": {
+      "target": "< 15 min for a 10-min video",
+      "measured_sec": 12.835,
+      "ten_minute_benchmark_passed": null,
+      "reason": "Only this input was timed; no extrapolation to 10 minutes"
+    },
+    "spatial_accuracy": {
+      "target": "\u2264 1 m",
+      "gps_alignment_rmse_m": 0.027408006275530993,
+      "independent_error_m": null,
+      "passed": null,
+      "reason": "Requires independent checkpoints; GPS fit residual is not ground truth"
+    },
+    "coverage": {
+      "target": "Full visible-scene coverage",
+      "registered_frames": 16,
+      "selected_frames": 16,
+      "registered_frames_pct": 100.0,
+      "surface_coverage_pct": null,
+      "passed": null
+    }
+  },
+  "metric_state": "GPS_ALIGNED_UNVERIFIED",
+  "reprojection_rmse_px": 0.7240288364364805,
+  "alignment": {
+    "valid": true,
+    "scale": 1.1091282450237576,
+    "rotation": [
+      [
+        0.896644440484026,
+        -0.35856177350629154,
+        0.2597348685277173
+      ],
+      [
+        -0.44260498806142345,
+        -0.7108244279430916,
+        0.5466529586332847
+      ],
+      [
+        -0.011382965001923206,
+        -0.6051132846165247,
+        -0.7960580009574463
+      ]
+    ],
+    "translation": [
+      0.8448747944060253,
+      0.5217164211302886,
+      0.5932684672959478
+    ],
+    "origin": [
+      229995.0000000007,
+      2539991.0,
+      63.0
+    ],
+    "epsg": 32643,
+    "rmse_m": 0.027408006275530993,
+    "gps_residuals_m": [
+      0.028316526364114594,
+      0.016751122852071483,
+      0.038379795886756614,
+      0.021933516771142428,
+      0.021903308461293285,
+      0.019901570508660947,
+      0.005567967870788072,
+      0.020348491407613717,
+      0.021255760726065272,
+      0.028847214929417744,
+      0.03400350934705694,
+      0.027272050169304507,
+      0.03607241533411936,
+      0.010633785820938246,
+      0.026810580432197105,
+      0.04842210386741704
+    ],
+    "rtk_used": false,
+    "barometer_used": false,
+    "alignment_inliers": 16
+  },
+  "preprocessing": {
+    "source_resolution": [
+      640,
+      480
+    ],
+    "input_frames": 60,
+    "fps": 10.0,
+    "duration_sec": 6.0,
+    "blur_rejections": 0,
+    "masked_detections": 0,
+    "dynamic_masking": false,
+    "truncated": false,
+    "width": 640,
+    "height": 480
+  },
+  "dense": {
+    "stereo_points": 659,
+    "tracked_stereo_points": 23998,
+    "method": "calibrated_SGBM_and_bidirectional_LK",
+    "neural_completion": false
+  },
+  "mesh": {
+    "method": "edge_filtered_2.5D_Delaunay",
+    "watertight": false,
+    "vertices": 9800,
+    "faces": 9987,
+    "note": "Reduced-fidelity surface; vertical facades, undersides and occluded regions can be incomplete."
+  },
+  "semantics": {
+    "method": "color_height_heuristics",
+    "validated": false,
+    "area_units": "m2",
+    "classes": {
+      "terrain_candidate": {
+        "point_fraction_pct": 51.72792564427545,
+        "surface_area": 119.48128785845213
+      },
+      "building_candidate": {
+        "point_fraction_pct": 13.417828474862695,
+        "surface_area": 18.47916947105754
+      },
+      "road_candidate": {
+        "point_fraction_pct": 15.141529362061682,
+        "surface_area": 36.890297605033105
+      },
+      "vegetation_candidate": {
+        "point_fraction_pct": 18.893113645965357,
+        "surface_area": 49.10870751836772
+      },
+      "unknown": {
+        "point_fraction_pct": 0.819602872834812,
+        "surface_area": 0.9005578189633812
+      }
+    },
+    "warning": "Candidate labels only. Roads/buildings can be misclassified; use a trained aerial classifier before operational decisions."
+  },
+  "exports": {
+    "PLY": "available",
+    "OBJ": "available",
+    "GLB": "available",
+    "glTF": "available",
+    "LAS": "available",
+    "GeoTIFF": "available: observed DSM and point-projected RGB ortho; no bare-earth DEM",
+    "FBX": "unavailable: install Blender (included in Docker image)"
+  },
+  "stages": {
+    "A": {
+      "elapsed_sec": 2.532,
+      "status": "completed"
+    },
+    "B": {
+      "elapsed_sec": 5.797,
+      "status": "completed"
+    },
+    "C": {
+      "elapsed_sec": 3.126,
+      "status": "completed"
+    },
+    "D": {
+      "elapsed_sec": 0.78,
+      "status": "completed"
+    },
+    "E": {
+      "elapsed_sec": 0.563,
+      "status": "completed"
+    },
+    "F": {
+      "elapsed_sec": 0.037,
+      "status": "completed"
+    }
+  },
+  "warnings": [
+    "This build uses geometric SfM + stereo, not trained Gaussian Splatting/InstantSplat.",
+    "GPS alignment RMSE is a fit residual, not independently verified spatial accuracy.",
+    "Unseen surfaces are not reconstructed. Frame registration is not a surface coverage measurement.",
+    "Texture selection uses per-face camera projection without multiband seam blending or full occlusion testing.",
+    "CPU mesh is a 2.5D surface; it is not guaranteed watertight.",
+    "Semantic classes are unvalidated color/height heuristics.",
+    "No learned deblurring: blurred frames are rejected to avoid invented detail.",
+    "Dynamic segmentation disabled: install/configure trusted YOLO segmentation weights.",
+    "Some exports are unavailable; consult exports.json."
+  ],
+  "confidence": {
+    "kind": "evidence indicators, not a calibrated probability",
+    "registered_fraction": 1.0,
+    "independent_accuracy_validated": false
+  }
+}

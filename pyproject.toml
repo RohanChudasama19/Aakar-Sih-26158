@@ -1,0 +1,8 @@
+[project]
+name = "aerorecon"
+version = "0.1.0"
+description = "Evidence-aware single-pass video reconstruction reference application"
+requires-python = ">=3.10,<3.13"
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
