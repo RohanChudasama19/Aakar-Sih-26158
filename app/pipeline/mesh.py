@@ -1,37 +1,21 @@
 import cv2
 import numpy as np
 import trimesh
-from scipy.spatial import Delaunay, cKDTree
 from PIL import Image
 from .georef import transform
 
 
-def build_mesh(points, colors, geo, sfm, k, directory, max_vertices=10000):
+def build_mesh(points, colors, geo, sfm, k, directory, max_vertices=None):
+    from .surface import reconstruct_surface
     local=transform(points,geo)
-    finite=np.isfinite(local).all(1)
-    local,colors=local[finite],colors[finite]
-    if len(local)>max_vertices:
-        ids=np.linspace(0,len(local)-1,max_vertices).astype(int); local,colors=local[ids],colors[ids]
-    center=np.median(local,axis=0)
-    distances=np.linalg.norm(local-center,axis=1)
-    keep=distances<np.percentile(distances,98)
-    local,colors=local[keep],colors[keep]
-    if geo['valid']:
-        xy=local[:,:2]
-    else:
-        _,_,basis=np.linalg.svd(local-local.mean(0),full_matrices=False)
-        xy=(local-local.mean(0))@basis[:2].T
-    _,unique=np.unique(np.round(xy,5),axis=0,return_index=True)
-    local,colors,xy=local[unique],colors[unique],xy[unique]
-    faces=Delaunay(xy).simplices
-    nn=cKDTree(xy).query(xy,k=2)[0][:,1]
-    limit=max(float(np.median(nn))*10, float(np.linalg.norm(np.ptp(xy,axis=0)))*.015)
-    lengths=np.linalg.norm(local[faces]-local[np.roll(faces,1,axis=1)],axis=2)
-    faces=faces[lengths.max(1)<limit]
-    if len(faces)<10:
-        raise ValueError('Not enough supported geometry for a mesh')
-    mesh=trimesh.Trimesh(local,faces,vertex_colors=colors,process=False)
-    return texture_mesh(mesh,geo,sfm,k,directory), {'method':'edge_filtered_2.5D_Delaunay','watertight':False,'vertices':len(local),'faces':len(faces),'note':'Reduced-fidelity surface; vertical facades, undersides and occluded regions can be incomplete.'}
+    cameras=np.array([-p[:,:3].T@p[:,3] for p in sfm['poses'].values()])
+    cameras=transform(cameras,geo)
+    surface,report=reconstruct_surface(local,colors,cameras)
+    result=texture_mesh(surface,geo,sfm,k,directory)
+    report['textured_face_fraction']=float(result.metadata['textured_face_fraction'])
+    if report['textured_face_fraction']<.5:
+        report['surface_quality']='LOW_TEXTURE_SUPPORT'
+    return result,report
 
 
 def texture_mesh(mesh, geo, sfm, k, directory):
@@ -61,7 +45,8 @@ def texture_mesh(mesh, geo, sfm, k, directory):
         better=weight>score
         selected[better]=j; score[better]=weight[better]
         projections[j]=uv
-    tile=8; grid=int(np.ceil(np.sqrt(len(triangles))))
+    grid=int(np.ceil(np.sqrt(len(triangles))))
+    tile=max(4,min(32,4096//grid))
     atlas=np.full((grid*tile,grid*tile,3),120,np.uint8)
     coords=[]
     loaded={j:cv2.imread(str(directory/f'{j:06d}.png')) for j in sfm['poses']}
@@ -79,6 +64,8 @@ def texture_mesh(mesh, geo, sfm, k, directory):
             atlas[row*tile:(row+1)*tile,col*tile:(col+1)*tile]=mesh.visual.vertex_colors[face,:3].mean(0)
         x,y=col*tile,row*tile; size=grid*tile
         coords.extend([((x+.5)/size,1-(y+.5)/size),((x+tile-.5)/size,1-(y+.5)/size),((x+.5)/size,1-(y+tile-.5)/size)])
-    result=trimesh.Trimesh(mesh.vertices[mesh.faces].reshape(-1,3),np.arange(len(mesh.faces)*3).reshape(-1,3),process=False)
-    result.visual=trimesh.visual.texture.TextureVisuals(uv=np.asarray(coords),image=Image.fromarray(atlas))
+    result=trimesh.Trimesh(mesh.vertices[mesh.faces].reshape(-1,3),np.arange(len(mesh.faces)*3).reshape(-1,3),vertex_normals=mesh.vertex_normals[mesh.faces].reshape(-1,3),process=False)
+    material=trimesh.visual.material.PBRMaterial(baseColorTexture=Image.fromarray(atlas),baseColorFactor=[255,255,255,255],metallicFactor=0.,roughnessFactor=1.,doubleSided=True)
+    result.visual=trimesh.visual.texture.TextureVisuals(uv=np.asarray(coords),material=material)
+    result.metadata["textured_face_fraction"]=float(np.mean(selected>=0))
     return result

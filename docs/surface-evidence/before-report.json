@@ -1,0 +1,6 @@
+{
+  "method": "legacy_XY_Delaunay",
+  "faces": 3082,
+  "components": 796,
+  "largest_component_area_fraction": 0.15380580219993842
+}

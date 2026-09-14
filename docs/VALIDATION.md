@@ -1,3 +1,7 @@
+# Original baseline validation — superseded for meshing
+
+This document records the original baseline only. For the current surface fix, tests and real-flight evaluation, read [SURFACE_FIX.md](SURFACE_FIX.md). Old sample artifacts and screenshots below show the earlier mesher.
+
 # Delivery validation — 2026-09-13
 
 ## Executed successfully

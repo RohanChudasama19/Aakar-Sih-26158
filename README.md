@@ -2,7 +2,7 @@
 
 **A runnable reference application for SIH 26158: single-pass video → camera poses → textured surface → spatial exports.**
 
-This repository implements a real, reduced-fidelity end-to-end geometric reconstruction workflow and a browser interface. It is **not a completed production-grade implementation of the entire aspirational brief**. The CPU workflow is exercised on the supplied synthetic clip. CUDA/COLMAP deployment is supplied but must be tested on your GPU. The <15-minute / ≤1 m targets are **not demonstrated**. Read the requirement matrix below before evaluating it.
+This repository implements a real, reduced-fidelity end-to-end geometric reconstruction workflow and a browser interface. It is **not a completed production-grade implementation of the entire aspirational brief**. The CPU workflow is exercised on the supplied synthetic clip and the real Zurich aerial subset. See docs/SURFACE_FIX.md for the real-footage result and remaining limitations. CUDA/COLMAP deployment is supplied but must be tested on your GPU. The <15-minute / ≤1 m targets are **not demonstrated**. Read the requirement matrix below before evaluating it.
 
 The download also includes an offline Git bundle. You can clone it with `git clone aerorecon-repository.bundle AeroRecon`, then open the cloned folder. Extracting and running the source folder works equally well.
 
@@ -101,7 +101,7 @@ GPU mode uses incremental COLMAP SfM + geometric-consistency PatchMatch MVS. It 
 | B · GPS | Robust Sim(3) alignment to interpolated UTM camera positions; optional additive RTK/PPK corrections and barometer altitude | No ESKF/IMU fusion or joint pose graph. Nearly collinear trajectories yield relative-only output. |
 | C · dense | Calibrated rectification, SGBM with left/right consistency plus bidirectional LK tracking/triangulation, mask filtering, sparse-envelope pruning, voxel deduplication; or COLMAP MVS | CPU supports positive horizontal disparity pairs. Unsupported pairs are skipped; sparse evidence remains. No trained 3DGS. |
 | C · optional depth | ONNX Z-depth model, sparse-depth median scale fit, rejection of inconsistent views | Inferred points saved separately, not fused into measured mesh. Model contract must match exactly. |
-| D · surface | Edge-filtered Delaunay 2.5D surface; per-face atlas from selected original frames | Not watertight; incomplete vertical walls/undersides. No multiband blending or full visibility test. |
+| D · surface | 3D screened Poisson with camera-oriented normals, outlier removal, support trimming; per-face image atlas | Preserves vertical surfaces; interpolated geometry may be wrong or incomplete. No guaranteed watertightness, multiband blending or full visibility test. |
 | E · export | Textured OBJ+MTL+PNG, PLY, GLB, glTF+dependencies, LAS, observed DSM/RGB ortho GeoTIFF; Blender FBX adapter | LAS/GeoTIFF require resolved metric frame. GeoTIFF DSM is not a classified bare-earth DEM. FBX needs Blender. |
 | F · report | Candidate point/face labels, class fractions/areas, stage timings, registration and alignment metrics | Semantic labels are unvalidated color/height heuristics, not a trained UAVid model. No calibrated confidence probability. |
 
@@ -118,7 +118,7 @@ GPU mode uses incremental COLMAP SfM + geometric-consistency PatchMatch MVS. It 
 | SfM, dense geometry, textured surface | Implemented CPU; additional unvalidated CUDA adapter |
 | ESKF / pose graph sensor fusion | Not implemented; robust trajectory similarity alignment substitute |
 | Fast trained 3D Gaussian Splatting + unified monocular field | Not implemented; calibrated stereo substitute; optional inferred depth saved separately |
-| Watertight mesh, complete facades, occlusion completion | Not guaranteed; working 2.5D visible-surface approximation |
+| Watertight mesh, complete facades, occlusion completion | Not guaranteed; 3D interpolated surface trimmed to nearby observations |
 | All output format paths | Implemented; FBX conditional on Blender, geospatial formats conditional on resolved coordinates |
 | Bare-earth DEM | Not implemented; DSM supplied and named correctly |
 | Live stages, viewer, distance/area, downloads | Implemented |
@@ -184,7 +184,7 @@ aerorecon/
     config.py db.py storage.py schemas.py worker.py
     pipeline/
       preprocess.py sfm.py georef.py dense.py colmap.py
-      depth.py mesh.py exports.py semantic.py runner.py
+      depth.py surface.py mesh.py exports.py semantic.py runner.py
   web/
     index.html style.css app.js viewer.js vendor/
   scripts/
