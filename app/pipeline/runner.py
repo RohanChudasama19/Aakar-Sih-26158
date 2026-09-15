@@ -7,7 +7,14 @@ from pathlib import Path
 import numpy as np
 
 from ..schemas import intrinsics, metadata, telemetry
-from . import dense, exports, georef, mesh, preprocess, semantic, sfm
+from . import dense, exports, georef, mesh, preprocess, readiness, semantic, sfm
+
+
+class ReadinessBlockedError(Exception):
+    def __init__(self, report):
+        self.report = report
+        super().__init__("Reconstruction blocked by readiness gate")
+
 
 STAGES = {
     "A": "Ingest & preprocess",
@@ -69,11 +76,54 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     video = next((p for p in input_dir.glob("video.*")), None)
     if video is None:
         raise ValueError("Missing video")
-    stage("A", 1)
-    info = preprocess.extract(video, work / "frames", opts, progress)
     override = (
         json.loads((input_dir / "intrinsics.json").read_text()) if (input_dir / "intrinsics.json").exists() else None
     )
+
+    stage("A", 1)
+
+    # Run Readiness Analysis
+    progress(2, "Running input quality and readiness analysis")
+
+    # Attempt to parse intrinsics for readiness if available (meta or override), using dummy width/height as it relies on resolution
+    # Readiness scales it anyway
+    import app.schemas as schemas
+
+    k_test = None
+    try:
+        # Default analysis resolution is 960 width
+        # The schema might raise an error if K is bad, we just ignore K if so
+        k_test = schemas.intrinsics(meta, 960, 540, override)
+    except Exception:
+        pass
+
+    ready_report = readiness.perform_analysis(video, gps, meta, k_test)
+    (out / "cv_quality_report.json").write_text(json.dumps(ready_report, indent=2))
+
+    lines = [
+        "RECONSTRUCTION READINESS REPORT",
+        f"Status: {ready_report['status']}",
+        f"Score: {ready_report['scores']['overall_readiness_score']:.1f}",
+        "",
+    ]
+    if ready_report["blocking_reasons"]:
+        lines.extend(["BLOCKING REASONS:", *[f"- {r}" for r in ready_report["blocking_reasons"]], ""])
+    if ready_report["warnings"]:
+        lines.extend(["WARNINGS:", *[f"- {r}" for r in ready_report["warnings"]], ""])
+    if ready_report["recommendations"]:
+        lines.extend(["RECOMMENDATIONS:", *[f"- {r}" for r in ready_report["recommendations"]], ""])
+    (out / "cv_quality_report.txt").write_text("\n".join(lines))
+
+    if ready_report["status"] == "NOT_READY":
+        raise ReadinessBlockedError(ready_report)
+
+    if ready_report["status"] == "WARNING":
+        progress(5, "Readiness analysis produced warnings. Proceeding.")
+    else:
+        progress(5, "Readiness analysis passed.")
+
+    info = preprocess.extract(video, work / "frames", opts, progress)
+
     k = intrinsics(meta, info["width"], info["height"], override)
     if abs(info["fps"] - float(meta["video_fps"])) > max(0.1, info["fps"] * 0.02):
         raise ValueError(

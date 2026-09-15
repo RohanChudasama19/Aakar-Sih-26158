@@ -29,6 +29,9 @@ class Job(Base):
     updated: Mapped[float] = mapped_column(Float, default=time.time)
     options: Mapped[dict] = mapped_column(JSON, default=dict)
     report: Mapped[dict] = mapped_column(JSON, default=dict)
+    readiness_status: Mapped[str] = mapped_column(String(24), default="pending")
+    readiness_score: Mapped[float] = mapped_column(Float, default=0.0)
+    readiness_report_path: Mapped[str] = mapped_column(String(255), default="")
 
 
 from typing import Any, Dict
@@ -51,5 +54,19 @@ def update(job_id: str, **values: Any) -> None:
 def serialize(j: Job) -> Dict[str, Any]:
     return {
         k: getattr(j, k)
-        for k in ("id", "name", "status", "stage", "progress", "message", "created", "updated", "options", "report")
+        for k in (
+            "id",
+            "name",
+            "status",
+            "stage",
+            "progress",
+            "message",
+            "created",
+            "updated",
+            "options",
+            "report",
+            "readiness_status",
+            "readiness_score",
+            "readiness_report_path",
+        )
     }

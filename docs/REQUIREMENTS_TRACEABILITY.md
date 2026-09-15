@@ -24,15 +24,22 @@ This document maps official system requirements to their implementation, tests, 
 
 ## Feature Phases Tracking
 
-| Phase | Description | Status |
-|---|---|---|
-| Phase 0 | Baseline and engineering hygiene (CI, Linting, Alembic, Logs) | In Progress |
-| Phase 1 | Ingest and reconstruction-readiness gate | Pending |
-| Phase 2 | Camera model and calibration | Pending |
-| Phase 3 | Production SfM + GPU dense reconstruction | Pending |
-| Phase 4 | Sensor fusion and metric georeferencing | Pending |
-| Phase 5 | Geometry, surface and texture quality | Pending |
-| Phase 6 | Dynamic objects, semantics and confidence | Pending |
-| Phase 7 | Geospatial outputs and viewer | Pending |
-| Phase 8 | Production backend and operations | Pending |
-| Phase 9 | Benchmark and release evidence | Pending |
+| ID | Category | Description | Status | Evidence |
+|---|---|---|---|---|
+| Phase 0 | Baseline | Baseline and engineering hygiene (CI, Linting, Alembic, Logs) | COMPLETED | - |
+| P1-01 | Input Gate | Stratified temporal frame sampling | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-02 | Input Gate | Blur & exposure analysis | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-03 | Input Gate | SIFT/ORB feature distribution | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-04 | Input Gate | Geometric overlap & parallax estimation | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-05 | Input Gate | Dataset connectivity graph | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-06 | Input Gate | Mandatory telemetry validation | **COMPLETED** | `app/pipeline/readiness.py` |
+| P1-07 | System | RECONSTRUCTION_BLOCKED DB state | **COMPLETED** | `app/db.py`, `app/pipeline/runner.py`, `app/worker.py` |
+| P1-08 | Reports | JSON & TXT cv_quality_report generation | **COMPLETED** | `app/pipeline/runner.py` |
+| Phase 2 | Calibration | Camera model and calibration | Pending | - |
+| Phase 3 | SfM | Production SfM + GPU dense reconstruction | Pending | - |
+| Phase 4 | Fusion | Sensor fusion and metric georeferencing | Pending | - |
+| Phase 5 | Quality | Geometry, surface and texture quality | Pending | - |
+| Phase 6 | Semantics | Dynamic objects, semantics and confidence | Pending | - |
+| Phase 7 | Outputs | Geospatial outputs and viewer | Pending | - |
+| Phase 8 | Backend | Production backend and operations | Pending | - |
+| Phase 9 | Benchmark | Benchmark and release evidence | Pending | - |

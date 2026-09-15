@@ -38,15 +38,46 @@ def process_job(job_id):
         )
         upload_job(job_id, directory / "work" / "outputs")
         upload_job(job_id, directory / "inputs")
-        update(
-            job_id,
-            status="completed",
-            progress=100,
-            report=report,
-            message="Completed · review accuracy and coverage limitations",
-        )
+
+        import json
+
+        ready_report_path = directory / "work" / "outputs" / "cv_quality_report.json"
+        if ready_report_path.exists():
+            ready_report = json.loads(ready_report_path.read_text())
+            update(
+                job_id,
+                status="completed",
+                progress=100,
+                report=report,
+                message="Completed · review accuracy and coverage limitations",
+                readiness_status=ready_report.get("status", "pending"),
+                readiness_score=ready_report.get("scores", {}).get("overall_readiness_score", 0.0),
+                readiness_report_path="cv_quality_report.json",
+            )
+        else:
+            update(
+                job_id,
+                status="completed",
+                progress=100,
+                report=report,
+                message="Completed · review accuracy and coverage limitations",
+            )
         return report
-    except BaseException as exc:
+    except Exception as exc:
+        if type(exc).__name__ == "ReadinessBlockedError":
+            report = exc.report
+            (directory / "error.log").write_text("Blocked by readiness gate:\n" + "\n".join(report["blocking_reasons"]))
+            update(
+                job_id,
+                status="RECONSTRUCTION_BLOCKED",
+                message="Blocked by readiness gate",
+                readiness_status=report["status"],
+                readiness_score=report["scores"]["overall_readiness_score"],
+                readiness_report_path="cv_quality_report.json",
+            )
+            # Upload artifacts so the report is accessible
+            upload_job(job_id, directory / "work" / "outputs")
+            return report
         (directory / "error.log").write_text(traceback.format_exc())
         update(job_id, status="failed", message=str(exc)[:1900])
         raise

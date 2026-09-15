@@ -31,8 +31,9 @@ META_FIELDS = [
 ]
 
 
-from typing import Any, Dict, List, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 
 def telemetry(path: Path) -> List[Dict[str, Any]]:
     with open(path, newline="") as f:

@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import structlog
+from typing import Callable, Optional
+
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,7 +24,7 @@ structlog.configure(
     processors=[
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
 )
 logger = structlog.get_logger()
@@ -46,12 +48,14 @@ async def lifespan(app):
 
 app = FastAPI(title="AeroRecon", version="0.1.0", lifespan=lifespan)
 
+
 class APIError(Exception):
-    def __init__(self, code: str, message: str, status_code: int = 400, details: dict = None):
+    def __init__(self, code: str, message: str, status_code: int = 400, details: Optional[dict] = None):
         self.code = code
         self.message = message
         self.status_code = status_code
         self.details = details or {}
+
 
 @app.exception_handler(APIError)
 async def api_error_handler(request: Request, exc: APIError):
@@ -62,14 +66,23 @@ async def api_error_handler(request: Request, exc: APIError):
         content={"error": {"code": exc.code, "message": exc.message, "request_id": request_id, "details": exc.details}},
     )
 
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
     logger.error("internal_error", error=str(exc), request_id=request_id, exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"error": {"code": "internal_error", "message": "An internal error occurred", "request_id": request_id, "details": {}}},
+        content={
+            "error": {
+                "code": "internal_error",
+                "message": "An internal error occurred",
+                "request_id": request_id,
+                "details": {},
+            }
+        },
     )
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -79,6 +92,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"error": {"code": "http_error", "message": exc.detail, "request_id": request_id, "details": {}}},
     )
+
 
 @app.middleware("http")
 async def protect(request: Request, call_next):
