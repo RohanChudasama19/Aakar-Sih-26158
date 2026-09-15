@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Ruff Check
+        run: ruff check .
+      - name: Ruff Format
+        run: ruff format --check .
+      - name: MyPy Check
+        run: mypy app/
+
+  test-cpu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run Pytest
+        run: pytest tests/ --cov=app --cov-report=xml
+      - name: Run CPU Sample Workflow
+        run: python -m scripts.smoke
+      - name: Verify Fresh Database Migration
+        run: |
+          alembic upgrade head
+          # Ensure db was created
+          test -f data/jobs.db

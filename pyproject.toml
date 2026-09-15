@@ -3,6 +3,21 @@ name = "aerorecon"
 version = "0.1.0"
 description = "Evidence-aware single-pass video reconstruction reference application"
 requires-python = ">=3.10,<3.13"
+
 [tool.pytest.ini_options]
+addopts = "-v"
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"] # Practical ruleset
+ignore = ["E501"] # Line too long ignored as codebase has many long lines
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+follow_imports = "silent"
