@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from ..schemas import intrinsics, metadata, telemetry
-from . import dense, exports, georef, mesh, preprocess, readiness, semantic, sfm
+from . import dense, exports, georef, mesh, preprocess, readiness, semantic
 
 
 class ReadinessBlockedError(Exception):
@@ -182,18 +182,41 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     k = active_camera.to_matrix()
 
     stage("B", 20)
-    if opts.get("engine") == "colmap":
-        from . import colmap
+    from .sfm_backend import execute_sfm
 
-        reconstruction = colmap.sparse(frames_dir, info, active_camera, progress)
-    else:
-        reconstruction = sfm.reconstruct(frames_dir, info, active_camera, progress)
+    force_cpu = opts.get("engine") != "colmap"
+
+    reconstruction = execute_sfm(frames_dir, info, active_camera, progress, force_cpu=force_cpu)
+
+    # Write SfM Report
+    sfm_report = reconstruction.get("sfm_report", {})
+    (out / "sfm_report.json").write_text(json.dumps(clean(sfm_report), indent=2))
+
+    lines = [
+        "STRUCTURE FROM MOTION (SFM) REPORT",
+        f"Backend: {sfm_report.get('backend')}",
+        f"Mapper Strategy: {sfm_report.get('mapper_strategy')}",
+        f"Registered Cameras: {sfm_report.get('registered_cameras')}/{sfm_report.get('input_frames')} ({sfm_report.get('registration_ratio', 0) * 100:.1f}%)",
+        f"Sparse Points: {sfm_report.get('sparse_point_count')}",
+        f"Median Reprojection Error: {sfm_report.get('median_reprojection_error_px', 0.0):.3f} px",
+        f"Median Track Length: {sfm_report.get('median_track_length', 0.0)}",
+        f"BA Backend: {sfm_report.get('ba_backend')}",
+        f"SfM Runtime: {sfm_report.get('sfm_runtime_sec', 0.0):.1f} s",
+        "",
+    ]
+    if "fallback_reason" in sfm_report:
+        lines.append(f"Fallback Reason: {sfm_report['fallback_reason']}")
+
+    (out / "sfm_report.txt").write_text("\n".join(lines))
+
     geo = georef.align(reconstruction, info, gps, input_dir)
     np.savez_compressed(work / "sparse.npz", points=reconstruction["points"], colors=reconstruction["colors"])
     (work / "poses.json").write_text(json.dumps(clean(reconstruction["poses"])))
     (work / "alignment.json").write_text(json.dumps(clean(geo), indent=2))
     stage("C", 43)
     if opts.get("engine") == "colmap":
+        from . import colmap
+
         points, colors, dense_report = colmap.dense(reconstruction, frames_dir, progress)
     else:
         points, colors, dense_report = dense.densify(reconstruction, k, originals_dir, progress)
@@ -280,6 +303,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         "reprojection_rmse_px": reconstruction["reprojection_rmse_px"],
         "alignment": clean(geo),
         "preprocessing": {k: v for k, v in info.items() if k != "frames"},
+        "sfm": sfm_report,
         "dense": dense_report,
         "mesh": mesh_report,
         "semantics": semantic_report,
@@ -288,7 +312,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         "warnings": warnings,
         "confidence": {
             "kind": "evidence indicators, not a calibrated probability",
-            "registered_fraction": len(reconstruction["poses"]) / len(info["frames"]),
+            "registered_fraction": len(reconstruction["poses"]) / max(1, len(info["frames"])),
             "independent_accuracy_validated": False,
         },
     }

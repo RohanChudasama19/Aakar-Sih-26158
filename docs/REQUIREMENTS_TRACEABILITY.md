@@ -36,7 +36,7 @@ This document maps official system requirements to their implementation, tests, 
 | P1-07 | System | RECONSTRUCTION_BLOCKED DB state | **COMPLETED** | `app/db.py`, `app/pipeline/runner.py`, `app/worker.py` |
 | P1-08 | Reports | JSON & TXT cv_quality_report generation | **COMPLETED** | `app/pipeline/runner.py` |
 | Phase 2 | Calibration | Canonical classes, pipeline integration, undistortion, calibration script | **COMPLETED** | - |
-| Phase 3 | SfM | Production SfM + GPU dense reconstruction | Pending | - |
+| Phase 3 | SfM | Adaptive matching, verified pairs, global BA, backend abstraction | **COMPLETED** | `app/pipeline/sfm_backend.py` |
 | Phase 4 | Fusion | Sensor fusion and metric georeferencing | Pending | - |
 | Phase 5 | Quality | Geometry, surface and texture quality | Pending | - |
 | Phase 6 | Semantics | Dynamic objects, semantics and confidence | Pending | - |
