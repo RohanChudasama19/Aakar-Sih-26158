@@ -19,10 +19,10 @@
  *   → { loadMode, setMode, clear, dispose, resetView }
  */
 
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+
+
+
 
 // ── Semantic class palette (mirrors semantic.py SEMANTIC_PALETTE) ──
 const SEMANTIC_PALETTE = {
@@ -45,7 +45,7 @@ const CONFIDENCE_PALETTE = {
 
 // ── API helpers ──
 let _token = '';
-export function setViewerToken(t) { _token = t; }
+function setViewerToken(t) { _token = t; }
 async function fetchBuf(url) {
   const r = await fetch(url, _token ? { headers: { Authorization: `Bearer ${_token}` } } : {});
   if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.url}`);
@@ -67,7 +67,7 @@ async function fetchJSON(url) {
  * @param {boolean}     metric     — true if metric coordinates available
  * @param {object}      options    — { measureLabel: HTMLElement }
  */
-export async function createViewer(container, jid, reps, metric, options = {}) {
+async function createViewer(container, jid, reps, metric, options = {}) {
   // ── Three.js setup ──
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));

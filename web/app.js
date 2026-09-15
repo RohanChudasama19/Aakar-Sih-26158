@@ -22,160 +22,221 @@ async function watch(id){streamAbort=new AbortController();try{const r=await api
 async function updateDetail(j){if(activeJob!==j.id)return;$('#detail-name').textContent=j.name;$('#job-message').textContent=j.message;$('#job-progress').value=j.progress;document.querySelectorAll('.stage-item').forEach(e=>{e.className='stage-item';if(j.status==='completed'||e.dataset.stage<j.stage)e.classList.add('done');else if(e.dataset.stage===j.stage)e.classList.add('running');});if(j.status==='RECONSTRUCTION_BLOCKED'){$('#results').innerHTML='<div class="notice" style="background:#fff3cd; color:#856404;"><h3>Reconstruction Blocked</h3><p><strong>Reason:</strong> '+esc(j.message)+'</p>'+(j.report&&j.report.readiness?'<h4>Readiness Metrics:</h4><pre>'+esc(JSON.stringify(j.report.readiness,null,2))+'</pre>':'')+'<p><strong>Recommendations:</strong> Ensure sharp frames, adequate overlap, and GPS telemetry before retrying.</p></div>';return;}if(j.status==='failed'){$('#results').innerHTML='<div class="notice error">Reconstruction stopped. '+esc(j.message)+'<br>Check the capture guide and worker logs before retrying.</div>';return;}if(j.status==='completed'&&renderedJob!==j.id){renderedJob=j.id;await showResults(j);}}
 async function download(url,name){try{if(!token){const a=document.createElement('a');a.href=url;a.download=name;a.click();return;}const blob=await(await api(url)).blob();const object=URL.createObjectURL(blob);const a=document.createElement('a');a.href=object;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(object),10000);}catch(e){toast(e.message);}}
 
+// ── Mode display names ──
+const MODE_LABELS = {
+  textured:   'Textured Mesh',
+  mesh:       'Mesh (Geometry)',
+  dense:      'Dense Point Cloud',
+  sparse:     'Sparse Point Cloud',
+  semantic:   'Semantic',
+  confidence: 'Confidence / Coverage',
+};
+const MODE_ORDER = ['textured','mesh','dense','sparse','semantic','confidence'];
+
 async function showResults(j) {
-    const r = j.report, metric = r.metric_state === 'GEOREFERENCED_METRIC' || r.metric_state === 'GPS_ALIGNED_UNVERIFIED' || r.metric_state === 'METRIC_SCALE';
-    
-    // Fetch deliverables matrix if available
-    let matrixHTML = '';
-    try {
-        const matrixReq = await api(`/api/jobs/${j.id}/files/reports/deliverables_matrix.json`);
-        if (matrixReq.ok) {
-            const matrix = await matrixReq.json();
-            matrixHTML = `<div class="deliverables-grid">
-                <div class="del-row header"><div class="del-col">Format</div><div class="del-col">Purpose</div><div class="del-col">Verified</div></div>
-                ${matrix.map(m => `<div class="del-row"><div class="del-col"><strong>${m.Format}</strong></div><div class="del-col">${m.Purpose}</div><div class="del-col">${m.Verified ? '✅ Yes' : '❌ No'}</div></div>`).join('')}
-            </div>`;
-        }
-    } catch (e) {
-        matrixHTML = '<p>Deliverables matrix unavailable.</p>';
-    }
-    
-    $('#results').innerHTML = `
-        <div class="tabs-header">
-            <button class="tab-btn active" data-tab="overview">Overview</button>
-            <button class="tab-btn" data-tab="viewer">3D Viewer</button>
-            <button class="tab-btn" data-tab="map">Map</button>
-            <button class="tab-btn" data-tab="measurements">Measurements</button>
-            <button class="tab-btn" data-tab="analysis">Analysis</button>
-            <button class="tab-btn" data-tab="validation">Validation</button>
-            <button class="tab-btn" data-tab="exports">Exports</button>
-            <button class="tab-btn" data-tab="technical">Technical</button>
-        </div>
-        
-        <div class="tab-content active" id="tab-overview">
-            <div class="notice">Surface: ${esc(r.mesh.surface_quality || 'QUALITY NOT ASSESSED')}. ${esc(r.mesh.note)}</div>
-            <div class="result-metrics">
-                <div><span>PROCESSING TIME</span><strong>${r.processing_time_sec.toFixed(1)} s</strong><small>${r.video_duration_sec.toFixed(1)}s video</small></div>
-                <div><span>REGISTERED CAMERAS</span><strong>${r.targets.coverage.registered_frames} / ${r.targets.coverage.selected_frames}</strong></div>
-                <div><span>METRIC STATE</span><strong>${esc(r.metric_state)}</strong></div>
-            </div>
-            <div class="export-list" style="margin-top: 20px;">
-                <button id="download-all">↓ Download Deliverables ZIP</button>
-                <button id="download-report">↓ Mission Report</button>
-            </div>
-        </div>
+  const r = j.report;
+  const metric = r.metric_state === 'GEOREFERENCED_METRIC' || r.metric_state === 'GPS_ALIGNED_UNVERIFIED' || r.metric_state === 'METRIC_SCALE';
 
-        <div class="tab-content" id="tab-viewer">
-            <div class="viewer-selector" style="margin-bottom: 10px;">
-                <select id="representation-selector">
-                    <option value="textured">Textured Mesh</option>
-                    <option value="mesh">Mesh (Geometry only)</option>
-                    <option value="dense">Dense Point Cloud (Download only)</option>
-                    <option value="sparse">Sparse Point Cloud (Download only)</option>
-                    <option value="semantic">Semantic View (Download only)</option>
-                </select>
-            </div>
-            <div class="viewer" id="viewer">
-                <div class="viewer-label">${metric ? 'METRIC ALIGNMENT (accuracy unverified)' : 'RELATIVE COORDINATES'}<br>Drag to orbit · right drag to pan · scroll to zoom</div>
-            </div>
-            <div class="viewer-tools">
-                <button data-mode="orbit" class="active">Orbit</button>
-                <button data-mode="distance" ${metric ? '' : 'disabled title="Requires metric state"'}>Distance</button>
-                <button data-mode="area" ${metric ? '' : 'disabled title="Requires metric state"'}>Planar area</button>
-                <button id="clear-measure">Clear points</button>
-                <button id="wireframe">Wireframe</button>
-                <span id="measurement">Choose a measurement tool</span>
-            </div>
-            <div class="notice">${metric ? 'Measurements use GPS-aligned scale but remain unverified against ground control.' : 'Metric scale is not established. Measurements are disabled or arbitrary.'}</div>
-        </div>
-        
-        <div class="tab-content" id="tab-map">
-            <div class="notice">
-                ${r.metric_state === 'GEOREFERENCED_METRIC' ? 
-                `Georeferenced map alignment established (EPSG: ${r.alignment?.epsg}). Integration with map providers requires configuration.` : 
-                'Georeferenced map unavailable because real-world alignment was not established.'}
-            </div>
-        </div>
-        
-        <div class="tab-content" id="tab-measurements">
-            <p>Measurements can be performed in the <strong>3D Viewer</strong> tab.</p>
-        </div>
-        
-        <div class="tab-content" id="tab-analysis">
-            <h3>Semantic Regions</h3>
-            <p>Semantic modeling extracts rough structural candidates.</p>
-            <pre>${esc(JSON.stringify(r.semantics || {}, null, 2))}</pre>
-        </div>
-        
-        <div class="tab-content" id="tab-validation">
-            <h3>Alignment Quality</h3>
-            <p><strong>GPS Alignment Residual (RMSE):</strong> ${r.alignment?.rmse_m != null ? r.alignment.rmse_m.toFixed(2) + ' m' : 'N/A'}</p>
-            <p><strong>Metric State:</strong> ${esc(r.metric_state)}</p>
-            <hr>
-            <h3>Independent Spatial Validation</h3>
-            <p><strong>Independent Spatial Accuracy:</strong> NOT AVAILABLE</p>
-            <small>No independent checkpoints were provided for verification.</small>
-        </div>
-        
-        <div class="tab-content" id="tab-exports">
-            <h3>Export Center</h3>
-            ${matrixHTML}
-        </div>
-        
-        <div class="tab-content" id="tab-technical">
-            <h3>Technical Pipeline Report</h3>
-            <ul class="warnings" style="margin-bottom: 20px;">${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
-            <pre>${esc(JSON.stringify(r, null, 2))}</pre>
-        </div>
-    `;
-    
-    // Tab switching logic
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-        };
+  // Fetch deliverables matrix
+  let matrixHTML = '';
+  try {
+    const matrixReq = await api(`/api/jobs/${j.id}/files/reports/deliverables_matrix.json`);
+    if (matrixReq.ok) {
+      const matrix = await matrixReq.json();
+      matrixHTML = `<div class="deliverables-grid">
+        <div class="del-row header"><div class="del-col">Format</div><div class="del-col">Purpose</div><div class="del-col">Verified</div></div>
+        ${matrix.map(m => `<div class="del-row"><div class="del-col"><strong>${m.Format}</strong></div><div class="del-col">${m.Purpose}</div><div class="del-col">${m.Verified ? '✅ Yes' : '❌ No'}</div></div>`).join('')}
+      </div>`;
+    }
+  } catch (_) {
+    matrixHTML = '<p>Deliverables matrix unavailable.</p>';
+  }
+
+  // Fetch representations manifest for viewer
+  let reps = null;
+  try {
+    reps = await (await api(`/api/jobs/${j.id}/representations`)).json();
+  } catch (_) { /* viewer falls back to trying GLB directly */ }
+
+  $('#results').innerHTML = `
+    <div class="tabs-header">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="viewer">3D Viewer</button>
+      <button class="tab-btn" data-tab="map">Map</button>
+      <button class="tab-btn" data-tab="measurements">Measurements</button>
+      <button class="tab-btn" data-tab="analysis">Analysis</button>
+      <button class="tab-btn" data-tab="validation">Validation</button>
+      <button class="tab-btn" data-tab="exports">Exports</button>
+      <button class="tab-btn" data-tab="technical">Technical</button>
+    </div>
+
+    <div class="tab-content active" id="tab-overview">
+      <div class="notice">Surface: ${esc(r.mesh.surface_quality || 'QUALITY NOT ASSESSED')}. ${esc(r.mesh.note || '')}</div>
+      <div class="result-metrics">
+        <div><span>PROCESSING TIME</span><strong>${r.processing_time_sec.toFixed(1)} s</strong><small>${r.video_duration_sec.toFixed(1)}s video</small></div>
+        <div><span>REGISTERED CAMERAS</span><strong>${r.targets.coverage.registered_frames} / ${r.targets.coverage.selected_frames}</strong></div>
+        <div><span>METRIC STATE</span><strong>${esc(r.metric_state)}</strong></div>
+      </div>
+      <div class="export-list" style="margin-top: 20px;">
+        <button id="download-all">↓ Download Deliverables ZIP</button>
+        <button id="download-report">↓ Mission Report</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-viewer">
+      <div class="viewer-selector" style="margin-bottom: 10px;">
+        <select id="representation-selector"></select>
+        <button id="reset-view" style="margin-left:8px;">Reset View</button>
+        <button id="wireframe-btn" style="margin-left:4px;">Wireframe</button>
+      </div>
+      <div class="viewer" id="viewer">
+        <div class="viewer-label">${metric ? 'METRIC ALIGNMENT (accuracy unverified)' : 'RELATIVE COORDINATES'}<br>Drag to orbit · right drag to pan · scroll to zoom</div>
+      </div>
+      <div class="viewer-tools">
+        <button data-mode="orbit" class="active">Orbit</button>
+        <button data-mode="distance" ${metric ? '' : 'disabled title="Requires metric state"'}>Distance</button>
+        <button data-mode="area" ${metric ? '' : 'disabled title="Requires metric state"'}>Planar area</button>
+        <button id="clear-measure">Clear points</button>
+        <span id="measurement">Choose a measurement tool</span>
+      </div>
+      <div class="notice">${metric ? 'Measurements use GPS-aligned scale but remain unverified against ground control.' : 'Metric scale is not established. Measurements are disabled or arbitrary.'}</div>
+    </div>
+
+    <div class="tab-content" id="tab-map">
+      <div class="notice">
+        ${r.metric_state === 'GEOREFERENCED_METRIC' ?
+          `Georeferenced map alignment established (EPSG: ${r.alignment?.epsg}). Integration with map providers requires configuration.` :
+          'Georeferenced map unavailable because real-world alignment was not established.'}
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-measurements">
+      <p>Measurements can be performed in the <strong>3D Viewer</strong> tab.</p>
+    </div>
+
+    <div class="tab-content" id="tab-analysis">
+      <h3>Semantic Regions</h3>
+      <p>Semantic modeling extracts rough structural candidates.</p>
+      <pre>${esc(JSON.stringify(r.semantics || {}, null, 2))}</pre>
+    </div>
+
+    <div class="tab-content" id="tab-validation">
+      <h3>Alignment Quality</h3>
+      <p><strong>GPS Alignment Residual (RMSE):</strong> ${r.alignment?.rmse_m != null ? r.alignment.rmse_m.toFixed(2) + ' m' : 'N/A'}</p>
+      <p><strong>Metric State:</strong> ${esc(r.metric_state)}</p>
+      <hr>
+      <h3>Independent Spatial Validation</h3>
+      <p><strong>Independent Spatial Accuracy:</strong> NOT AVAILABLE</p>
+      <small>No independent checkpoints were provided for verification.</small>
+    </div>
+
+    <div class="tab-content" id="tab-exports">
+      <h3>Export Center</h3>
+      ${matrixHTML}
+    </div>
+
+    <div class="tab-content" id="tab-technical">
+      <h3>Technical Pipeline Report</h3>
+      <ul class="warnings" style="margin-bottom: 20px;">${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+      <pre>${esc(JSON.stringify(r, null, 2))}</pre>
+    </div>
+  `;
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    };
+  });
+
+  $('#download-all').onclick = () => download(`/api/jobs/${j.id}/download`, `mission_${j.id}_deliverables.zip`);
+  $('#download-report').onclick = () => download(`/api/jobs/${j.id}/files/reports/mission_report.json`, 'mission_report.json');
+
+  // ── Build representation selector from API ──
+  const sel = $('#representation-selector');
+  if (reps) {
+    MODE_ORDER.forEach(mode => {
+      const rep = reps[mode];
+      const opt = document.createElement('option');
+      opt.value = mode;
+      const avail = rep?.available;
+      opt.textContent = avail ? MODE_LABELS[mode] : `${MODE_LABELS[mode]} [Unavailable]`;
+      opt.disabled = !avail;
+      // Select first available as default
+      sel.append(opt);
     });
+    // Set to first available
+    const firstAvail = MODE_ORDER.find(m => reps[m]?.available);
+    if (firstAvail) sel.value = firstAvail;
+  } else {
+    // Fallback: just show GLB modes if no representations API
+    ['textured','mesh'].forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = MODE_LABELS[m];
+      sel.append(o);
+    });
+    sel.value = 'textured';
+  }
 
-    $('#download-all').onclick = () => download(`/api/jobs/${j.id}/download`, `mission_${j.id}_deliverables.zip`);
-    $('#download-report').onclick = () => download(`/api/jobs/${j.id}/files/reports/mission_report.json`, 'mission_report.json');
+  // ── Initialize viewer ──
+  const viewerContainer = $('#viewer');
+  try {
+    const { createViewer, setViewerToken } = await import('/viewer.js');
+    setViewerToken(token);
 
-    // 3D Viewer Logic
-    try {
-        const { createViewer } = await import('/viewer.js');
-        const blob = await (await api(`/api/jobs/${j.id}/files/mesh/model.glb`)).arrayBuffer();
-        if (activeJob !== j.id) return;
-        
-        viewer = await createViewer($('#viewer'), blob, metric);
-        
-        $('#representation-selector').onchange = (e) => {
-            if (e.target.value === 'mesh') {
-                viewer.wireframe(true);
-            } else if (e.target.value === 'textured') {
-                viewer.wireframe(false);
-            } else {
-                toast('That representation is available via download in the Export Center.');
-            }
-        };
+    viewer = await createViewer(
+      viewerContainer,
+      j.id,
+      reps || { textured: { available: true, url: `/api/jobs/${j.id}/files/mesh/model.glb` } },
+      metric,
+      { measureLabel: $('#measurement') }
+    );
 
-        document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
-            if (b.disabled) return;
-            document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('active', x === b));
-            viewer.setMode(b.dataset.mode);
-        });
-        
-        $('#clear-measure').onclick = () => viewer.clear();
-        $('#wireframe').onclick = () => viewer.wireframe();
-        
-    } catch (e) {
-        const el = document.createElement('p');
-        el.className = 'notice';
-        el.style.margin = '100px 20px';
-        el.textContent = '3D viewer could not load: ' + e.message + '. Download the GLB bundle to inspect the model locally.';
-        $('#viewer').append(el);
+    // Sync selector to actual loaded mode
+    if (viewer && sel.value) {
+      // The viewer auto-loads via fallback; update selector to match
     }
+
+    // Representation switching
+    let switching = false;
+    sel.onchange = async (e) => {
+      if (switching) return;
+      switching = true;
+      const prev = sel.value;
+      try {
+        await viewer.loadMode(e.target.value);
+      } catch (err) {
+        toast(`Could not load ${MODE_LABELS[e.target.value]}: ${err.message}`);
+        sel.value = prev;
+      } finally {
+        switching = false;
+      }
+    };
+
+    // Reset view
+    $('#reset-view').onclick = () => viewer.resetView();
+
+    // Wireframe toggle (applicable to mesh modes)
+    $('#wireframe-btn').onclick = () => viewer.wireframe();
+
+    // Measurement tools
+    document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
+      if (b.disabled) return;
+      document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('active', x === b));
+      viewer.setMode(b.dataset.mode);
+    });
+    $('#clear-measure').onclick = () => viewer.clear();
+
+  } catch (e) {
+    const el = document.createElement('p');
+    el.className = 'notice';
+    el.style.margin = '100px 20px';
+    el.textContent = '3D viewer could not initialize: ' + e.message + '. Download the GLB bundle from the Export Center.';
+    viewerContainer.append(el);
+  }
 }
 
 refresh();setInterval(()=>{if(!activeJob)refresh();},15000);

@@ -258,6 +258,22 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         except Exception:
             pass
 
+    # Generate compact viewer artifacts (sparse PLY, display cloud, confidence mesh, semantic copy)
+    try:
+        from .viewer_artifacts import generate_all_viewer_artifacts
+
+        generate_all_viewer_artifacts(
+            out_dir=out,
+            reconstruction=reconstruction,
+            dense_points=points,
+            dense_colors=colors,
+            mesh=surface,
+        )
+    except Exception as _va_err:
+        import warnings
+
+        warnings.warn(f"Viewer artifact generation failed (non-fatal): {_va_err}")
+
     export_report = exports.export_all(surface, points, colors, geo, out, point_labels=point_labels)
 
     elapsed = time.monotonic() - start
