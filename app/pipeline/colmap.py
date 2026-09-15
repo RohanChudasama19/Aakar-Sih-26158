@@ -22,7 +22,7 @@ def run(args, work):
         )
 
 
-def sparse(directory, info, k, notify):
+def sparse(directory, info, camera, notify):
     work = directory.parent
     db = work / "colmap.db"
     models = work / "sparse"
@@ -40,9 +40,9 @@ def sparse(directory, info, k, notify):
             "--ImageReader.single_camera",
             "1",
             "--ImageReader.camera_model",
-            "PINHOLE",
+            camera.model_type.value,
             "--ImageReader.camera_params",
-            ",".join(str(v) for v in [k[0, 0], k[1, 1], k[0, 2], k[1, 2]]),
+            camera.to_colmap(),
             "--SiftExtraction.use_gpu",
             "1",
         ],

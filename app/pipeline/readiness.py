@@ -217,8 +217,11 @@ def analyze_telemetry(gps_rows: List[Dict], meta: Dict, config: Dict) -> Dict:
     return res
 
 
+from ..camera import CameraModel
+
+
 def perform_analysis(
-    video_path: Path, gps_rows: List[Dict], meta: Dict, intrinsics: Optional[np.ndarray] = None
+    video_path: Path, gps_rows: List[Dict], meta: Dict, intrinsics: Optional[CameraModel] = None
 ) -> Dict:
     start_time = time.time()
     cap = cv2.VideoCapture(str(video_path))
@@ -290,13 +293,11 @@ def perform_analysis(
     max_dist = CONFIG["overlap"]["max_local_distance"]
     K_scaled = None
     if intrinsics is not None:
-        K_scaled = intrinsics.copy()
-        if w_orig > 0:
-            s = CONFIG["sampling"]["analysis_width_px"] / w_orig
-            K_scaled[0, 0] *= s
-            K_scaled[1, 1] *= s
-            K_scaled[0, 2] *= s
-            K_scaled[1, 2] *= s
+        scaled_cam = intrinsics.scale(
+            CONFIG["sampling"]["analysis_width_px"],
+            int(intrinsics.height * (CONFIG["sampling"]["analysis_width_px"] / intrinsics.width)),
+        )
+        K_scaled = scaled_cam.to_matrix()
 
     for i in range(n):
         for j in range(i + 1, min(i + 1 + max_dist, n)):

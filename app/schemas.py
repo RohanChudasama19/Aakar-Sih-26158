@@ -81,22 +81,68 @@ def metadata(path: Path) -> Dict[str, Any]:
     return m
 
 
-def intrinsics(meta: Dict[str, Any], width: int, height: int, override: Optional[Dict[str, Any]] = None) -> np.ndarray:
-    x = override or meta["camera_intrinsics"]
+from .camera import CalibrationSource, CalibrationState, CameraModel, CameraModelType
+
+
+def intrinsics(meta: Dict[str, Any], width: int, height: int, override: Optional[Dict[str, Any]] = None) -> CameraModel:
+    if override:
+        source = CalibrationSource.PROVIDED_CALIBRATION
+        state = CalibrationState.CALIBRATED
+        x = override
+    elif "camera_intrinsics" in meta and meta["camera_intrinsics"]:
+        source = CalibrationSource.PROVIDED_CALIBRATION
+        state = CalibrationState.CALIBRATED
+        x = meta["camera_intrinsics"]
+    else:
+        # Should not reach here if schemas are validated strictly, but just in case
+        raise ValueError("Missing camera_intrinsics in metadata")
+
     if "fx" in x:
-        sx, sy = width / float(x["image_width_px"]), height / float(x["image_height_px"])
-        k = np.array(
-            [[float(x["fx"]) * sx, 0, float(x["cx"]) * sx], [0, float(x["fy"]) * sy, float(x["cy"]) * sy], [0, 0, 1.0]]
+        # Already formatted somewhat like our schema
+        cam = CameraModel(
+            model_type=CameraModelType(x.get("camera_model", "PINHOLE")),
+            width=int(x.get("image_width_px", x.get("image_width", width))),
+            height=int(x.get("image_height_px", x.get("image_height", height))),
+            fx=float(x["fx"]),
+            fy=float(x.get("fy", x["fx"])),
+            cx=float(x.get("cx", width / 2.0)),
+            cy=float(x.get("cy", height / 2.0)),
+            distortion=[float(v) for v in x.get("distortion", [])],
+            source=source,
+            state=state,
+            original_width=int(x.get("image_width_px", x.get("image_width", width))),
+            original_height=int(x.get("image_height_px", x.get("image_height", height))),
         )
     else:
+        # Exif / Sensor derived fallback
+        source = CalibrationSource.METADATA_DERIVED
+        state = CalibrationState.ESTIMATED
         f = float(x["focal_length_mm"])
-        k = np.array(
-            [
-                [f / float(x["sensor_width_mm"]) * width, 0, width / 2],
-                [0, f / float(x["sensor_height_mm"]) * height, height / 2],
-                [0, 0, 1.0],
-            ]
+        sw = float(x.get("sensor_width_mm", 36.0))  # Fallback to full frame equivalent if missing
+        sh = float(x.get("sensor_height_mm", 24.0))
+
+        orig_w = int(x.get("image_width_px", width))
+        orig_h = int(x.get("image_height_px", height))
+
+        cam = CameraModel(
+            model_type=CameraModelType.PINHOLE,
+            width=orig_w,
+            height=orig_h,
+            fx=f / sw * orig_w,
+            fy=f / sh * orig_h,
+            cx=orig_w / 2.0,
+            cy=orig_h / 2.0,
+            source=source,
+            state=state,
+            original_width=orig_w,
+            original_height=orig_h,
         )
-    if not np.isfinite(k).all() or k[0, 0] <= 0 or k[1, 1] <= 0:
+
+    if not np.isfinite([cam.fx, cam.fy, cam.cx, cam.cy]).all() or cam.fx <= 0 or cam.fy <= 0:
         raise ValueError("Invalid camera intrinsics")
-    return k
+
+    # If the processing resolution is different, scale the model explicitly
+    if cam.width != width or cam.height != height:
+        cam = cam.scale(width, height)
+
+    return cam

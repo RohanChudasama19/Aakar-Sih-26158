@@ -36,7 +36,8 @@ def triangulate(k, pa, pb, xa, xb):
     return xyz, good
 
 
-def reconstruct(directory, info, k, notify):
+def reconstruct(directory, info, camera, notify):
+    k = camera.to_matrix()
     cv2.setRNGSeed(42)
     sift = cv2.SIFT_create(nfeatures=5000)
     frames = info["frames"]

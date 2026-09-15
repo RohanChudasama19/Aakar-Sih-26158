@@ -124,7 +124,11 @@ def run_pipeline(input_dir, work, options=None, callback=None):
 
     info = preprocess.extract(video, work / "frames", opts, progress)
 
-    k = intrinsics(meta, info["width"], info["height"], override)
+    camera = intrinsics(meta, info["width"], info["height"], override)
+
+    # Save camera artifact
+    (out / "camera_model.json").write_text(json.dumps(clean(camera.to_dict()), indent=2))
+
     if abs(info["fps"] - float(meta["video_fps"])) > max(0.1, info["fps"] * 0.02):
         raise ValueError(
             "Flight metadata FPS differs from the decoded video; telemetry frame alignment would be unreliable"
@@ -137,31 +141,69 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     for sample in gps:
         if abs(sample["time"] - start_utc - sample["frame"] / info["fps"]) > max(0.25, 2 / info["fps"]):
             raise ValueError("GPS UTC/frame values are inconsistent with the video FPS and flight start time")
+
+    # Undistort images if needed
+    import cv2
+
+    from ..camera import Undistorter
+
+    undistorter = Undistorter(camera)
+    if any(camera.distortion):
+        progress(10, "Undistorting extracted frames")
+        undistorted_dir = work / "undistorted_frames"
+        undistorted_dir.mkdir(exist_ok=True)
+        undistorted_originals_dir = work / "undistorted_originals"
+        undistorted_originals_dir.mkdir(exist_ok=True)
+
+        for f in info["frames"]:
+            # Undistort processed frames
+            frame_path = work / "frames" / f["name"]
+            img = cv2.imread(str(frame_path))
+            if img is not None:
+                img_u = undistorter.undistort_image(img)
+                cv2.imwrite(str(undistorted_dir / f["name"]), img_u)
+
+            # Undistort original frames
+            orig_path = work / "originals" / f["name"]
+            img_orig = cv2.imread(str(orig_path))
+            if img_orig is not None:
+                img_orig_u = undistorter.undistort_image(img_orig)
+                cv2.imwrite(str(undistorted_originals_dir / f["name"]), img_orig_u)
+
+        # Replace directory pointers for downstream stages
+        frames_dir = undistorted_dir
+        originals_dir = undistorted_originals_dir
+        active_camera = undistorter.get_undistorted_camera()
+    else:
+        frames_dir = work / "frames"
+        originals_dir = work / "originals"
+        active_camera = camera
+
+    k = active_camera.to_matrix()
+
     stage("B", 20)
     if opts.get("engine") == "colmap":
         from . import colmap
 
-        reconstruction = colmap.sparse(work / "frames", info, k, progress)
+        reconstruction = colmap.sparse(frames_dir, info, active_camera, progress)
     else:
-        reconstruction = sfm.reconstruct(work / "frames", info, k, progress)
+        reconstruction = sfm.reconstruct(frames_dir, info, active_camera, progress)
     geo = georef.align(reconstruction, info, gps, input_dir)
     np.savez_compressed(work / "sparse.npz", points=reconstruction["points"], colors=reconstruction["colors"])
     (work / "poses.json").write_text(json.dumps(clean(reconstruction["poses"])))
     (work / "alignment.json").write_text(json.dumps(clean(geo), indent=2))
     stage("C", 43)
     if opts.get("engine") == "colmap":
-        points, colors, dense_report = colmap.dense(reconstruction, work / "frames", progress)
+        points, colors, dense_report = colmap.dense(reconstruction, frames_dir, progress)
     else:
-        points, colors, dense_report = dense.densify(reconstruction, k, work / "originals", progress)
+        points, colors, dense_report = dense.densify(reconstruction, k, originals_dir, progress)
     if (input_dir / "depth.onnx").exists():
         from .depth import infer
 
-        dense_report["custom_depth"] = infer(
-            input_dir / "depth.onnx", reconstruction, k, work / "originals", out, progress
-        )
+        dense_report["custom_depth"] = infer(input_dir / "depth.onnx", reconstruction, k, originals_dir, out, progress)
     np.savez_compressed(work / "dense.npz", points=points, colors=colors)
     stage("D", 62)
-    surface, mesh_report = mesh.build_mesh(points, colors, geo, reconstruction, k, work / "originals")
+    surface, mesh_report = mesh.build_mesh(points, colors, geo, reconstruction, k, originals_dir)
     stage("E", 78)
     export_report = exports.export_all(surface, points, colors, geo, out)
     stage("F", 93)

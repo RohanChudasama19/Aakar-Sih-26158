@@ -35,7 +35,7 @@ def test_triangulation_rejects_negative_depth_and_recovers_visible_points():
 def test_intrinsics_preserve_pixel_scale():
     m = {"camera_intrinsics": {"focal_length_mm": 5.5, "sensor_width_mm": 6.4, "sensor_height_mm": 4.8}}
     k = intrinsics(m, 640, 480)
-    np.testing.assert_allclose(k, [[550, 0, 320], [0, 550, 240], [0, 0, 1]])
+    np.testing.assert_allclose(k.to_matrix(), [[550, 0, 320], [0, 550, 240], [0, 0, 1]])
 
 
 def test_collinear_gps_does_not_claim_absolute_orientation(tmp_path):
