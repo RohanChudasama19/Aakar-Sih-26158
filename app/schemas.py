@@ -1,8 +1,12 @@
 import csv
 import json
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import numpy as np
+
+from .camera import CalibrationSource, CalibrationState, CameraModel, CameraModelType
 
 GPS_COLUMNS = [
     "timestamp_utc",
@@ -29,10 +33,6 @@ META_FIELDS = [
     "end_time_utc",
     "camera_intrinsics",
 ]
-
-
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 
 def telemetry(path: Path) -> List[Dict[str, Any]]:
@@ -79,9 +79,6 @@ def metadata(path: Path) -> Dict[str, Any]:
     if start.tzinfo is None or end.tzinfo is None or end <= start:
         raise ValueError("Flight times must be timezone-aware and increasing")
     return m
-
-
-from .camera import CalibrationSource, CalibrationState, CameraModel, CameraModelType
 
 
 def intrinsics(meta: Dict[str, Any], width: int, height: int, override: Optional[Dict[str, Any]] = None) -> CameraModel:

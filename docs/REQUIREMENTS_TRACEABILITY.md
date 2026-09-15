@@ -37,8 +37,8 @@ This document maps official system requirements to their implementation, tests, 
 | P1-08 | Reports | JSON & TXT cv_quality_report generation | **COMPLETED** | `app/pipeline/runner.py` |
 | Phase 2 | Calibration | Canonical classes, pipeline integration, undistortion, calibration script | **COMPLETED** | - |
 | Phase 3 | SfM | Adaptive matching, verified pairs, global BA, backend abstraction | **COMPLETED** | `app/pipeline/sfm_backend.py` |
-| Phase 4 | Fusion | Sensor fusion and metric georeferencing | Pending | - |
-| Phase 5 | Quality | Geometry, surface and texture quality | Pending | - |
+| Phase 4 | Fusion | Sensor fusion, Metric scaling (WGS84->UTM), and Sim(3) alignment | **COMPLETED** | `app/pipeline/georef.py` |
+| Phase 5 | Quality | Dense stereo profiles, geometric consistency, and open3d point filtering | **COMPLETED** | `app/pipeline/dense_backend.py` |
 | Phase 6 | Semantics | Dynamic objects, semantics and confidence | Pending | - |
 | Phase 7 | Outputs | Geospatial outputs and viewer | Pending | - |
 | Phase 8 | Backend | Production backend and operations | Pending | - |

@@ -341,7 +341,7 @@ async def events(jid: str, request: Request):
                 last = text
             else:
                 yield ": heartbeat\n\n"
-            if data["status"] in ("completed", "failed"):
+            if data["status"] in ("completed", "failed", "cancelled", "RECONSTRUCTION_BLOCKED"):
                 break
             await asyncio.sleep(1)
 
@@ -357,20 +357,24 @@ def files(jid: str):
         return []
     out = DATA / jid / "work" / "outputs"
     return [
-        {"name": p.name, "bytes": p.stat().st_size, "url": f"/api/jobs/{jid}/files/{p.name}"}
-        for p in sorted(out.iterdir())
+        {
+            "name": p.relative_to(out).as_posix(),
+            "bytes": p.stat().st_size,
+            "url": f"/api/jobs/{jid}/files/{p.relative_to(out).as_posix()}",
+        }
+        for p in sorted(out.rglob("*"))
         if p.is_file()
     ]
 
 
-@app.get("/api/jobs/{jid}/files/{filename}")
+@app.get("/api/jobs/{jid}/files/{filename:path}")
 def artifact(jid: str, filename: str):
     data = get_job(jid)
     if data["status"] != "completed":
         raise HTTPException(409, "Artifacts are available after the job finishes")
     out = (DATA / jid / "work" / "outputs").resolve()
     p = (out / filename).resolve()
-    if p.parent != out or not p.is_file():
+    if not p.is_relative_to(out) or not p.is_file():
         raise HTTPException(404, "Artifact not found")
     return FileResponse(p, filename=p.name)
 

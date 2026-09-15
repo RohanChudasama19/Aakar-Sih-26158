@@ -42,7 +42,10 @@ def test_collinear_gps_does_not_claim_absolute_orientation(tmp_path):
     from app.pipeline.georef import align
 
     poses = {i: np.c_[np.eye(3), [-float(i), 0, 0]] for i in range(4)}
-    info = {"frames": [{"frame": i} for i in range(4)]}
-    gps = [{"frame": i, "latitude": 23.0, "longitude": 72.0 + i * 0.00001, "altitude_m": 50.0} for i in range(4)]
+    info = {"frames": [{"frame": i, "time_sec": float(i)} for i in range(4)], "start_time_utc": 0.0}
+    gps = [
+        {"frame": i, "time": float(i), "latitude": 23.0, "longitude": 72.0 + i * 0.00001, "altitude_m": 50.0}
+        for i in range(4)
+    ]
     result = align({"poses": poses}, info, gps, tmp_path)
     assert not result["valid"] and result["rmse_m"] is None

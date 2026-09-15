@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from ..schemas import intrinsics, metadata, telemetry
-from . import dense, exports, georef, mesh, preprocess, readiness, semantic
+from . import exports, georef, mesh, preprocess, readiness, semantic
 
 
 class ReadinessBlockedError(Exception):
@@ -21,8 +21,8 @@ STAGES = {
     "B": "Pose estimation & GPS alignment",
     "C": "Dense reconstruction",
     "D": "Mesh extraction & texturing",
-    "E": "Georeferencing & export",
-    "F": "Semantic layer & scene report",
+    "E": "Semantic layer",
+    "F": "Export packaging & scene report",
 }
 
 
@@ -138,6 +138,8 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     from datetime import datetime
 
     start_utc = datetime.fromisoformat(meta["start_time_utc"].replace("Z", "+00:00")).timestamp()
+    info["start_time_utc"] = start_utc
+
     for sample in gps:
         if abs(sample["time"] - start_utc - sample["frame"] / info["fps"]) > max(0.25, 2 / info["fps"]):
             raise ValueError("GPS UTC/frame values are inconsistent with the video FPS and flight start time")
@@ -214,23 +216,50 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     (work / "poses.json").write_text(json.dumps(clean(reconstruction["poses"])))
     (work / "alignment.json").write_text(json.dumps(clean(geo), indent=2))
     stage("C", 43)
-    if opts.get("engine") == "colmap":
-        from . import colmap
+    from .dense_backend import execute_dense
 
-        points, colors, dense_report = colmap.dense(reconstruction, frames_dir, progress)
-    else:
-        points, colors, dense_report = dense.densify(reconstruction, k, originals_dir, progress)
+    points, colors, dense_report = execute_dense(reconstruction, k, frames_dir, work, opts, geo, progress)
     if (input_dir / "depth.onnx").exists():
         from .depth import infer
 
         dense_report["custom_depth"] = infer(input_dir / "depth.onnx", reconstruction, k, originals_dir, out, progress)
+
     np.savez_compressed(work / "dense.npz", points=points, colors=colors)
+
+    import trimesh
+
+    if len(points) > 0:
+        trimesh.points.PointCloud(points, colors=colors).export(out / "dense_filtered.ply")
+        trimesh.points.PointCloud(points, colors=colors).export(out / "dense_relative.ply")
+        if geo["valid"]:
+            from .exports import transform
+
+            local = transform(points, geo)
+            absolute = local + geo["origin"]
+            trimesh.points.PointCloud(absolute, colors=colors).export(out / "dense_metric.ply")
+
     stage("D", 62)
-    surface, mesh_report = mesh.build_mesh(points, colors, geo, reconstruction, k, originals_dir)
+    surface, mesh_report = mesh.build_mesh(
+        points, colors, geo, reconstruction, k, originals_dir, out_dir=out, options=opts
+    )
     stage("E", 78)
-    export_report = exports.export_all(surface, points, colors, geo, out)
+    semantic_report = semantic.classify(
+        points, colors, geo, surface, out, sfm=reconstruction, k=k, directory=originals_dir, options=opts
+    )
+
     stage("F", 93)
-    semantic_report = semantic.classify(points, colors, geo, surface, out)
+    # Load semantic labels for export if available
+    point_labels = None
+    labels_file = out / "semantic_labels.npz"
+    if labels_file.exists():
+        try:
+            with np.load(labels_file) as d:
+                point_labels = d["point_labels"]
+        except Exception:
+            pass
+
+    export_report = exports.export_all(surface, points, colors, geo, out, point_labels=point_labels)
+
     elapsed = time.monotonic() - start
     stages["F"] = {"elapsed_sec": round(time.monotonic() - stage_start, 3), "status": "completed"}
     warnings = [
@@ -260,8 +289,10 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         warnings.append(
             "IMU was archived but is not fused: this build has no calibrated IMU-to-camera extrinsics/time-offset estimator."
         )
-    if any("unavailable" in s for s in export_report.values()):
-        warnings.append("Some exports are unavailable; consult exports.json.")
+    if any(
+        "FAILED" in str(s) or "NOT_AVAILABLE" in str(s) for s in export_report.get("validation_results", {}).values()
+    ):
+        warnings.append("Some exports are unavailable or failed validation; consult manifest.json.")
     report = {
         "application": "AeroRecon",
         "build_tier": "reduced_fidelity_reference_implementation",
@@ -285,8 +316,8 @@ def run_pipeline(input_dir, work, options=None, callback=None):
             },
             "spatial_accuracy": {
                 "target": "≤ 1 m",
-                "gps_alignment_rmse_m": geo["rmse_m"],
-                "independent_error_m": None,
+                "gps_alignment_rmse_m": geo.get("rmse_m"),
+                "independent_error_m": geo.get("checkpoint_rmse_3d"),
                 "passed": None,
                 "reason": "Requires independent checkpoints; GPS fit residual is not ground truth",
             },
@@ -299,7 +330,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
                 "passed": None,
             },
         },
-        "metric_state": "GPS_ALIGNED_UNVERIFIED" if geo["valid"] else "RELATIVE_ONLY",
+        "metric_state": geo.get("metric_state", "RELATIVE"),
         "reprojection_rmse_px": reconstruction["reprojection_rmse_px"],
         "alignment": clean(geo),
         "preprocessing": {k: v for k, v in info.items() if k != "frames"},
@@ -316,19 +347,36 @@ def run_pipeline(input_dir, work, options=None, callback=None):
             "independent_accuracy_validated": False,
         },
     }
-    (out / "report.json").write_text(json.dumps(clean(report), indent=2, allow_nan=False))
+    reports_dir = out / "reports"
+    reports_dir.mkdir(exist_ok=True)
+
+    # Move other reports into reports_dir (optional cleanup)
+    for rep in ["cv_quality_report.json", "cv_quality_report.txt", "sfm_report.json", "sfm_report.txt"]:
+        if (out / rep).exists():
+            shutil.move(str(out / rep), str(reports_dir / rep))
+
+    (out / "mission_report.json").write_text(json.dumps(clean(report), indent=2, allow_nan=False))
     lines = [
         "AERORECON SCENE REPORT",
         str(meta["mission_name"]),
         f"Processing: {elapsed:.2f} s",
         f"Metric state: {report['metric_state']}",
         f"Registered cameras: {len(reconstruction['poses'])}/{len(info['frames'])}",
-        f"GPS fit residual: {geo['rmse_m']} m (NOT independent accuracy)",
+        f"GPS alignment residual: {geo.get('rmse_m', 'N/A')} m (NOT independent accuracy)",
         "",
         *warnings,
     ]
-    (out / "report.txt").write_text("\n".join(lines))
+    (out / "mission_report.txt").write_text("\n".join(lines))
     progress(99, "Packaging model, texture dependencies and reports")
-    shutil.make_archive(str(work / "artifacts"), "zip", out)
+    deliverables_dir = work / f"mission_{meta.get('mission_name', 'unknown')}_deliverables"
+    deliverables_dir.mkdir(exist_ok=True)
+    for folder in ["mesh", "pointcloud", "geospatial", "reports"]:
+        if (out / folder).exists():
+            shutil.copytree(out / folder, deliverables_dir / folder, dirs_exist_ok=True)
+    for file in ["manifest.json", "mission_report.json", "mission_report.txt"]:
+        if (out / file).exists():
+            shutil.copy2(out / file, deliverables_dir / file)
+
+    shutil.make_archive(str(work / "artifacts"), "zip", deliverables_dir)
     progress(100, "Completed with reported limitations")
     return clean(report)

@@ -6,7 +6,7 @@ import numpy as np
 from .sfm import triangulate
 
 
-def densify(sfm, k, directory, notify, max_pairs=12):
+def cpu_densify(sfm, k, directory, notify, max_pairs=12):
     poses = sfm["poses"]
     ids = sorted(poses)
     pairs = list(zip(ids, ids[2:])) or list(zip(ids, ids[1:]))

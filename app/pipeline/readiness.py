@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from ..camera import CameraModel
+
 # Default configurable thresholds
 CONFIG: Dict[str, Any] = {
     "sampling": {
@@ -217,9 +219,6 @@ def analyze_telemetry(gps_rows: List[Dict], meta: Dict, config: Dict) -> Dict:
     return res
 
 
-from ..camera import CameraModel
-
-
 def perform_analysis(
     video_path: Path, gps_rows: List[Dict], meta: Dict, intrinsics: Optional[CameraModel] = None
 ) -> Dict:
@@ -230,7 +229,7 @@ def perform_analysis(
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    w_orig = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     duration = count / fps if fps > 0 else 0
 
     if count < CONFIG["integrity"]["min_frames"] or fps <= 0:
@@ -253,7 +252,6 @@ def perform_analysis(
 
     frames_data = []
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    current_idx = 0
 
     for idx in sample_indices:
         cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
@@ -337,7 +335,7 @@ def perform_analysis(
     # Aggregation
     blur_ratio = sum(1 for f in frames_data if f["sharpness"] < CONFIG["blur"]["warning_threshold"]) / n
     dark_ratio = sum(1 for f in frames_data if f["exposure"]["is_dark"]) / n
-    conc_ratio = sum(1 for f in frames_data if f["features"]["is_concentrated"]) / n
+    sum(1 for f in frames_data if f["features"]["is_concentrated"]) / n
 
     warnings = telem_report.get("warnings", [])
     blocking = telem_report.get("blocking_reasons", [])

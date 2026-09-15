@@ -264,7 +264,7 @@ class CPUFallbackBackend(SfMBackend):
 
     def run(self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback) -> Dict[str, Any]:
         start_time = time.monotonic()
-        profile = determine_profile(info)
+        determine_profile(info)
 
         try:
             # Re-use existing sfm.py logic, but adapt to new report structure

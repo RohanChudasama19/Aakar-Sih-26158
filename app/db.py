@@ -1,4 +1,5 @@
 import time
+from typing import Any, Dict
 
 from sqlalchemy import JSON, Float, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
@@ -32,9 +33,6 @@ class Job(Base):
     readiness_status: Mapped[str] = mapped_column(String(24), default="pending")
     readiness_score: Mapped[float] = mapped_column(Float, default=0.0)
     readiness_report_path: Mapped[str] = mapped_column(String(255), default="")
-
-
-from typing import Any, Dict
 
 
 def init_db() -> None:

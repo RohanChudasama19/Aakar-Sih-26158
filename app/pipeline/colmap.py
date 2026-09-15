@@ -4,7 +4,6 @@ import os
 import subprocess
 
 import numpy as np
-import trimesh
 from scipy.spatial.transform import Rotation
 
 
@@ -123,51 +122,3 @@ def sparse(directory, info, camera, notify):
         "reprojection_rmse_px": float(np.sqrt(np.mean(np.square(errors)))),
         "engine": "colmap_cuda",
     }
-
-
-def dense(sfm, directory, notify):
-    work = directory.parent
-    target = work / "dense"
-    run(
-        [
-            "colmap",
-            "image_undistorter",
-            "--image_path",
-            directory,
-            "--input_path",
-            sfm["model_path"],
-            "--output_path",
-            target,
-            "--output_type",
-            "COLMAP",
-            "--max_image_size",
-            "1600",
-        ],
-        work,
-    )
-    notify(46, "CUDA PatchMatch stereo; see colmap.log for detailed iteration output")
-    run(
-        ["colmap", "patch_match_stereo", "--workspace_path", target, "--PatchMatchStereo.geom_consistency", "true"],
-        work,
-    )
-    run(
-        [
-            "colmap",
-            "stereo_fusion",
-            "--workspace_path",
-            target,
-            "--input_type",
-            "geometric",
-            "--output_path",
-            target / "fused.ply",
-        ],
-        work,
-    )
-    cloud = trimesh.load(target / "fused.ply", process=False)
-    if len(cloud.vertices) < 100:
-        raise ValueError("COLMAP dense fusion produced too few supported points")
-    return (
-        np.array(cloud.vertices),
-        np.array(cloud.colors[:, :3]),
-        {"method": "COLMAP_PatchMatch_MVS", "stereo_points": len(cloud.vertices), "neural_completion": False},
-    )

@@ -1,0 +1,66 @@
+=== CURRENT BRANCH ===
+feature/phase0-hygiene
+
+=== LATEST COMMIT ===
+076145c355e0cedad0f4fddfc0d60b55586e6457
+
+=== GIT STATUS ===
+On branch feature/phase0-hygiene
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   README.md
+	modified:   app/pipeline/colmap.py
+	modified:   app/pipeline/dense.py
+	modified:   app/pipeline/exports.py
+	modified:   app/pipeline/georef.py
+	modified:   app/pipeline/mesh.py
+	modified:   app/pipeline/runner.py
+	modified:   app/pipeline/semantic.py
+	modified:   app/pipeline/surface.py
+	modified:   docs/REQUIREMENTS_TRACEABILITY.md
+	modified:   tests/test_geometry.py
+	modified:   tests/test_pipeline.py
+	modified:   web/app.js
+	modified:   web/style.css
+	modified:   web/viewer.js
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	app/pipeline/dense_backend.py
+	app/pipeline/texture.py
+	docs/DEPLOYMENT.md
+	docs/FINAL_GIT_STATUS.txt
+	docs/FINAL_PRODUCT_COMPLETION_REPORT.md
+	docs/FINAL_VERIFICATION_MATRIX.md
+	docs/JUDGE_DEMO_GUIDE.md
+	docs/PHASE4_COMPLETION_REPORT.md
+	docs/PHASE4_GEOREFERENCING.md
+	docs/PHASE5_COMPLETION_REPORT.md
+	docs/PHASE5_DENSE_RECONSTRUCTION.md
+	docs/PHASE7_COMPLETION_REPORT.md
+	docs/PHASE7_SEMANTICS.md
+	docs/PHASE8_COMPLETION_REPORT.md
+	docs/PHASE8_EXPORTS.md
+	docs/PHASE9_COMPLETION_REPORT.md
+	docs/SIH_FINAL_READINESS_REPORT.md
+	docs/USER_GUIDE.md
+	generate_docs.py
+	patch_app.py
+	scripts/create_audit_bundle.py
+	tests/test_api_live.py
+	tests/test_exports.py
+	tests/test_georef.py
+	tests/test_semantic.py
+	tests/test_surface_hallucination.py
+	tests/test_texture_occlusion.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+=== LATEST 10 COMMITS ===
+076145c Complete Phase 3: Robust SfM Backend Abstraction and Integration
+2c526a6 Complete Phase 2: Camera Model and Undistortion Layer
+dca9b2f feat: complete Phase 1 Reconstruction Readiness and Input Quality Gate
+2e60957 Phase 0: Engineering Hygiene Baseline
+b2e5113 Replace facade-collapsing mesher with supported 3D Poisson surfaces
+1738665 Build tested AeroRecon reference application and sample workflow

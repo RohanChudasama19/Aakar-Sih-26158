@@ -16,8 +16,7 @@ rasterio==1.4.3
 laspy==2.6.1
 
 # Full 3D surface reconstruction; CPU package is smaller on Linux.
-open3d-cpu==0.19.0 ; platform_system == 'Linux'
-open3d==0.19.0 ; platform_system != 'Linux'
+open3d==0.19.0
 
 alembic
 structlog

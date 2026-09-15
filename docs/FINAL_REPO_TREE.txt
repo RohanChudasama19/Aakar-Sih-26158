@@ -1,0 +1,601 @@
+AeroRecon/
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .mypy_cache
+│   ├── 3.10
+│   │   ├── cache.0.db
+│   │   ├── cache.1.db
+│   │   ├── cache.10.db
+│   │   ├── cache.11.db
+│   │   ├── cache.12.db
+│   │   ├── cache.13.db
+│   │   ├── cache.14.db
+│   │   ├── cache.15.db
+│   │   ├── cache.2.db
+│   │   ├── cache.3.db
+│   │   ├── cache.4.db
+│   │   ├── cache.5.db
+│   │   ├── cache.6.db
+│   │   ├── cache.7.db
+│   │   ├── cache.8.db
+│   │   └── cache.9.db
+│   ├── .gitignore
+│   └── CACHEDIR.TAG
+├── .pytest_cache
+│   ├── v
+│   │   └── cache
+│   │       ├── lastfailed
+│   │       └── nodeids
+│   ├── .gitignore
+│   ├── CACHEDIR.TAG
+│   └── README.md
+├── .ruff_cache
+│   ├── 0.16.7
+│   │   ├── 10201327714969857669
+│   │   ├── 1463261639246071666
+│   │   ├── 17203204907580522513
+│   │   ├── 18172884684181161443
+│   │   ├── 3063475159603791033
+│   │   ├── 410658168508922214
+│   │   ├── 5551042401390520542
+│   │   ├── 6400135994534416686
+│   │   └── 9724838432588471514
+│   ├── .gitignore
+│   └── CACHEDIR.TAG
+├── alembic
+│   ├── versions
+│   │   ├── 13027d2e6cf9_initial_baseline.py
+│   │   └── 586987a4bb10_add_readiness_columns.py
+│   ├── README
+│   ├── env.py
+│   └── script.py.mako
+├── app
+│   ├── pipeline
+│   │   ├── __init__.py
+│   │   ├── colmap.py
+│   │   ├── dense.py
+│   │   ├── dense_backend.py
+│   │   ├── depth.py
+│   │   ├── exports.py
+│   │   ├── georef.py
+│   │   ├── mesh.py
+│   │   ├── preprocess.py
+│   │   ├── readiness.py
+│   │   ├── runner.py
+│   │   ├── semantic.py
+│   │   ├── sfm.py
+│   │   ├── sfm_backend.py
+│   │   ├── surface.py
+│   │   └── texture.py
+│   ├── __init__.py
+│   ├── camera.py
+│   ├── config.py
+│   ├── db.py
+│   ├── main.py
+│   ├── schemas.py
+│   ├── storage.py
+│   └── worker.py
+├── docs
+│   ├── screenshots
+│   │   ├── dashboard-complete.png
+│   │   ├── dashboard.png
+│   │   ├── mobile.png
+│   │   ├── upload.png
+│   │   └── viewer.png
+│   ├── surface-evidence
+│   │   ├── after.png
+│   │   ├── before-report.json
+│   │   ├── before.png
+│   │   └── corrected-report.json
+│   ├── DATABASE_MIGRATIONS.md
+│   ├── DEPLOYMENT.md
+│   ├── FINAL_GIT_STATUS.txt
+│   ├── FINAL_PRODUCT_COMPLETION_REPORT.md
+│   ├── FINAL_VERIFICATION_MATRIX.md
+│   ├── INPUT_FORMATS.md
+│   ├── JUDGE_DEMO_GUIDE.md
+│   ├── LICENSES.md
+│   ├── ORIGINAL_REQUIREMENTS.md
+│   ├── PHASE0_BASELINE.md
+│   ├── PHASE0_COMPLETION_REPORT.md
+│   ├── PHASE1_COMPLETION_REPORT.md
+│   ├── PHASE1_RECONSTRUCTION_READINESS.md
+│   ├── PHASE2_CAMERA_MODEL.md
+│   ├── PHASE2_COMPLETION_REPORT.md
+│   ├── PHASE3_COMPLETION_REPORT.md
+│   ├── PHASE3_SFM.md
+│   ├── PHASE4_COMPLETION_REPORT.md
+│   ├── PHASE4_GEOREFERENCING.md
+│   ├── PHASE5_COMPLETION_REPORT.md
+│   ├── PHASE5_DENSE_RECONSTRUCTION.md
+│   ├── PHASE7_COMPLETION_REPORT.md
+│   ├── PHASE7_SEMANTICS.md
+│   ├── PHASE8_COMPLETION_REPORT.md
+│   ├── PHASE8_EXPORTS.md
+│   ├── PHASE9_COMPLETION_REPORT.md
+│   ├── REQUIREMENTS_TRACEABILITY.md
+│   ├── SIH_FINAL_READINESS_REPORT.md
+│   ├── SURFACE_FIX.md
+│   ├── USER_GUIDE.md
+│   ├── VALIDATION.md
+│   └── sample-report.json
+├── samples
+│   ├── barometer-example.csv
+│   ├── flight.json
+│   ├── gps.csv
+│   ├── ground_truth.json
+│   ├── rtk-example.csv
+│   ├── sample-result.zip
+│   └── sample.mp4
+├── scripts
+│   ├── calibrate_camera.py
+│   ├── create_audit_bundle.py
+│   ├── download_models.py
+│   ├── export_fbx.py
+│   ├── generate_sample.py
+│   ├── smoke.py
+│   ├── start-local.ps1
+│   ├── start-local.sh
+│   └── vendor.mjs
+├── tests
+│   ├── conftest.py
+│   ├── test_api_live.py
+│   ├── test_camera.py
+│   ├── test_exports.py
+│   ├── test_geometry.py
+│   ├── test_georef.py
+│   ├── test_inputs_api.py
+│   ├── test_pipeline.py
+│   ├── test_readiness.py
+│   ├── test_semantic.py
+│   ├── test_sfm_backend.py
+│   ├── test_surface.py
+│   ├── test_surface_hallucination.py
+│   └── test_texture_occlusion.py
+├── web
+│   ├── vendor
+│   │   ├── addons
+│   │   │   ├── animation
+│   │   │   │   ├── AnimationClipCreator.js
+│   │   │   │   └── CCDIKSolver.js
+│   │   │   ├── capabilities
+│   │   │   │   ├── WebGL.js
+│   │   │   │   └── WebGPU.js
+│   │   │   ├── controls
+│   │   │   │   ├── ArcballControls.js
+│   │   │   │   ├── DragControls.js
+│   │   │   │   ├── FirstPersonControls.js
+│   │   │   │   ├── FlyControls.js
+│   │   │   │   ├── MapControls.js
+│   │   │   │   ├── OrbitControls.js
+│   │   │   │   ├── PointerLockControls.js
+│   │   │   │   ├── TrackballControls.js
+│   │   │   │   └── TransformControls.js
+│   │   │   ├── csm
+│   │   │   │   ├── CSM.js
+│   │   │   │   ├── CSMFrustum.js
+│   │   │   │   ├── CSMHelper.js
+│   │   │   │   ├── CSMShader.js
+│   │   │   │   └── CSMShadowNode.js
+│   │   │   ├── curves
+│   │   │   │   ├── CurveExtras.js
+│   │   │   │   ├── NURBSCurve.js
+│   │   │   │   ├── NURBSSurface.js
+│   │   │   │   ├── NURBSUtils.js
+│   │   │   │   └── NURBSVolume.js
+│   │   │   ├── effects
+│   │   │   │   ├── AnaglyphEffect.js
+│   │   │   │   ├── AsciiEffect.js
+│   │   │   │   ├── OutlineEffect.js
+│   │   │   │   ├── ParallaxBarrierEffect.js
+│   │   │   │   └── StereoEffect.js
+│   │   │   ├── environments
+│   │   │   │   ├── DebugEnvironment.js
+│   │   │   │   └── RoomEnvironment.js
+│   │   │   ├── exporters
+│   │   │   │   ├── DRACOExporter.js
+│   │   │   │   ├── EXRExporter.js
+│   │   │   │   ├── GLTFExporter.js
+│   │   │   │   ├── KTX2Exporter.js
+│   │   │   │   ├── OBJExporter.js
+│   │   │   │   ├── PLYExporter.js
+│   │   │   │   ├── STLExporter.js
+│   │   │   │   └── USDZExporter.js
+│   │   │   ├── geometries
+│   │   │   │   ├── BoxLineGeometry.js
+│   │   │   │   ├── ConvexGeometry.js
+│   │   │   │   ├── DecalGeometry.js
+│   │   │   │   ├── ParametricFunctions.js
+│   │   │   │   ├── ParametricGeometry.js
+│   │   │   │   ├── RoundedBoxGeometry.js
+│   │   │   │   ├── TeapotGeometry.js
+│   │   │   │   └── TextGeometry.js
+│   │   │   ├── helpers
+│   │   │   │   ├── LightProbeHelper.js
+│   │   │   │   ├── LightProbeHelperGPU.js
+│   │   │   │   ├── OctreeHelper.js
+│   │   │   │   ├── PositionalAudioHelper.js
+│   │   │   │   ├── RapierHelper.js
+│   │   │   │   ├── RectAreaLightHelper.js
+│   │   │   │   ├── TextureHelper.js
+│   │   │   │   ├── TextureHelperGPU.js
+│   │   │   │   ├── VertexNormalsHelper.js
+│   │   │   │   ├── VertexTangentsHelper.js
+│   │   │   │   └── ViewHelper.js
+│   │   │   ├── interactive
+│   │   │   │   ├── HTMLMesh.js
+│   │   │   │   ├── InteractiveGroup.js
+│   │   │   │   ├── SelectionBox.js
+│   │   │   │   └── SelectionHelper.js
+│   │   │   ├── libs
+│   │   │   │   ├── basis
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── basis_transcoder.js
+│   │   │   │   │   └── basis_transcoder.wasm
+│   │   │   │   ├── draco
+│   │   │   │   │   ├── gltf
+│   │   │   │   │   │   ├── draco_decoder.js
+│   │   │   │   │   │   ├── draco_decoder.wasm
+│   │   │   │   │   │   ├── draco_encoder.js
+│   │   │   │   │   │   └── draco_wasm_wrapper.js
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── draco_decoder.js
+│   │   │   │   │   ├── draco_decoder.wasm
+│   │   │   │   │   ├── draco_encoder.js
+│   │   │   │   │   └── draco_wasm_wrapper.js
+│   │   │   │   ├── rhino3dm
+│   │   │   │   │   ├── rhino3dm.js
+│   │   │   │   │   ├── rhino3dm.module.js
+│   │   │   │   │   └── rhino3dm.wasm
+│   │   │   │   ├── ammo.wasm.js
+│   │   │   │   ├── ammo.wasm.wasm
+│   │   │   │   ├── chevrotain.module.min.js
+│   │   │   │   ├── demuxer_mp4.js
+│   │   │   │   ├── ecsy.module.js
+│   │   │   │   ├── fflate.module.js
+│   │   │   │   ├── ktx-parse.module.js
+│   │   │   │   ├── lil-gui.module.min.js
+│   │   │   │   ├── lottie_canvas.module.js
+│   │   │   │   ├── meshopt_decoder.module.js
+│   │   │   │   ├── mikktspace.module.js
+│   │   │   │   ├── motion-controllers.module.js
+│   │   │   │   ├── opentype.module.js
+│   │   │   │   ├── potpack.module.js
+│   │   │   │   ├── stats.module.js
+│   │   │   │   ├── surfaceNet.js
+│   │   │   │   ├── tween.module.js
+│   │   │   │   ├── utif.module.js
+│   │   │   │   └── zstddec.module.js
+│   │   │   ├── lighting
+│   │   │   │   └── TiledLighting.js
+│   │   │   ├── lights
+│   │   │   │   ├── LightProbeGenerator.js
+│   │   │   │   ├── RectAreaLightTexturesLib.js
+│   │   │   │   └── RectAreaLightUniformsLib.js
+│   │   │   ├── lines
+│   │   │   │   ├── webgpu
+│   │   │   │   │   ├── Line2.js
+│   │   │   │   │   ├── LineSegments2.js
+│   │   │   │   │   └── Wireframe.js
+│   │   │   │   ├── Line2.js
+│   │   │   │   ├── LineGeometry.js
+│   │   │   │   ├── LineMaterial.js
+│   │   │   │   ├── LineSegments2.js
+│   │   │   │   ├── LineSegmentsGeometry.js
+│   │   │   │   ├── Wireframe.js
+│   │   │   │   └── WireframeGeometry2.js
+│   │   │   ├── loaders
+│   │   │   │   ├── lwo
+│   │   │   │   │   ├── IFFParser.js
+│   │   │   │   │   ├── LWO2Parser.js
+│   │   │   │   │   └── LWO3Parser.js
+│   │   │   │   ├── usd
+│   │   │   │   │   ├── USDAParser.js
+│   │   │   │   │   └── USDCParser.js
+│   │   │   │   ├── 3DMLoader.js
+│   │   │   │   ├── 3MFLoader.js
+│   │   │   │   ├── AMFLoader.js
+│   │   │   │   ├── BVHLoader.js
+│   │   │   │   ├── ColladaLoader.js
+│   │   │   │   ├── DDSLoader.js
+│   │   │   │   ├── DRACOLoader.js
+│   │   │   │   ├── EXRLoader.js
+│   │   │   │   ├── FBXLoader.js
+│   │   │   │   ├── FontLoader.js
+│   │   │   │   ├── GCodeLoader.js
+│   │   │   │   ├── GLTFLoader.js
+│   │   │   │   ├── HDRCubeTextureLoader.js
+│   │   │   │   ├── IESLoader.js
+│   │   │   │   ├── KMZLoader.js
+│   │   │   │   ├── KTX2Loader.js
+│   │   │   │   ├── KTXLoader.js
+│   │   │   │   ├── LDrawLoader.js
+│   │   │   │   ├── LUT3dlLoader.js
+│   │   │   │   ├── LUTCubeLoader.js
+│   │   │   │   ├── LUTImageLoader.js
+│   │   │   │   ├── LWOLoader.js
+│   │   │   │   ├── LottieLoader.js
+│   │   │   │   ├── MD2Loader.js
+│   │   │   │   ├── MDDLoader.js
+│   │   │   │   ├── MTLLoader.js
+│   │   │   │   ├── MaterialXLoader.js
+│   │   │   │   ├── NRRDLoader.js
+│   │   │   │   ├── OBJLoader.js
+│   │   │   │   ├── PCDLoader.js
+│   │   │   │   ├── PDBLoader.js
+│   │   │   │   ├── PLYLoader.js
+│   │   │   │   ├── PVRLoader.js
+│   │   │   │   ├── RGBELoader.js
+│   │   │   │   ├── RGBMLoader.js
+│   │   │   │   ├── STLLoader.js
+│   │   │   │   ├── SVGLoader.js
+│   │   │   │   ├── TDSLoader.js
+│   │   │   │   ├── TGALoader.js
+│   │   │   │   ├── TIFFLoader.js
+│   │   │   │   ├── TTFLoader.js
+│   │   │   │   ├── USDLoader.js
+│   │   │   │   ├── USDZLoader.js
+│   │   │   │   ├── UltraHDRLoader.js
+│   │   │   │   ├── VOXLoader.js
+│   │   │   │   ├── VRMLLoader.js
+│   │   │   │   ├── VTKLoader.js
+│   │   │   │   └── XYZLoader.js
+│   │   │   ├── materials
+│   │   │   │   ├── LDrawConditionalLineMaterial.js
+│   │   │   │   ├── LDrawConditionalLineNodeMaterial.js
+│   │   │   │   ├── MeshGouraudMaterial.js
+│   │   │   │   └── MeshPostProcessingMaterial.js
+│   │   │   ├── math
+│   │   │   │   ├── Capsule.js
+│   │   │   │   ├── ColorConverter.js
+│   │   │   │   ├── ColorSpaces.js
+│   │   │   │   ├── ConvexHull.js
+│   │   │   │   ├── ImprovedNoise.js
+│   │   │   │   ├── Lut.js
+│   │   │   │   ├── MeshSurfaceSampler.js
+│   │   │   │   ├── OBB.js
+│   │   │   │   ├── Octree.js
+│   │   │   │   └── SimplexNoise.js
+│   │   │   ├── misc
+│   │   │   │   ├── ConvexObjectBreaker.js
+│   │   │   │   ├── GPUComputationRenderer.js
+│   │   │   │   ├── Gyroscope.js
+│   │   │   │   ├── MD2Character.js
+│   │   │   │   ├── MD2CharacterComplex.js
+│   │   │   │   ├── MorphAnimMesh.js
+│   │   │   │   ├── MorphBlendMesh.js
+│   │   │   │   ├── ProgressiveLightMap.js
+│   │   │   │   ├── ProgressiveLightMapGPU.js
+│   │   │   │   ├── RollerCoaster.js
+│   │   │   │   ├── TubePainter.js
+│   │   │   │   ├── Volume.js
+│   │   │   │   └── VolumeSlice.js
+│   │   │   ├── modifiers
+│   │   │   │   ├── CurveModifier.js
+│   │   │   │   ├── CurveModifierGPU.js
+│   │   │   │   ├── EdgeSplitModifier.js
+│   │   │   │   ├── SimplifyModifier.js
+│   │   │   │   └── TessellateModifier.js
+│   │   │   ├── objects
+│   │   │   │   ├── GroundedSkybox.js
+│   │   │   │   ├── Lensflare.js
+│   │   │   │   ├── LensflareMesh.js
+│   │   │   │   ├── MarchingCubes.js
+│   │   │   │   ├── Reflector.js
+│   │   │   │   ├── ReflectorForSSRPass.js
+│   │   │   │   ├── Refractor.js
+│   │   │   │   ├── ShadowMesh.js
+│   │   │   │   ├── Sky.js
+│   │   │   │   ├── SkyMesh.js
+│   │   │   │   ├── Water.js
+│   │   │   │   ├── Water2.js
+│   │   │   │   ├── Water2Mesh.js
+│   │   │   │   └── WaterMesh.js
+│   │   │   ├── offscreen
+│   │   │   │   ├── jank.js
+│   │   │   │   ├── offscreen.js
+│   │   │   │   └── scene.js
+│   │   │   ├── physics
+│   │   │   │   ├── AmmoPhysics.js
+│   │   │   │   ├── JoltPhysics.js
+│   │   │   │   └── RapierPhysics.js
+│   │   │   ├── postprocessing
+│   │   │   │   ├── AfterimagePass.js
+│   │   │   │   ├── BloomPass.js
+│   │   │   │   ├── BokehPass.js
+│   │   │   │   ├── ClearPass.js
+│   │   │   │   ├── CubeTexturePass.js
+│   │   │   │   ├── DotScreenPass.js
+│   │   │   │   ├── EffectComposer.js
+│   │   │   │   ├── FXAAPass.js
+│   │   │   │   ├── FilmPass.js
+│   │   │   │   ├── GTAOPass.js
+│   │   │   │   ├── GlitchPass.js
+│   │   │   │   ├── HalftonePass.js
+│   │   │   │   ├── LUTPass.js
+│   │   │   │   ├── MaskPass.js
+│   │   │   │   ├── OutlinePass.js
+│   │   │   │   ├── OutputPass.js
+│   │   │   │   ├── Pass.js
+│   │   │   │   ├── RenderPass.js
+│   │   │   │   ├── RenderPixelatedPass.js
+│   │   │   │   ├── RenderTransitionPass.js
+│   │   │   │   ├── SAOPass.js
+│   │   │   │   ├── SMAAPass.js
+│   │   │   │   ├── SSAARenderPass.js
+│   │   │   │   ├── SSAOPass.js
+│   │   │   │   ├── SSRPass.js
+│   │   │   │   ├── SavePass.js
+│   │   │   │   ├── ShaderPass.js
+│   │   │   │   ├── TAARenderPass.js
+│   │   │   │   ├── TexturePass.js
+│   │   │   │   └── UnrealBloomPass.js
+│   │   │   ├── renderers
+│   │   │   │   ├── CSS2DRenderer.js
+│   │   │   │   ├── CSS3DRenderer.js
+│   │   │   │   ├── Projector.js
+│   │   │   │   └── SVGRenderer.js
+│   │   │   ├── shaders
+│   │   │   │   ├── ACESFilmicToneMappingShader.js
+│   │   │   │   ├── AfterimageShader.js
+│   │   │   │   ├── BasicShader.js
+│   │   │   │   ├── BleachBypassShader.js
+│   │   │   │   ├── BlendShader.js
+│   │   │   │   ├── BokehShader.js
+│   │   │   │   ├── BokehShader2.js
+│   │   │   │   ├── BrightnessContrastShader.js
+│   │   │   │   ├── ColorCorrectionShader.js
+│   │   │   │   ├── ColorifyShader.js
+│   │   │   │   ├── ConvolutionShader.js
+│   │   │   │   ├── CopyShader.js
+│   │   │   │   ├── DOFMipMapShader.js
+│   │   │   │   ├── DepthLimitedBlurShader.js
+│   │   │   │   ├── DigitalGlitch.js
+│   │   │   │   ├── DotScreenShader.js
+│   │   │   │   ├── ExposureShader.js
+│   │   │   │   ├── FXAAShader.js
+│   │   │   │   ├── FilmShader.js
+│   │   │   │   ├── FocusShader.js
+│   │   │   │   ├── FreiChenShader.js
+│   │   │   │   ├── GTAOShader.js
+│   │   │   │   ├── GammaCorrectionShader.js
+│   │   │   │   ├── GodRaysShader.js
+│   │   │   │   ├── HalftoneShader.js
+│   │   │   │   ├── HorizontalBlurShader.js
+│   │   │   │   ├── HorizontalTiltShiftShader.js
+│   │   │   │   ├── HueSaturationShader.js
+│   │   │   │   ├── KaleidoShader.js
+│   │   │   │   ├── LuminosityHighPassShader.js
+│   │   │   │   ├── LuminosityShader.js
+│   │   │   │   ├── MirrorShader.js
+│   │   │   │   ├── NormalMapShader.js
+│   │   │   │   ├── OutputShader.js
+│   │   │   │   ├── PoissonDenoiseShader.js
+│   │   │   │   ├── RGBShiftShader.js
+│   │   │   │   ├── SAOShader.js
+│   │   │   │   ├── SMAAShader.js
+│   │   │   │   ├── SSAOShader.js
+│   │   │   │   ├── SSRShader.js
+│   │   │   │   ├── SepiaShader.js
+│   │   │   │   ├── SobelOperatorShader.js
+│   │   │   │   ├── SubsurfaceScatteringShader.js
+│   │   │   │   ├── TechnicolorShader.js
+│   │   │   │   ├── ToonShader.js
+│   │   │   │   ├── TriangleBlurShader.js
+│   │   │   │   ├── UnpackDepthRGBAShader.js
+│   │   │   │   ├── VelocityShader.js
+│   │   │   │   ├── VerticalBlurShader.js
+│   │   │   │   ├── VerticalTiltShiftShader.js
+│   │   │   │   ├── VignetteShader.js
+│   │   │   │   ├── VolumeShader.js
+│   │   │   │   └── WaterRefractionShader.js
+│   │   │   ├── textures
+│   │   │   │   └── FlakesTexture.js
+│   │   │   ├── transpiler
+│   │   │   │   ├── AST.js
+│   │   │   │   ├── GLSLDecoder.js
+│   │   │   │   ├── Linker.js
+│   │   │   │   ├── ShaderToyDecoder.js
+│   │   │   │   ├── TSLEncoder.js
+│   │   │   │   ├── Transpiler.js
+│   │   │   │   ├── TranspilerUtils.js
+│   │   │   │   └── WGSLEncoder.js
+│   │   │   ├── tsl
+│   │   │   │   ├── display
+│   │   │   │   │   ├── AfterImageNode.js
+│   │   │   │   │   ├── AnaglyphPassNode.js
+│   │   │   │   │   ├── AnamorphicNode.js
+│   │   │   │   │   ├── BleachBypass.js
+│   │   │   │   │   ├── BloomNode.js
+│   │   │   │   │   ├── ChromaticAberrationNode.js
+│   │   │   │   │   ├── DenoiseNode.js
+│   │   │   │   │   ├── DepthOfFieldNode.js
+│   │   │   │   │   ├── DotScreenNode.js
+│   │   │   │   │   ├── FXAANode.js
+│   │   │   │   │   ├── FilmNode.js
+│   │   │   │   │   ├── GTAONode.js
+│   │   │   │   │   ├── GaussianBlurNode.js
+│   │   │   │   │   ├── LensflareNode.js
+│   │   │   │   │   ├── Lut3DNode.js
+│   │   │   │   │   ├── MotionBlur.js
+│   │   │   │   │   ├── OutlineNode.js
+│   │   │   │   │   ├── ParallaxBarrierPassNode.js
+│   │   │   │   │   ├── PixelationPassNode.js
+│   │   │   │   │   ├── RGBShiftNode.js
+│   │   │   │   │   ├── SMAANode.js
+│   │   │   │   │   ├── SSAAPassNode.js
+│   │   │   │   │   ├── SSRNode.js
+│   │   │   │   │   ├── Sepia.js
+│   │   │   │   │   ├── SobelOperatorNode.js
+│   │   │   │   │   ├── StereoCompositePassNode.js
+│   │   │   │   │   ├── StereoPassNode.js
+│   │   │   │   │   ├── TRAANode.js
+│   │   │   │   │   ├── TransitionNode.js
+│   │   │   │   │   └── hashBlur.js
+│   │   │   │   ├── lighting
+│   │   │   │   │   └── TiledLightsNode.js
+│   │   │   │   ├── math
+│   │   │   │   │   └── Bayer.js
+│   │   │   │   ├── shadows
+│   │   │   │   │   ├── TileShadowNode.js
+│   │   │   │   │   └── TileShadowNodeHelper.js
+│   │   │   │   └── utils
+│   │   │   │       └── Raymarching.js
+│   │   │   ├── utils
+│   │   │   │   ├── BufferGeometryUtils.js
+│   │   │   │   ├── CameraUtils.js
+│   │   │   │   ├── GeometryCompressionUtils.js
+│   │   │   │   ├── GeometryUtils.js
+│   │   │   │   ├── LDrawUtils.js
+│   │   │   │   ├── SceneOptimizer.js
+│   │   │   │   ├── SceneUtils.js
+│   │   │   │   ├── ShadowMapViewer.js
+│   │   │   │   ├── ShadowMapViewerGPU.js
+│   │   │   │   ├── SkeletonUtils.js
+│   │   │   │   ├── SortUtils.js
+│   │   │   │   ├── UVsDebug.js
+│   │   │   │   ├── WebGLTextureUtils.js
+│   │   │   │   ├── WebGPUTextureUtils.js
+│   │   │   │   └── WorkerPool.js
+│   │   │   ├── webxr
+│   │   │   │   ├── ARButton.js
+│   │   │   │   ├── OculusHandModel.js
+│   │   │   │   ├── OculusHandPointerModel.js
+│   │   │   │   ├── Text2D.js
+│   │   │   │   ├── VRButton.js
+│   │   │   │   ├── XRButton.js
+│   │   │   │   ├── XRControllerModelFactory.js
+│   │   │   │   ├── XREstimatedLight.js
+│   │   │   │   ├── XRHandMeshModel.js
+│   │   │   │   ├── XRHandModelFactory.js
+│   │   │   │   ├── XRHandPrimitiveModel.js
+│   │   │   │   └── XRPlanes.js
+│   │   │   └── Addons.js
+│   │   ├── THREE-LICENSE
+│   │   ├── three.core.js
+│   │   └── three.module.js
+│   ├── app.js
+│   ├── index.html
+│   ├── style.css
+│   └── viewer.js
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── .pre-commit-config.yaml
+├── Dockerfile
+├── Dockerfile.gpu
+├── README.md
+├── alembic.ini
+├── docker-compose.gpu.yml
+├── docker-compose.yml
+├── generate_docs.py
+├── package-lock.json
+├── package.json
+├── patch_app.py
+├── pyproject.toml
+├── requirements-dev.in
+├── requirements-dev.txt
+├── requirements-models.txt
+├── requirements.in
+└── requirements.txt
