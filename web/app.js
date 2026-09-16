@@ -102,12 +102,18 @@ async function showResults(j) {
       <div class="notice">${metric ? 'Measurements use GPS-aligned scale but remain unverified against ground control.' : 'Metric scale is not established. Measurements are disabled or arbitrary.'}</div>
     </div>
 
-    <div class="tab-content" id="tab-map">
-      <div class="notice">
-        ${r.metric_state === 'GEOREFERENCED_METRIC' ?
-          `Georeferenced map alignment established (EPSG: ${r.alignment?.epsg}). Integration with map providers requires configuration.` :
-          'Georeferenced map unavailable because real-world alignment was not established.'}
+        <div class="tab-content" id="tab-map">
+      <div id="map-notice" class="notice" style="display:none;"></div>
+      <div id="map-container" style="display:none;">
+        <div class="result-metrics" id="map-metrics" style="margin-bottom: 10px;"></div>
+        <div id="leaflet-map" style="height: 600px; width: 100%; border-radius: 6px;"></div>
+        <div class="notice" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.4);">
+           <span style="display:inline-block; width:12px; height:12px; background:#ff4444; border-radius:50%; margin-right:5px; vertical-align:middle;"></span> GPS Trajectory
+           <span style="display:inline-block; width:12px; height:12px; background:#4444ff; border-radius:50%; margin-right:5px; margin-left:15px; vertical-align:middle;"></span> Reconstructed Camera Trajectory
+           <span style="display:inline-block; margin-left: 20px;" id="map-coords"></span>
+        </div>
       </div>
+    </div>
     </div>
 
     <div class="tab-content" id="tab-measurements">
@@ -143,14 +149,25 @@ async function showResults(j) {
   `;
 
   // Tab switching
+  let leafletMap = null;
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      
+      if (btn.dataset.tab === 'map') {
+         if (!window.leafletMap) {
+            initMap(j.id);
+         } else {
+            window.leafletMap.invalidateSize();
+         }
+      }
     };
   });
+
+  
 
   $('#download-all').onclick = () => download(`/api/jobs/${j.id}/download`, `mission_${j.id}_deliverables.zip`);
   $('#download-report').onclick = () => download(`/api/jobs/${j.id}/files/reports/mission_report.json`, 'mission_report.json');
@@ -240,3 +257,85 @@ async function showResults(j) {
 }
 
 refresh();setInterval(()=>{if(!activeJob)refresh();},15000);
+
+
+  async function initMap(jid) {
+    const notice = document.getElementById('map-notice');
+    const container = document.getElementById('map-container');
+    const metrics = document.getElementById('map-metrics');
+    const coords = document.getElementById('map-coords');
+    
+    try {
+      const res = await fetch(`/api/jobs/${jid}/map-data`);
+      if (!res.ok) throw new Error('Failed to fetch map data');
+      const data = await res.json();
+      
+      if (data.metric_state !== 'GEOREFERENCED_METRIC') {
+         notice.style.display = 'block';
+         notice.innerText = "Georeferenced map unavailable because real-world alignment was not established.";
+         return;
+      }
+      
+      container.style.display = 'block';
+      metrics.innerHTML = `
+        <div><span>CRS</span><strong>${data.crs || 'Unknown'}</strong></div>
+        <div><span>Alignment Quality (RMSE)</span><strong>${data.alignment_quality?.rmse_m?.toFixed(3) || 'N/A'} m</strong></div>
+        <div><span>Inliers</span><strong>${data.alignment_quality?.inliers || 0}/${data.alignment_quality?.samples || 0}</strong></div>
+      `;
+      
+      if (!window.leafletMap) {
+          window.leafletMap = L.map('leaflet-map');
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+             attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(window.leafletMap);
+          
+          // Coordinate readout
+          window.leafletMap.on('mousemove', (e) => {
+             coords.innerText = `Lat: ${e.latlng.lat.toFixed(6)}, Lon: ${e.latlng.lng.toFixed(6)}`;
+          });
+      }
+      
+      // Clear previous layers if any
+      window.leafletMap.eachLayer((layer) => {
+          if (layer instanceof L.TileLayer === false) {
+              window.leafletMap.removeLayer(layer);
+          }
+      });
+      
+      // Draw GPS Trajectory
+      if (data.gps_trajectory && data.gps_trajectory.length > 0) {
+         const gpsPts = data.gps_trajectory.map(pt => [pt.lat, pt.lon]);
+         L.polyline(gpsPts, {color: '#ff4444', weight: 3}).addTo(window.leafletMap);
+         data.gps_trajectory.forEach(pt => {
+             const circle = L.circleMarker([pt.lat, pt.lon], {radius: 4, color: '#ff4444', fillOpacity: 0.8}).addTo(window.leafletMap);
+             circle.bindPopup(`<b>GPS</b><br>Lat: ${pt.lat.toFixed(6)}<br>Lon: ${pt.lon.toFixed(6)}<br>Alt: ${pt.alt.toFixed(2)}<br>Time: ${pt.timestamp}`);
+         });
+      }
+      
+      // Draw Reconstructed Trajectory
+      if (data.reconstructed_trajectory && data.reconstructed_trajectory.length > 0) {
+         const recPts = data.reconstructed_trajectory.map(pt => [pt.lat, pt.lon]);
+         L.polyline(recPts, {color: '#4444ff', weight: 3, dashArray: '5, 5'}).addTo(window.leafletMap);
+         data.reconstructed_trajectory.forEach(pt => {
+             const circle = L.circleMarker([pt.lat, pt.lon], {radius: 4, color: '#4444ff', fillOpacity: 0.8}).addTo(window.leafletMap);
+             circle.bindPopup(`<b>Reconstructed Camera</b><br>ID: ${pt.camera_id}<br>Lat: ${pt.lat.toFixed(6)}<br>Lon: ${pt.lon.toFixed(6)}<br>Alt: ${pt.alt.toFixed(2)}`);
+         });
+      }
+      
+      // Fit Bounds
+      if (data.mission_bounds) {
+         const b = data.mission_bounds;
+         window.leafletMap.fitBounds([[b.min_lat, b.min_lon], [b.max_lat, b.max_lon]]);
+         
+         L.rectangle([[b.min_lat, b.min_lon], [b.max_lat, b.max_lon]], {color: "#ff7800", weight: 1, fillOpacity: 0.1}).addTo(window.leafletMap);
+      }
+      
+      window.window.leafletMap.invalidateSize();
+      
+    } catch (e) {
+      console.error(e);
+      notice.style.display = 'block';
+      notice.innerText = "Error loading map data: " + e.message;
+    }
+  }

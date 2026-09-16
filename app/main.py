@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import os
 import shutil
@@ -113,7 +113,7 @@ async def protect(request: Request, call_next):
 
 def queue_health():
     if not REDIS_URL:
-        return {"mode": "local", "available": True, "workers": 1, "message": "Local CPU worker · one job at a time"}
+        return {"mode": "local", "available": True, "workers": 1, "message": "Local CPU worker Â· one job at a time"}
     try:
         from redis import Redis
         from rq import Queue, Worker
@@ -187,9 +187,9 @@ async def submit(
     if engine not in ("cpu", "colmap"):
         raise HTTPException(422, "Engine must be cpu or colmap")
     if not 3 <= max_frames <= 1500:
-        raise HTTPException(422, "Frame budget must be 3–1500")
+        raise HTTPException(422, "Frame budget must be 3â€“1500")
     if not 1 <= len(name.strip()) <= 160:
-        raise HTTPException(422, "Mission name must be 1–160 characters")
+        raise HTTPException(422, "Mission name must be 1â€“160 characters")
     health = queue_health()
     if not health["available"]:
         raise HTTPException(503, health["message"])
@@ -560,4 +560,104 @@ def sample(filename: str):
     return FileResponse(ROOT / "samples" / filename, filename=filename)
 
 
+
+@app.get("/api/jobs/{jid}/map-data")
+async def get_map_data(jid: str):
+    job_dir = DATA / jid
+    if not job_dir.exists():
+        raise HTTPException(404, "Job not found")
+
+    report_path = job_dir / "work/outputs/mission_report.json"
+    if not report_path.exists():
+        raise HTTPException(404, "Mission report not available")
+
+    report = json.loads(report_path.read_text())
+    align = report.get("alignment", {})
+    metric_state = align.get("metric_state", "RELATIVE")
+
+    if metric_state == "RELATIVE":
+        return {"metric_state": metric_state}
+
+    gps_traj = []
+    gps_path = job_dir / "inputs/gps.csv"
+    if gps_path.exists():
+        lines = gps_path.read_text().strip().split('\n')
+        if len(lines) > 1:
+            for line in lines[1:]:
+                parts = line.split(',')
+                if len(parts) >= 5:
+                    gps_traj.append({
+                        "timestamp": parts[0],
+                        "frame": parts[1],
+                        "lat": float(parts[2]),
+                        "lon": float(parts[3]),
+                        "alt": float(parts[4])
+                    })
+
+    if metric_state != "GEOREFERENCED_METRIC":
+        return {
+            "metric_state": metric_state,
+            "gps_trajectory": gps_traj
+        }
+
+    epsg = align.get("epsg")
+    if not epsg:
+        return {"metric_state": "RELATIVE", "error": "Missing EPSG"}
+
+    s = align.get("scale", 1.0)
+    import numpy as np
+    R = np.array(align.get("rotation", np.eye(3)))
+    t = np.array(align.get("translation", np.zeros(3)))
+    origin = np.array(align.get("origin", np.zeros(3)))
+
+    import pyproj
+    transformer = pyproj.Transformer.from_crs(epsg, "EPSG:4326", always_xy=True)
+
+    recon_traj = []
+    poses_path = job_dir / "work/poses.json"
+    if poses_path.exists():
+        poses = json.loads(poses_path.read_text())
+        for cid, pose_mat in poses.items():
+            mat = np.array(pose_mat)
+            if mat.shape != (3, 4):
+                continue
+            R_cam = mat[:, :3]
+            t_cam = mat[:, 3]
+            center_rel = -R_cam.T @ t_cam
+            center_metric = s * (R @ center_rel) + t
+            center_utm = center_metric + origin
+            lon, lat = transformer.transform(center_utm[0], center_utm[1])
+            recon_traj.append({
+                "camera_id": cid,
+                "lat": float(lat),
+                "lon": float(lon),
+                "alt": float(center_utm[2])
+            })
+
+    bounds = None
+    if recon_traj:
+        lats = [pt["lat"] for pt in recon_traj]
+        lons = [pt["lon"] for pt in recon_traj]
+        bounds = {
+            "min_lat": min(lats),
+            "max_lat": max(lats),
+            "min_lon": min(lons),
+            "max_lon": max(lons)
+        }
+
+    return {
+        "metric_state": metric_state,
+        "crs": f"EPSG:{epsg}",
+        "epsg": epsg,
+        "gps_trajectory": gps_traj,
+        "reconstructed_trajectory": recon_traj,
+        "mission_bounds": bounds,
+        "alignment_quality": {
+            "rmse_m": align.get("rmse_m"),
+            "inliers": align.get("alignment_inliers"),
+            "samples": align.get("alignment_samples")
+        }
+    }
+
 app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
+
