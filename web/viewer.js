@@ -94,7 +94,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   scene.add(annotations);
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let measureMode = 'orbit', measurePoints = [], measureMeshes = [];
+  let measureMode = 'orbit', measurePoints = [], measureFaces = [], measureMeshes = [];
   const onMeasureUpdate = options.onMeasureUpdate || (() => {});
   
   // Ã¢â€â‚¬Ã¢â€â‚¬ State Ã¢â€â‚¬Ã¢â€â‚¬
@@ -125,6 +125,32 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   // Ã¢â€â‚¬Ã¢â€â‚¬ Measurement event listeners Ã¢â€â‚¬Ã¢â€â‚¬
   renderer.domElement.addEventListener('pointerdown', e => { _measureStart = [e.clientX, e.clientY]; });
   let _measureStart = null;
+
+  renderer.domElement.addEventListener('pointermove', e => {
+      if (measureMode === 'surface_area' && _measureStart && e.buttons === 1) {
+          const rect = renderer.domElement.getBoundingClientRect();
+          mouse.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
+          ray.setFromCamera(mouse, camera);
+          const hit = ray.intersectObjects(targets, true)[0];
+          if (hit && hit.face && hit.object && hit.object.geometry && hit.object.geometry.attributes.position) {
+              const pos = hit.object.geometry.attributes.position;
+              const a = new THREE.Vector3().fromBufferAttribute(pos, hit.face.a).applyMatrix4(hit.object.matrixWorld);
+              const b = new THREE.Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(hit.object.matrixWorld);
+              const c = new THREE.Vector3().fromBufferAttribute(pos, hit.face.c).applyMatrix4(hit.object.matrixWorld);
+              
+              const centroid = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
+              const exists = measureFaces.some(f => {
+                  const fc = new THREE.Vector3().addVectors(f[0], f[1]).add(f[2]).divideScalar(3);
+                  return fc.distanceTo(centroid) < 1e-5;
+              });
+              if (!exists) {
+                  measureFaces.push([a, b, c]);
+                  _drawMeasure();
+              }
+          }
+      }
+  });
+
   renderer.domElement.addEventListener('pointerup', e => {
     if (measureMode === 'orbit' || !_measureStart || Math.hypot(e.clientX - _measureStart[0], e.clientY - _measureStart[1]) > 5 || e.button !== 0) return;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -433,8 +459,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
       o.material?.dispose();
     }
     measurePoints = [];
+    measureFaces = [];
     measureMeshes = [];
-    if (measureMode !== 'orbit') onMeasureUpdate(measurePoints, measureMode);
+    if (measureMode !== 'orbit') onMeasureUpdate(measureMode === 'surface_area' ? measureFaces : measurePoints, measureMode);
   }
 
   function _drawMeasure() {
@@ -446,39 +473,76 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     measureMeshes = [];
 
     // Draw markers
-    for (let i = 0; i < measurePoints.length; i++) {
-        const marker = new THREE.Mesh(
-          new THREE.SphereGeometry(cameraSize / 280, 12, 8),
-          new THREE.MeshBasicMaterial({ color: 0xc6ff8e, depthTest: false })
-        );
-        marker.position.copy(measurePoints[i]);
-        marker.renderOrder = 11;
-        annotations.add(marker);
-        measureMeshes.push(marker);
-    }
-
-    if (measurePoints.length > 1) {
-        if (measureMode === 'area' && measurePoints.length > 2) {
-            const path = [...measurePoints, measurePoints[0]];
-            const line = new THREE.Line(
-              new THREE.BufferGeometry().setFromPoints(path),
-              new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+    if (measureMode === 'surface_area') {
+        if (measureFaces.length > 0) {
+            const positions = new Float32Array(measureFaces.length * 9);
+            for (let i = 0; i < measureFaces.length; i++) {
+                positions[i*9 + 0] = measureFaces[i][0].x;
+                positions[i*9 + 1] = measureFaces[i][0].y;
+                positions[i*9 + 2] = measureFaces[i][0].z;
+                positions[i*9 + 3] = measureFaces[i][1].x;
+                positions[i*9 + 4] = measureFaces[i][1].y;
+                positions[i*9 + 5] = measureFaces[i][1].z;
+                positions[i*9 + 6] = measureFaces[i][2].x;
+                positions[i*9 + 7] = measureFaces[i][2].y;
+                positions[i*9 + 8] = measureFaces[i][2].z;
+            }
+            const geom = new THREE.BufferGeometry();
+            geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            // Fill
+            const mesh = new THREE.Mesh(
+                geom,
+                new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
             );
-            line.renderOrder = 10;
-            annotations.add(line);
-            measureMeshes.push(line);
-        } else {
-            const line = new THREE.Line(
-              new THREE.BufferGeometry().setFromPoints(measurePoints),
-              new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+            mesh.renderOrder = 10;
+            annotations.add(mesh);
+            measureMeshes.push(mesh);
+            
+            // Wireframe outline
+            const edges = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geom),
+                new THREE.LineBasicMaterial({ color: 0xffaa00, depthTest: false })
             );
-            line.renderOrder = 10;
-            annotations.add(line);
-            measureMeshes.push(line);
+            edges.renderOrder = 11;
+            annotations.add(edges);
+            measureMeshes.push(edges);
         }
+        onMeasureUpdate(measureFaces, measureMode);
+    } else {
+        for (let i = 0; i < measurePoints.length; i++) {
+            const marker = new THREE.Mesh(
+              new THREE.SphereGeometry(cameraSize / 280, 12, 8),
+              new THREE.MeshBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+            );
+            marker.position.copy(measurePoints[i]);
+            marker.renderOrder = 11;
+            annotations.add(marker);
+            measureMeshes.push(marker);
+        }
+
+        if (measurePoints.length > 1) {
+            if (measureMode === 'area' && measurePoints.length > 2) {
+                const path = [...measurePoints, measurePoints[0]];
+                const line = new THREE.Line(
+                  new THREE.BufferGeometry().setFromPoints(path),
+                  new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+                );
+                line.renderOrder = 10;
+                annotations.add(line);
+                measureMeshes.push(line);
+            } else {
+                const line = new THREE.Line(
+                  new THREE.BufferGeometry().setFromPoints(measurePoints),
+                  new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+                );
+                line.renderOrder = 10;
+                annotations.add(line);
+                measureMeshes.push(line);
+            }
+        }
+        onMeasureUpdate(measurePoints, measureMode);
     }
-    
-    onMeasureUpdate(measurePoints, measureMode);
   }
 
   window.getCurrentViewerType = () => { if (!currentRepObject) return 'None'; let type = currentRepObject.type; if (type === 'Group' || type === 'Scene') { currentRepObject.traverse(o => { if (o.isMesh) type = 'Mesh'; else if (o.isPoints && type !== 'Mesh') type = 'Points'; }); } return type; };

@@ -116,3 +116,11 @@ export function formatNumber(num, precision = 3) {
     if (num === Infinity) return "Infinity";
     return num.toFixed(precision);
 }
+
+export function surfaceArea3D(triangles) {
+    let total = 0;
+    for (let i = 0; i < triangles.length; i++) {
+        total += triangleArea(triangles[i][0], triangles[i][1], triangles[i][2]);
+    }
+    return total;
+}

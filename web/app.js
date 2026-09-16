@@ -96,7 +96,8 @@ async function showResults(j) {
       <div class="viewer-tools" style="display: flex; gap: 5px; flex-wrap: wrap;">
         <button data-mode="orbit" class="active">Orbit</button>
         <button data-mode="distance">Distance</button>
-        <button data-mode="area">Area</button>
+        <button data-mode="area">Planar Area</button>
+        <button data-mode="surface_area">Surface Area</button>
         <button data-mode="slope">Slope</button>
         <button data-mode="angle">Angle</button>
         <button id="clear-measure" style="background-color: #552222; color: #ffaaaa; margin-left: auto;">Clear Current</button>
