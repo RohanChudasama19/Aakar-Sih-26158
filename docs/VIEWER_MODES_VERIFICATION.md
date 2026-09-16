@@ -32,3 +32,4 @@ Textured Mesh -> Mesh -> Dense Point Cloud -> Sparse Point Cloud
 Playwright / Browser Automation: NOT_EXECUTED
 
 Reason: No Playwright installation in the project environment. Full pipeline test (test_pipeline.py) runs end-to-end reconstruction and validates artifact generation from source to output. Manual browser verification was performed using a complete sample mission.
+
