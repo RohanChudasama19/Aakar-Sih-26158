@@ -1,4 +1,4 @@
-import tempfile
+﻿import tempfile
 from pathlib import Path
 
 import cv2
@@ -48,28 +48,9 @@ def test_texture_occlusion():
     k = np.array([[1000, 0, 500], [0, 1000, 500], [0, 0, 1]], dtype=float)
 
     with tempfile.TemporaryDirectory() as td:
-        tdp = Path(td)
-        # Create dummy image
-        cv2.imwrite(str(tdp / "000000.png"), np.full((1000, 1000, 3), 255, np.uint8))
-        (tdp.parent / "masks").mkdir(exist_ok=True)
-
-        # We need pyembree for occlusion testing, trimesh ray intersections
-        try:
-            import pyembree  # noqa: F401
-
-            has_embree = True
-        except ImportError:
-            has_embree = False
-
-        if has_embree:
+            tdp = Path(td)
+            cv2.imwrite(str(tdp / "000000.png"), np.full((1000, 1000, 3), 255, np.uint8))
+            (tdp.parent / "masks").mkdir(exist_ok=True)
+            
             textured = texture_mesh(mesh, geo, sfm, k, tdp, options={"occlusion_test": True})
-
-            # Since Wall 2 is behind Wall 1, it should NOT be textured by Camera 0.
-            # So textured_face_fraction should be exactly 0.5 (2 out of 4 faces)
             assert abs(textured.metadata["textured_face_fraction"] - 0.5) < 1e-5
-
-        else:
-            # If pyembree is not installed, occlusion testing falls back gracefully
-            textured = texture_mesh(mesh, geo, sfm, k, tdp, options={"occlusion_test": True})
-            # Without occlusion testing, all 4 faces are inside the view frustum and facing the camera
-            assert abs(textured.metadata["textured_face_fraction"] - 1.0) < 1e-5
