@@ -21,23 +21,24 @@ All six 3D viewer representation modes have been implemented with genuine artifa
 ### Backend: app/main.py (MODIFIED)
 - Added GET /api/jobs/{jid}/representations endpoint
 - Returns canonical 6-key descriptor: sparse, dense, mesh, textured, semantic, confidence
-- Derives availability from: viewer_artifacts.json + manifest.json validation state + file existence
+- Derives availability from: iewer_artifacts.json + manifest.json validation state + file existence
 - Never marks available if GLB failed validation (FAILED in manifest)
 - Dense prefers dense_display.ply, falls back to dense_filtered.ply
 
-### Frontend: web/viewer.js (COMPLETE REWRITE - 26 lines to 370 lines)
+### Frontend: web/viewer.js (COMPLETE REWRITE)
 - createViewer(container, jid, reps, metric, options) returns { loadMode, setMode, clear, wireframe, resetView, dispose }
 - loadSparse(reps): PLYLoader -> THREE.Points; camera centers as orange points
 - loadDense(reps): PLYLoader -> THREE.Points; point size slider
 - loadMesh(reps): GLTFLoader; ALL original materials replaced with neutral MeshStandardMaterial
 - loadTexturedMesh(reps): GLTFLoader; original materials preserved (DoubleSide)
-- loadSemantic(reps): PLYLoader with baked vertex colors; semantic class legend overlay
-- loadConfidence(reps): PLYLoader with pre-colored support vertices; confidence legend overlay
+- loadSemantic(reps): PLYLoader -> THREE.Mesh with baked vertex colors; semantic class legend overlay
+- loadConfidence(reps): PLYLoader -> THREE.Mesh with pre-colored support vertices; confidence legend overlay
+- _loadPLY unified helper with sMesh option to distinguish topology preservation
 - disposeCurrentRepresentation(): disposes geometry + materials + textures before every switch
-- fitCamera(object): auto-frames bounding box, adjusts near/far, adds grid
+- itCamera(object): auto-frames bounding box, adjusts near/far, adds grid
 - setLoading(msg) / clearLoading(): animated loading overlay
 - setLegend(html) / clearLegend(): legend panel overlay
-- Fallback chain: textured -> mesh -> dense -> sparse
+- Fallback chain: 	extured -> mesh -> dense -> sparse
 - Wireframe toggle preserved as optional on mesh modes
 - Measurement tools (orbit/distance/area) preserved and reset on mode switch
 
@@ -45,7 +46,7 @@ All six 3D viewer representation modes have been implemented with genuine artifa
 - Fetches /api/jobs/{jid}/representations on job completion
 - Builds selector dynamically from API response
 - Unavailable modes shown with [Unavailable] suffix and disabled attribute
-- Calls viewer.loadMode(mode) on selector change - no reconstruction triggered
+- Calls iewer.loadMode(mode) on selector change - no reconstruction triggered
 - Reset View and Wireframe buttons wired to viewer API
 
 ### Frontend: web/style.css (MODIFIED)
@@ -59,14 +60,14 @@ All six 3D viewer representation modes have been implemented with genuine artifa
 ## Test Results
 
 ### pytest tests/ -> 81 passed (0 failed, 3 warnings)
-- tests/test_viewer_artifacts.py: 19 tests PASSED
+- **test_viewer_artifacts.py (19)**:
   - sparse PLY creation, point count, empty guard
   - dense display creation, budget compliance, analysis cloud preservation, determinism
   - confidence mesh creation, summary JSON, ratio recording, null guard
   - cameras JSON structure and count
   - semantic copy, original preservation, missing guard
   - generate_all integration
-- tests/test_representations_api.py: 17 tests PASSED
+- **test_representations_api.py (17)**:
   - 409 for non-completed job
   - 6 keys always present
   - All unavailable when no files
@@ -97,8 +98,9 @@ Reason: No Playwright in project environment. Manual developer verification perf
 
 ## Architectural Constraints Preserved
 
-- dense_filtered.ply: UNCHANGED (analysis cloud not modified by viewer generation)
-- semantic_mesh.ply: COPIED to outputs/semantic/, never deleted from original path
-- Representation switching: NEVER triggers reconstruction
-- Confidence: labeled "Coverage / Confidence" - never "Accuracy"
-- All 6 modes: selector entries exist, unavailable modes are disabled not hidden
+- **dense_filtered.ply**: UNCHANGED (analysis cloud not modified by viewer generation)
+- **semantic_mesh.ply**: COPIED to outputs/semantic/, never deleted from original path
+- **Representation switching**: NEVER triggers reconstruction
+- **Confidence**: labeled "Coverage / Confidence" - never "Accuracy"
+- **All 6 modes**: selector entries exist, unavailable modes are disabled not hidden
+- **Semantic / Confidence topology**: Both are rendered via THREE.Mesh to preserve face connectivity from Phase 6/7. Three.js PLYLoader correctly translates PLY face colors into duplicated vertex colors on an unindexed BufferGeometry, avoiding color interpolation bleeding at boundaries.
