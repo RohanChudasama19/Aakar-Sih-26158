@@ -94,9 +94,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   scene.add(annotations);
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  let measureMode = 'orbit', measurePoints = [], measureLine = null;
-  const measureLabel = options.measureLabel || { textContent: '' };
-
+  let measureMode = 'orbit', measurePoints = [], measureMeshes = [];
+  const onMeasureUpdate = options.onMeasureUpdate || (() => {});
+  
   // Ã¢â€â‚¬Ã¢â€â‚¬ State Ã¢â€â‚¬Ã¢â€â‚¬
   let currentRepObject = null;   // current scene object (Points or Group/Mesh)
   let currentMode = null;
@@ -134,13 +134,6 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     const hit = ray.intersectObjects(targets, true)[0];
     if (!hit) return;
     measurePoints.push(hit.point.clone());
-    const marker = new THREE.Mesh(
-      new THREE.SphereGeometry(cameraSize / 280, 12, 8),
-      new THREE.MeshBasicMaterial({ color: 0xc6ff8e, depthTest: false })
-    );
-    marker.position.copy(hit.point);
-    marker.renderOrder = 11;
-    annotations.add(marker);
     _drawMeasure();
   });
 
@@ -440,99 +433,52 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
       o.material?.dispose();
     }
     measurePoints = [];
-    measureLine = null;
-    measureLabel.textContent = 'Select points on the model';
+    measureMeshes = [];
+    if (measureMode !== 'orbit') onMeasureUpdate(measurePoints, measureMode);
   }
 
   function _drawMeasure() {
-    if (measureLine) { annotations.remove(measureLine); measureLine.geometry.dispose(); measureLine.material.dispose(); }
-    const path = measureMode === 'area' && measurePoints.length > 2 ? [...measurePoints, measurePoints[0]] : measurePoints;
-    measureLine = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(path),
-      new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
-    );
-    measureLine.renderOrder = 10;
-    annotations.add(measureLine);
-    if (measureMode === 'distance') {
-      let d = 0;
-      for (let i = 1; i < measurePoints.length; i++) d += measurePoints[i].distanceTo(measurePoints[i - 1]);
-      measureLabel.textContent = `Path: ${d.toFixed(3)} ${metric ? 'm' : 'relative units'} Ã‚Â· ${measurePoints.length} pts`;
-    } else {
-      let normal = new THREE.Vector3();
-      const origin = measurePoints[0];
-      for (let i = 0; i < measurePoints.length; i++) {
-        normal.add(new THREE.Vector3().crossVectors(
-          measurePoints[i].clone().sub(origin),
-          measurePoints[(i + 1) % measurePoints.length].clone().sub(origin)
-        ));
-      }
-      measureLabel.textContent = `Planar area: ${(normal.length() / 2).toFixed(3)} ${metric ? 'mÃ‚Â²' : 'unitsÃ‚Â²'} Ã‚Â· ${measurePoints.length} pts`;
+    for (const o of measureMeshes) {
+      annotations.remove(o);
+      o.geometry?.dispose();
+      o.material?.dispose();
     }
-  }
+    measureMeshes = [];
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Fallback chain Ã¢â€â‚¬Ã¢â€â‚¬
-  const FALLBACK_ORDER = ['textured', 'mesh', 'dense', 'sparse'];
+    // Draw markers
+    for (let i = 0; i < measurePoints.length; i++) {
+        const marker = new THREE.Mesh(
+          new THREE.SphereGeometry(cameraSize / 280, 12, 8),
+          new THREE.MeshBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+        );
+        marker.position.copy(measurePoints[i]);
+        marker.renderOrder = 11;
+        annotations.add(marker);
+        measureMeshes.push(marker);
+    }
 
-  async function loadWithFallback(preferredMode, repsData) {
-    const order = preferredMode === 'textured' ? FALLBACK_ORDER :
-                  preferredMode === 'mesh'     ? ['mesh', 'dense', 'sparse', 'textured'] :
-                  [preferredMode, ...FALLBACK_ORDER.filter(m => m !== preferredMode)];
-
-    const loaders = { sparse: loadSparse, dense: loadDense, mesh: loadMesh, textured: loadTexturedMesh, semantic: loadSemantic, confidence: loadConfidence };
-
-    for (const mode of order) {
-      if (!repsData[mode]?.available) continue;
-      try {
-        await loaders[mode](repsData);
-        currentMode = mode;
-        return mode;
-      } catch (err) {
-        console.warn(`Representation '${mode}' failed: ${err.message}`);
-        disposeCurrentRepresentation();
-        if (mode !== order[order.length - 1]) {
-          setLoading(`${mode} failed. Trying next representationÃ¢â‚¬Â¦`);
-          await new Promise(r => setTimeout(r, 500));
+    if (measurePoints.length > 1) {
+        if (measureMode === 'area' && measurePoints.length > 2) {
+            const path = [...measurePoints, measurePoints[0]];
+            const line = new THREE.Line(
+              new THREE.BufferGeometry().setFromPoints(path),
+              new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+            );
+            line.renderOrder = 10;
+            annotations.add(line);
+            measureMeshes.push(line);
+        } else {
+            const line = new THREE.Line(
+              new THREE.BufferGeometry().setFromPoints(measurePoints),
+              new THREE.LineBasicMaterial({ color: 0xc6ff8e, depthTest: false })
+            );
+            line.renderOrder = 10;
+            annotations.add(line);
+            measureMeshes.push(line);
         }
-      }
     }
-    throw new Error('No representation could be loaded');
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Public API Ã¢â€â‚¬Ã¢â€â‚¬
-
-  async function loadMode(mode) {
-    if (disposed) return;
-    _removePointSizeControl();
-    disposeCurrentRepresentation();
-    const loaders = { sparse: loadSparse, dense: loadDense, mesh: loadMesh, textured: loadTexturedMesh, semantic: loadSemantic, confidence: loadConfidence };
-    const loader = loaders[mode];
-    if (!loader) throw new Error(`Unknown mode: ${mode}`);
-    if (!reps[mode]?.available) throw new Error(`Mode '${mode}' is not available`);
-    try {
-      await loader(reps);
-      currentMode = mode;
-    } catch (err) {
-      // For non-fallback modes (semantic, confidence), don't chain
-      if (mode === 'semantic' || mode === 'confidence') throw err;
-      setLoading(`${mode} failed: ${err.message}. Trying fallbackÃ¢â‚¬Â¦`);
-      await new Promise(r => setTimeout(r, 600));
-      await loadWithFallback(mode, reps);
-    }
-  }
-
-  function resetView() {
-    if (currentRepObject) { fitCamera(currentRepObject); }
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Wireframe toggle (kept for mesh mode) Ã¢â€â‚¬Ã¢â€â‚¬
-  function wireframe(state) {
-    if (!currentRepObject) return;
-    currentRepObject.traverse(o => {
-      if (o.isMesh && o.material) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(m => { m.wireframe = state !== undefined ? state : !m.wireframe; });
-      }
-    });
+    
+    onMeasureUpdate(measurePoints, measureMode);
   }
 
   window.getCurrentViewerType = () => { if (!currentRepObject) return 'None'; let type = currentRepObject.type; if (type === 'Group' || type === 'Scene') { currentRepObject.traverse(o => { if (o.isMesh) type = 'Mesh'; else if (o.isPoints && type !== 'Mesh') type = 'Points'; }); } return type; };

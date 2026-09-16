@@ -1,3 +1,4 @@
+import * as Meas from './measurements.js';
 const $=s=>document.querySelector(s);
 let token=sessionStorage.getItem('aerorecon-token')||'', activeJob=null, streamAbort=null, viewer=null, renderedJob=null;
 const headers=()=>token?{Authorization:`Bearer ${token}`} : {};
@@ -83,26 +84,33 @@ async function showResults(j) {
       </div>
     </div>
 
-    <div class="tab-content" id="tab-viewer">
+        <div class="tab-content" id="tab-viewer">
       <div class="viewer-selector" style="margin-bottom: 10px;">
         <select id="representation-selector"></select>
         <button id="reset-view" style="margin-left:8px;">Reset View</button>
         <button id="wireframe-btn" style="margin-left:4px;">Wireframe</button>
       </div>
       <div class="viewer" id="viewer">
-        <div class="viewer-label">${metric ? 'METRIC ALIGNMENT (accuracy unverified)' : 'RELATIVE COORDINATES'}<br>Drag to orbit · right drag to pan · scroll to zoom</div>
+        <div class="viewer-label">${metric ? 'METRIC ALIGNMENT' : 'RELATIVE COORDINATES'}<br>Drag to orbit · right drag to pan · scroll to zoom</div>
       </div>
-      <div class="viewer-tools">
+      <div class="viewer-tools" style="display: flex; gap: 5px; flex-wrap: wrap;">
         <button data-mode="orbit" class="active">Orbit</button>
-        <button data-mode="distance" ${metric ? '' : 'disabled title="Requires metric state"'}>Distance</button>
-        <button data-mode="area" ${metric ? '' : 'disabled title="Requires metric state"'}>Planar area</button>
-        <button id="clear-measure">Clear points</button>
-        <span id="measurement">Choose a measurement tool</span>
+        <button data-mode="distance">Distance</button>
+        <button data-mode="area">Area</button>
+        <button data-mode="slope">Slope</button>
+        <button data-mode="angle">Angle</button>
+        <button id="clear-measure" style="background-color: #552222; color: #ffaaaa; margin-left: auto;">Clear Current</button>
+        <button id="clear-all-measure" style="background-color: #552222; color: #ffaaaa;">Clear All</button>
       </div>
-      <div class="notice">${metric ? 'Measurements use GPS-aligned scale but remain unverified against ground control.' : 'Metric scale is not established. Measurements are disabled or arbitrary.'}</div>
+      <div id="measure-result" style="background: rgba(0,0,0,0.5); padding: 10px; margin-top: 10px; border-radius: 4px; font-family: monospace; min-height: 40px; font-size: 13px;">
+        Select a tool to begin measuring.
+      </div>
+      <div id="measure-history" style="margin-top: 10px; max-height: 150px; overflow-y: auto; font-size: 13px;">
+      </div>
+      <div class="notice" id="measure-notice"></div>
     </div>
 
-        <div class="tab-content" id="tab-map">
+  <div class="tab-content" id="tab-map">
       <div id="map-notice" class="notice" style="display:none;"></div>
       <div id="map-container" style="display:none;">
         <div class="result-metrics" id="map-metrics" style="margin-bottom: 10px;"></div>
