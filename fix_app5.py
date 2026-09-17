@@ -1,5 +1,5 @@
-﻿import re
-from pathlib import Path
+﻿from pathlib import Path
+
 p = Path("web/app.js")
 js = p.read_text(encoding="utf-8")
 js = js.replace("import * as Meas from './measurements.js';", "")

@@ -1,5 +1,5 @@
-﻿import re
-from pathlib import Path
+﻿from pathlib import Path
+
 p = Path("web/app.js")
 js = p.read_text(encoding="utf-8")
 js = js.replace("/api/jobs//files/mesh/model.glb", "`/api/jobs/${j.id}/files/mesh/model.glb`")

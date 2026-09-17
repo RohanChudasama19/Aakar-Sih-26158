@@ -108,7 +108,7 @@ class COLMAPBackend(SfMBackend):
                 camera.model_type.value,
                 "--ImageReader.camera_params",
                 camera.to_colmap(),
-                "--SiftExtraction.use_gpu",
+                "--FeatureExtraction.use_gpu",
                 "1" if self.capabilities["cuda_available"] else "0",
             ],
             work,
@@ -129,7 +129,7 @@ class COLMAPBackend(SfMBackend):
                 str(profile.matching_overlap),
                 "--SequentialMatching.quadratic_overlap",
                 "1",  # wider baseline periodically
-                "--SiftMatching.use_gpu",
+                "--FeatureMatching.use_gpu",
                 "1" if self.capabilities["cuda_available"] else "0",
             ],
             work,

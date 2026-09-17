@@ -51,6 +51,6 @@ def test_texture_occlusion():
             tdp = Path(td)
             cv2.imwrite(str(tdp / "000000.png"), np.full((1000, 1000, 3), 255, np.uint8))
             (tdp.parent / "masks").mkdir(exist_ok=True)
-            
+
             textured = texture_mesh(mesh, geo, sfm, k, tdp, options={"occlusion_test": True})
             assert abs(textured.metadata["textured_face_fraction"] - 0.5) < 1e-5

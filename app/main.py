@@ -157,11 +157,12 @@ def health():
 
 async def save(upload, target, budget):
     total = 0
+    print(f'Inside save: {target.name}, passed budget={budget}')
     with target.open("wb") as f:
         while chunk := await upload.read(1024 * 1024):
             total += len(chunk)
             if total > budget:
-                raise HTTPException(413, "Upload exceeds configured byte limit")
+                raise HTTPException(413, f"Upload exceeds configured byte limit: {total} > {budget} ({target.name})")
             f.write(chunk)
     if total == 0:
         raise HTTPException(422, "An uploaded file is empty")
@@ -225,10 +226,10 @@ async def submit(
         ]
         for upload, filename in files:
             if upload:
-                remaining -= await save(
+                print(f'Remaining before {filename}: {remaining}'); remaining -= await save(
                     upload,
                     inputs / filename,
-                    min(remaining, 2 * 1024**2) if filename.endswith((".csv", ".json")) else remaining,
+                    min(remaining, 10 * 1024**2) if filename.endswith((".csv", ".json")) else remaining,
                 )
         telemetry(inputs / "gps.csv")
         metadata(inputs / "flight.json")
@@ -264,7 +265,7 @@ async def submit(
             update(jid, status="failed", message="Job could not be queued; check service logs")
         else:
             shutil.rmtree(directory, ignore_errors=True)
-        raise HTTPException(503, "Job could not be queued. Check API/Redis logs.") from exc
+        import traceback; traceback.print_exc(); import traceback; traceback.print_exc(); raise HTTPException(503, f"Job could not be queued. {exc}") from exc
     return {"id": jid, "status": "queued"}
 
 

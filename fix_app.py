@@ -1,5 +1,4 @@
-﻿import re
-from pathlib import Path
+﻿from pathlib import Path
 
 p = Path("web/app.js")
 js = p.read_text(encoding="utf-8")

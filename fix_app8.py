@@ -1,11 +1,11 @@
-﻿import re
-from pathlib import Path
+﻿from pathlib import Path
 
 p = Path("web/app.js")
 js = p.read_text(encoding="utf-8")
 
 # Let's restore from git first to get a clean slate
 import subprocess
+
 subprocess.run(["git", "restore", "web/app.js"])
 js = p.read_text(encoding="utf-8")
 

@@ -28,7 +28,7 @@ new_events = '''    // Measurement state
       function updateHistoryUI() {
           historyPanel.innerHTML = measureHistory.map(m => 
               <div style="border-bottom: 1px solid #333; padding: 5px 0;">
-                <strong>\</strong> (\): \
+                <strong>\\</strong> (\\): \
               </div>
           ).reverse().join('');
       }
@@ -39,7 +39,7 @@ new_events = '''    // Measurement state
               return;
           }
           
-          let resultHtml = <strong>Current (\)</strong> - \ pts selected<br>;
+          let resultHtml = <strong>Current (\\)</strong> - \\ pts selected<br>;
           let summary = "";
           let complete = false;
           
@@ -52,30 +52,30 @@ new_events = '''    // Measurement state
                   const dv = Meas.verticalDifference(a, b);
                   const dxyz = Meas.deltaXYZ(a, b);
                   
-                  resultHtml += Segment 3D: \ \<br>;
-                  resultHtml += Segment Horiz: \ \<br>;
-                  resultHtml += Segment Vert: \ \<br>;
-                  resultHtml += ΔX: \, ΔY: \, ΔZ: \<br>;
+                  resultHtml += Segment 3D: \\ \\<br>;
+                  resultHtml += Segment Horiz: \\ \\<br>;
+                  resultHtml += Segment Vert: \\ \\<br>;
+                  resultHtml += ΔX: \\, ΔY: \\, ΔZ: \\<br>;
                   
                   let totalD = 0;
                   for (let i=1; i<points.length; i++) totalD += Meas.distance3D(points[i-1], points[i]);
-                  resultHtml += <br><strong>Total Path 3D: \ \</strong>;
-                  summary = Path \ \;
+                  resultHtml += <br><strong>Total Path 3D: \\ \\</strong>;
+                  summary = Path \\ \\;
               }
           } else if (mode === 'area') {
               if (points.length >= 3) {
                   const a = Meas.planarArea3D(points);
-                  resultHtml += <strong>Planar Area: \ \</strong>;
-                  summary = Area \ \;
+                  resultHtml += <strong>Planar Area: \\ \\</strong>;
+                  summary = Area \\ \\;
               } else {
                   resultHtml += Select at least 3 points.;
               }
           } else if (mode === 'slope') {
               if (points.length >= 2) {
                   const sl = Meas.slope(points[0], points[1]);
-                  resultHtml += Horiz: \ \, Vert: \ \<br>;
-                  resultHtml += <strong>Slope: \°</strong> (Grade: \%);
-                  summary = Slope \°;
+                  resultHtml += Horiz: \\ \\, Vert: \\ \\<br>;
+                  resultHtml += <strong>Slope: \\°</strong> (Grade: \\%);
+                  summary = Slope \\°;
                   complete = true;
               } else {
                   resultHtml += Select 2 points.;
@@ -83,8 +83,8 @@ new_events = '''    // Measurement state
           } else if (mode === 'angle') {
               if (points.length >= 3) {
                   const ang = Meas.angle3(points[0], points[1], points[2]);
-                  resultHtml += <strong>Angle at P2: \°</strong>;
-                  summary = Angle \°;
+                  resultHtml += <strong>Angle at P2: \\°</strong>;
+                  summary = Angle \\°;
                   complete = true;
               } else {
                   resultHtml += Select 3 points (angle at P2).;
@@ -93,7 +93,7 @@ new_events = '''    // Measurement state
           
           if (points.length > 0) {
               const last = points[points.length-1];
-              resultHtml += <br><span style="color:#888;">Last point: (\, \, \)</span>;
+              resultHtml += <br><span style="color:#888;">Last point: (\\, \\, \\)</span>;
           }
           
           if (!caps.metric_distance) {
