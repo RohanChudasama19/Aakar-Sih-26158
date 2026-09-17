@@ -29,3 +29,18 @@ vidia-smi observed colmap.exe utilizing 100% GPU-Util and 561 MiB VRAM during Pa
 - **Mesh Faces:** 550,019 triangles
 - **Viewer Downsampled Cloud:** 7,146 points (optimized for UI display)
 - **Export Verification:** All required .ply meshes (dense_filtered, dense_relative, mesh_filtered, semantic_mesh, mesh_analysis) were successfully synthesized and outputted to the job's /outputs directory.
+
+### 6-Mode Viewer Verification (Real Mission)
+
+| Mode | Real Zurich Artifact | HTTP | Rendered | Object Type | Result |
+|---|---|---|---|---|---|
+| Sparse | sparse.ply | 200 | Yes | THREE.Points | Success |
+| Dense | dense_display.ply | 200 | Yes | THREE.Points | Success |
+| Mesh | model.glb | 200 | Yes | GLTF meshes (THREE.Mesh) | Success |
+| Textured | model.glb | 200 | Yes | GLTF meshes (THREE.Mesh) | Success |
+| Semantic | semantic_mesh.ply | 200 | Yes | THREE.Mesh | Success |
+| Confidence | confidence_mesh.ply | 200 | Yes | THREE.Mesh | Success |
+
+*Note: No CPU fallback occurred in the GPU dense reconstruction path. (The pipeline naturally uses CPU for georeferencing, semantic mapping, and meshing).*
+
+*Note: The GPS alignment RMSE (0.9324 m) represents the alignment residual against telemetry priors, not an independently validated reconstruction accuracy.*

@@ -546,6 +546,70 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   }
 
   window.getCurrentViewerType = () => { if (!currentRepObject) return 'None'; let type = currentRepObject.type; if (type === 'Group' || type === 'Scene') { currentRepObject.traverse(o => { if (o.isMesh) type = 'Mesh'; else if (o.isPoints && type !== 'Mesh') type = 'Points'; }); } return type; };
+  
+  // ── Fallback chain ──
+  const FALLBACK_ORDER = ['textured', 'mesh', 'dense', 'sparse'];
+
+  async function loadWithFallback(preferredMode, repsData) {
+    const order = preferredMode === 'textured' ? FALLBACK_ORDER :
+                  preferredMode === 'mesh'     ? ['mesh', 'dense', 'sparse', 'textured'] :
+                  [preferredMode, ...FALLBACK_ORDER.filter(m => m !== preferredMode)];
+
+    const loaders = { sparse: loadSparse, dense: loadDense, mesh: loadMesh, textured: loadTexturedMesh, semantic: loadSemantic, confidence: loadConfidence };
+
+    for (const mode of order) {
+      if (!repsData[mode]?.available) continue;
+      try {
+        await loaders[mode](repsData);
+        currentMode = mode;
+        return mode;
+      } catch (err) {
+        console.warn(`Representation '${mode}' failed: ${err.message}`);
+        disposeCurrentRepresentation();
+        if (mode !== order[order.length - 1]) {
+          setLoading(`${mode} failed. Trying next representation…`);
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+    }
+    throw new Error('No representation could be loaded');
+  }
+
+  // ── Public API ──
+
+  async function loadMode(mode) {
+    if (disposed) return;
+    _removePointSizeControl();
+    disposeCurrentRepresentation();
+    const loaders = { sparse: loadSparse, dense: loadDense, mesh: loadMesh, textured: loadTexturedMesh, semantic: loadSemantic, confidence: loadConfidence };
+    const loader = loaders[mode];
+    if (!loader) throw new Error(`Unknown mode: ${mode}`);
+    if (!reps[mode]?.available) throw new Error(`Mode '${mode}' is not available`);
+    try {
+      await loader(reps);
+      currentMode = mode;
+    } catch (err) {
+      if (mode === 'semantic' || mode === 'confidence') throw err;
+      setLoading(`${mode} failed: ${err.message}. Trying fallback…`);
+      await new Promise(r => setTimeout(r, 600));
+      await loadWithFallback(mode, reps);
+    }
+  }
+
+  function resetView() {
+    if (currentRepObject) { fitCamera(currentRepObject); }
+  }
+
+  function wireframe(state) {
+    if (!currentRepObject) return;
+    currentRepObject.traverse(o => {
+      if (o.isMesh && o.material) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(m => { m.wireframe = state !== undefined ? state : !m.wireframe; });
+      }
+    });
+  }
+
   function setMode(v) {
     measureMode = v;
     _clearMeasure();
