@@ -1,4 +1,7 @@
+"""COLMAP PatchMatch dense reconstruction backend with per-subprocess timing."""
+
 import shutil
+import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, Tuple
@@ -36,7 +39,16 @@ class CPUFallbackDenseBackend(DenseBackend):
 
 
 def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[str, Any]:
-    # Conceptually FAST, BALANCED, QUALITY
+    """Select PatchMatch profile based on frame count.
+
+    Profiles target the RTX 3050 Laptop (4 GB VRAM, 2048 CUDA cores).
+    num_matching_views caps the number of source images per reference to
+    reduce VRAM pressure without significant quality loss for UAV sequences.
+
+    QUALITY  (≤50 frames):  max_image_size=2048, window_radius=6, geom=True,  iters=7, src=10
+    BALANCED (≤200 frames): max_image_size=1600, window_radius=5, geom=True,  iters=5, src=8
+    FAST     (>200 frames): max_image_size=1024, window_radius=4, geom=False, iters=3, src=7
+    """
     if num_frames > 200:
         return {
             "name": "FAST",
@@ -45,6 +57,7 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
             "window_step": 2,
             "num_iterations": 3,
             "geom_consistency": False,
+            "num_matching_views": 7,
         }
     elif num_frames > 50:
         return {
@@ -54,6 +67,7 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
             "window_step": 1,
             "num_iterations": 5,
             "geom_consistency": True,
+            "num_matching_views": 8,
         }
     else:
         return {
@@ -63,6 +77,7 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
             "window_step": 1,
             "num_iterations": 7,
             "geom_consistency": True,
+            "num_matching_views": 10,
         }
 
 
@@ -90,6 +105,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "window_step": 2,
                     "num_iterations": 3,
                     "geom_consistency": False,
+                    "num_matching_views": 7,
                 }
             )
 
@@ -114,7 +130,9 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--max_image_size",
                     str(profile["max_image_size"]),
                 ]
+                t_u0 = time.monotonic()
                 subprocess.run(cmd_undistort, check=True, capture_output=True, text=True)
+                t_undistort = round(time.monotonic() - t_u0, 1)
 
                 # 2. PatchMatch Stereo
                 progress(60, f"Running COLMAP patch_match_stereo ({profile['name']} profile)")
@@ -135,8 +153,12 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(profile["window_step"]),
                     "--PatchMatchStereo.num_iterations",
                     str(profile["num_iterations"]),
+                    "--PatchMatchStereo.num_matching_views",
+                    str(profile.get("num_matching_views", 8)),
                 ]
+                t_pm0 = time.monotonic()
                 subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True)
+                t_patchmatch = round(time.monotonic() - t_pm0, 1)
 
                 # 3. Stereo Fusion
                 progress(85, f"Running COLMAP stereo_fusion ({profile['name']} profile)")
@@ -152,7 +174,9 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--output_path",
                     str(dense_dir / "fused.ply"),
                 ]
+                t_f0 = time.monotonic()
                 subprocess.run(cmd_fusion, check=True, capture_output=True, text=True)
+                t_fusion = round(time.monotonic() - t_f0, 1)
 
                 if (dense_dir / "fused.ply").exists():
                     import trimesh
@@ -184,6 +208,11 @@ class ColmapPatchMatchBackend(DenseBackend):
                             "dense_support_confidence": {
                                 "formula": "Number of consistent stereo views observing a point",
                                 "median_support": "Preserved in COLMAP binary workspace (fused.ply header lacks per-point view count)",
+                            },
+                            "subprocess_timings": {
+                                "undistort_s": t_undistort,
+                                "patchmatch_s": t_patchmatch,
+                                "fusion_s": t_fusion,
                             },
                         },
                     )

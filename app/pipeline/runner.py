@@ -1,5 +1,4 @@
 import json
-import platform
 import shutil
 import time
 from pathlib import Path
@@ -38,6 +37,43 @@ def clean(value):
     return value
 
 
+
+
+def _build_hardware_info() -> dict:
+    """Return actual hardware info including real GPU from nvidia-smi."""
+    import platform as _platform
+    _g = _detect_gpu_info()
+    return {
+        "cpu": _platform.processor() or _platform.machine(),
+        "gpu": _g.get("name", "unknown"),
+        "gpu_driver": _g.get("driver", "unknown"),
+        "vram_total_mib": _g.get("vram_total_mib"),
+        "benchmark_verified": bool(_g),
+    }
+
+
+def _detect_gpu_info() -> dict:
+    """Query nvidia-smi for actual GPU name/driver/VRAM. Returns empty dict if unavailable."""
+    import subprocess as _sp
+    try:
+        r = _sp.run(
+            ["nvidia-smi", "--query-gpu=name,driver_version,memory.total,memory.used",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            parts = [p.strip() for p in r.stdout.strip().split(",")]
+            return {
+                "name": parts[0] if len(parts) > 0 else "unknown",
+                "driver": parts[1] if len(parts) > 1 else "unknown",
+                "vram_total_mib": int(parts[2]) if len(parts) > 2 else None,
+                "vram_used_at_start_mib": int(parts[3]) if len(parts) > 3 else None,
+            }
+    except Exception:
+        pass
+    return {}
+
+
 def run_pipeline(input_dir, work, options=None, callback=None):
     input_dir, work = Path(input_dir), Path(work)
     work.mkdir(parents=True, exist_ok=True)
@@ -49,6 +85,19 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     events = []
     current = "A"
     stage_start = start
+    sub_stages: dict = {}
+
+    import contextlib as _contextlib
+
+    @_contextlib.contextmanager
+    def timed(name: str):
+        """Record wall-clock duration of a named sub-stage."""
+        t0 = time.monotonic()
+        try:
+            yield
+        finally:
+            sub_stages[name] = round(time.monotonic() - t0, 3)
+
 
     def progress(p, message):
         e = {
@@ -97,7 +146,8 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     except Exception:
         pass
 
-    ready_report = readiness.perform_analysis(video, gps, meta, k_test)
+    with timed("readiness_analysis"):
+        ready_report = readiness.perform_analysis(video, gps, meta, k_test)
     (out / "cv_quality_report.json").write_text(json.dumps(ready_report, indent=2))
 
     lines = [
@@ -122,7 +172,8 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     else:
         progress(5, "Readiness analysis passed.")
 
-    info = preprocess.extract(video, work / "frames", opts, progress)
+    with timed("frame_extraction"):
+        info = preprocess.extract(video, work / "frames", opts, progress)
 
     camera = intrinsics(meta, info["width"], info["height"], override)
 
@@ -186,9 +237,10 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     stage("B", 20)
     from .sfm_backend import execute_sfm
 
-    force_cpu = opts.get("engine") != "colmap"
+    force_cpu = not (opts.get("engine", "") or "").lower().startswith("colmap")
 
-    reconstruction = execute_sfm(frames_dir, info, active_camera, progress, force_cpu=force_cpu)
+    with timed("sfm"):
+        reconstruction = execute_sfm(frames_dir, info, active_camera, progress, force_cpu=force_cpu)
 
     # Write SfM Report
     sfm_report = reconstruction.get("sfm_report", {})
@@ -211,14 +263,16 @@ def run_pipeline(input_dir, work, options=None, callback=None):
 
     (out / "sfm_report.txt").write_text("\n".join(lines))
 
-    geo = georef.align(reconstruction, info, gps, input_dir)
+    with timed("georef"):
+        geo = georef.align(reconstruction, info, gps, input_dir)
     np.savez_compressed(work / "sparse.npz", points=reconstruction["points"], colors=reconstruction["colors"])
     (work / "poses.json").write_text(json.dumps(clean(reconstruction["poses"])))
     (work / "alignment.json").write_text(json.dumps(clean(geo), indent=2))
     stage("C", 43)
     from .dense_backend import execute_dense
 
-    points, colors, dense_report = execute_dense(reconstruction, k, frames_dir, work, opts, geo, progress)
+    with timed("dense"):
+        points, colors, dense_report = execute_dense(reconstruction, k, frames_dir, work, opts, geo, progress)
     if (input_dir / "depth.onnx").exists():
         from .depth import infer
 
@@ -229,8 +283,9 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     import trimesh
 
     if len(points) > 0:
-        trimesh.points.PointCloud(points, colors=colors).export(out / "dense_filtered.ply")
-        trimesh.points.PointCloud(points, colors=colors).export(out / "dense_relative.ply")
+        _pc_path = out / "dense_filtered.ply"
+        trimesh.points.PointCloud(points, colors=colors).export(_pc_path)
+        shutil.copy2(str(_pc_path), str(out / "dense_relative.ply"))  # avoid re-serializing identical data
         if geo["valid"]:
             from .exports import transform
 
@@ -239,11 +294,13 @@ def run_pipeline(input_dir, work, options=None, callback=None):
             trimesh.points.PointCloud(absolute, colors=colors).export(out / "dense_metric.ply")
 
     stage("D", 62)
-    surface, mesh_report = mesh.build_mesh(
+    with timed("mesh"):
+        surface, mesh_report = mesh.build_mesh(
         points, colors, geo, reconstruction, k, originals_dir, out_dir=out, options=opts
     )
     stage("E", 78)
-    semantic_report = semantic.classify(
+    with timed("semantics"):
+        semantic_report = semantic.classify(
         points, colors, geo, surface, out, sfm=reconstruction, k=k, directory=originals_dir, options=opts
     )
 
@@ -274,7 +331,8 @@ def run_pipeline(input_dir, work, options=None, callback=None):
 
         warnings.warn(f"Viewer artifact generation failed (non-fatal): {_va_err}")
 
-    export_report = exports.export_all(surface, points, colors, geo, out, point_labels=point_labels)
+    with timed("exports"):
+        export_report = exports.export_all(surface, points, colors, geo, out, point_labels=point_labels)
 
     elapsed = time.monotonic() - start
     stages["F"] = {"elapsed_sec": round(time.monotonic() - stage_start, 3), "status": "completed"}
@@ -318,11 +376,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         "processing_time_sec": round(elapsed, 3),
         "video_duration_sec": info["duration_sec"],
         "engine": reconstruction["engine"],
-        "hardware": {
-            "cpu": platform.processor() or platform.machine(),
-            "gpu_assumption_for_target": "RTX 4090-class, 24 GB VRAM",
-            "benchmark_verified": False,
-        },
+        "hardware": _build_hardware_info(),
         "targets": {
             "processing_time": {
                 "target": "< 15 min for a 10-min video",
@@ -356,6 +410,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         "semantics": semantic_report,
         "exports": export_report,
         "stages": stages,
+        "sub_stages": sub_stages,
         "warnings": warnings,
         "confidence": {
             "kind": "evidence indicators, not a calibrated probability",
@@ -393,6 +448,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         if (out / file).exists():
             shutil.copy2(out / file, deliverables_dir / file)
 
-    shutil.make_archive(str(work / "artifacts"), "zip", deliverables_dir)
+    with timed("zip_packaging"):
+        shutil.make_archive(str(work / "artifacts"), "zip", deliverables_dir)
     progress(100, "Completed with reported limitations")
     return clean(report)
