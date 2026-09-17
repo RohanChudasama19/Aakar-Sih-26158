@@ -19,12 +19,33 @@ def process_job(job_id):
     directory = DATA / job_id
     stop = threading.Event()
 
+
     def heartbeat():
-        while not stop.wait(10):
+        import os
+
+        import psutil
+
+        from .db import Job, Session
+
+        while not stop.wait(3):
             try:
                 update(job_id)
+                # Check for cancellation
+                with Session() as s:
+                    j = s.get(Job, job_id)
+                    if j and j.status == "cancelling":
+                        update(job_id, status="cancelled", message="Job cancelled by user")
+                        # Kill process tree
+                        parent = psutil.Process(os.getpid())
+                        for child in parent.children(recursive=True):
+                            try:
+                                child.kill()
+                            except psutil.NoSuchProcess:
+                                pass
+                        os._exit(1)
             except Exception:
                 pass
+
 
     thread = threading.Thread(target=heartbeat, daemon=True)
     thread.start()

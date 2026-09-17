@@ -1,6 +1,5 @@
 import hashlib
 import json
-import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -131,10 +130,58 @@ class ExportManager:
         except Exception:
             self.log_file(glb_path, "GLB", status="FAILED_VALIDATION: Unreadable")
 
+
+        # GLTF
+        gltf_path = out_mesh / "model.gltf"
+        mesh.export(gltf_path)
+        try:
+            check_gltf = trimesh.load(gltf_path)
+            if len(check_gltf.geometry) == 0:
+                self.log_file(gltf_path, "GLTF", status="FAILED_VALIDATION: Empty geometry")
+            else:
+                self.log_file(gltf_path, "GLTF")
+        except Exception:
+            self.log_file(gltf_path, "GLTF", status="FAILED_VALIDATION: Unreadable")
+
         # OBJ
         obj_path = out_mesh / "model.obj"
         mesh.export(obj_path)
-        self.log_file(obj_path, "OBJ")
+
+        # Validate OBJ Portability
+        try:
+            import shutil
+            import tempfile
+            with tempfile.TemporaryDirectory() as td:
+                tmp = Path(td)
+                # copy OBJ, MTL and any image
+                shutil.copy2(obj_path, tmp / obj_path.name)
+                mtl_path = obj_path.with_suffix('.mtl')
+                if mtl_path.exists():
+                    shutil.copy2(mtl_path, tmp / mtl_path.name)
+                    # Check MTL for absolute paths
+                    mtl_content = mtl_path.read_text(encoding="utf8")
+                    if "C:\\" in mtl_content or "c:\\" in mtl_content.lower() or "/" in mtl_content and "://" not in mtl_content:
+                        # Forward slashes might just be relative directories, but absolute paths on Linux start with /
+                        # Let's just do a naive check for absolute paths
+                        lines = mtl_content.splitlines()
+                        for line in lines:
+                            if line.strip().startswith("map_Kd"):
+                                tex = line.strip().split()[-1]
+                                if Path(tex).is_absolute():
+                                    raise ValueError("Absolute path found in MTL: " + tex)
+                                tex_path = out_mesh / tex
+                                if tex_path.exists():
+                                    shutil.copy2(tex_path, tmp / tex)
+
+                # Verify it loads from temp dir
+                check_obj = trimesh.load(tmp / obj_path.name)
+                if len(check_obj.geometry) == 0:
+                    self.log_file(obj_path, "OBJ", status="FAILED_VALIDATION: Empty geometry")
+                else:
+                    self.log_file(obj_path, "OBJ")
+        except Exception as e:
+            self.log_file(obj_path, "OBJ", status=f"FAILED_VALIDATION: Portability error: {e}")
+
 
         # FBX (if available)
         blender = shutil.which("blender")
@@ -148,7 +195,17 @@ class ExportManager:
                     timeout=180,
                     capture_output=True,
                 )
+
+                # Verify FBX by re-importing
+                verify_script = Path(__file__).resolve().parents[2] / "scripts" / "verify_fbx.py"
+                subprocess.run(
+                    [blender, "--background", "--python", str(verify_script), "--", str(fbx_path)],
+                    check=True,
+                    timeout=180,
+                    capture_output=True,
+                )
                 self.log_file(fbx_path, "FBX")
+
             except Exception:
                 self.manifest["validation_results"]["FBX"] = "FAILED_VALIDATION: Blender conversion failed"
         else:
@@ -216,6 +273,16 @@ class ExportManager:
 
         deliverables_matrix = [
             {
+                "Format": "GLTF",
+                "Available": "GLTF" in self.manifest["validation_results"],
+                "Verified": self.manifest["validation_results"].get("GLTF", "") == "VERIFIED",
+                "Metric requirement": False,
+                "CRS": False,
+                "Texture": True,
+                "Semantics": False,
+                "Purpose": "Web Interoperability",
+            },
+            {
                 "Format": "GLB",
                 "Available": "GLB" in self.manifest["validation_results"],
                 "Verified": self.manifest["validation_results"].get("GLB", "") == "VERIFIED",
@@ -224,6 +291,16 @@ class ExportManager:
                 "Texture": True,
                 "Semantics": False,
                 "Purpose": "Web 3D Viewer",
+            },
+            {
+                "Format": "GLTF",
+                "Available": "GLTF" in self.manifest["validation_results"],
+                "Verified": self.manifest["validation_results"].get("GLTF", "") == "VERIFIED",
+                "Metric requirement": False,
+                "CRS": False,
+                "Texture": True,
+                "Semantics": False,
+                "Purpose": "Web Interoperability",
             },
             {
                 "Format": "OBJ",

@@ -165,9 +165,11 @@ class AeroreconTextureBackend(TextureBackend):
             doubleSided=True,
         )
 
+
         result.visual = trimesh.visual.texture.TextureVisuals(uv=np.asarray(coords), material=material)
         result.metadata["textured_face_fraction"] = float(np.mean(selected >= 0))
         result.metadata["mean_viewing_angle"] = float(np.mean(score[selected >= 0]) if np.any(selected >= 0) else 0)
+        result.metadata["atlas_resolution"] = f"{atlas_size}x{atlas_size}"
 
         return result
 

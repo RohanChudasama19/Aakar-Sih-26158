@@ -226,6 +226,7 @@ class ColmapPatchMatchBackend(DenseBackend):
         return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
 
 
+
 def execute_dense(
     sfm: Dict[str, Any],
     k: Any,
@@ -235,6 +236,20 @@ def execute_dense(
     geo: Dict[str, Any],
     progress: Any,
 ) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+    import shutil
+
+    # Disk Space Precheck
+    try:
+        total, used, free = shutil.disk_usage(str(work_dir))
+        # Estimate: 50MB per frame for workspace
+        required = len(sfm["poses"]) * 50 * 1024 * 1024
+        if free < required:
+            raise RuntimeError(f"Insufficient disk space for dense reconstruction. Required: {required/1024**2:.1f} MB, Free: {free/1024**2:.1f} MB")
+    except RuntimeError as e:
+        raise e
+    except Exception:
+        pass
+
     # Simple check for CUDA/COLMAP
     colmap_exe = shutil.which("colmap")
     has_colmap = bool(colmap_exe)

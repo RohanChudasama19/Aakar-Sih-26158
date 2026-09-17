@@ -12,3 +12,16 @@
 | Semantic Extraction | 7 | ✅ VERIFIED | Structural heuristics and optional AI segmentation. Exported as LAS classes. |
 | Export Center | 8 | ✅ VERIFIED | Formal validation of GLB, OBJ, LAS, PLY, GeoTIFF, and FBX with checksums. |
 | Mission UX | 9 | ✅ VERIFIED | FastAPI backend, SSE progress streaming, interactive web viewer, tabbed interface. |
+
+
+## Required Export Formats
+
+| Format | Status | Notes |
+|---|---|---|
+| PLY | VERIFIED | Point cloud and geometry formats |
+| OBJ | VERIFIED | Portable with relative MTL and textures |
+| LAS | VERIFIED | With semantic classification classes |
+| GeoTIFF | VERIFIED | True orthomosaic with affine transform |
+| GLB | VERIFIED | Contains embedded textures |
+| GLTF | VERIFIED | Real glTF with .bin buffers and texture images |
+| FBX | VERIFIED | Executed via Blender background conversion |

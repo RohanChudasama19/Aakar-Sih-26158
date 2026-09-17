@@ -29,11 +29,19 @@ def build_mesh(points, colors, geo, sfm, k, directory, out_dir=None, options=Non
         # Currently no dedicated filter pass in mesh.py, so filtered is same as raw
         mesh_raw.export(out_dir / "mesh_filtered.ply")
 
+
     # 2. Texturing
+    options["occlusion_test"] = options.get("occlusion_test", True)
+
     try:
         result = texture_mesh(mesh_raw, geo, sfm, k, directory, options)
         report["textured_face_fraction"] = float(result.metadata.get("textured_face_fraction", 0.0))
+        report["untextured_face_fraction"] = 1.0 - report["textured_face_fraction"]
         report["texture_status"] = "TEXTURED"
+        report["occlusion_enabled"] = options["occlusion_test"]
+        report["exposure_normalization"] = options.get("exposure_normalization", True)
+        report["seam_reduction_method"] = "NONE (Single-best-view hard assignment)"
+        report["atlas_resolution"] = result.metadata.get("atlas_resolution", "unknown")
 
         if report["textured_face_fraction"] < 0.5:
             report["texture_status"] = "LOW_TEXTURE_SUPPORT"
