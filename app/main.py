@@ -140,6 +140,12 @@ def queue_health():
         }
 
 
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    from fastapi.responses import Response
+    return Response(content=b"", media_type="image/x-icon", status_code=204)
+
 @app.get("/api/health")
 def health():
     return {

@@ -96,6 +96,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   const mouse = new THREE.Vector2();
   let measureMode = 'orbit', measurePoints = [], measureFaces = [], measureMeshes = [];
   const onMeasureUpdate = options.onMeasureUpdate || (() => {});
+  const measureLabel = options.measureLabel || { textContent: '' };
   
   // Ã¢â€â‚¬Ã¢â€â‚¬ State Ã¢â€â‚¬Ã¢â€â‚¬
   let currentRepObject = null;   // current scene object (Points or Group/Mesh)
