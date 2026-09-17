@@ -1,4 +1,4 @@
-﻿import tempfile
+import tempfile
 from pathlib import Path
 
 import cv2
@@ -48,9 +48,9 @@ def test_texture_occlusion():
     k = np.array([[1000, 0, 500], [0, 1000, 500], [0, 0, 1]], dtype=float)
 
     with tempfile.TemporaryDirectory() as td:
-            tdp = Path(td)
-            cv2.imwrite(str(tdp / "000000.png"), np.full((1000, 1000, 3), 255, np.uint8))
-            (tdp.parent / "masks").mkdir(exist_ok=True)
+        tdp = Path(td)
+        cv2.imwrite(str(tdp / "000000.png"), np.full((1000, 1000, 3), 255, np.uint8))
+        (tdp.parent / "masks").mkdir(exist_ok=True)
 
-            textured = texture_mesh(mesh, geo, sfm, k, tdp, options={"occlusion_test": True})
-            assert abs(textured.metadata["textured_face_fraction"] - 0.5) < 1e-5
+        textured = texture_mesh(mesh, geo, sfm, k, tdp, options={"occlusion_test": True})
+        assert abs(textured.metadata["textured_face_fraction"] - 0.5) < 1e-5

@@ -136,14 +136,49 @@ async function showResults(j) {
     </div>
 
     <div class="tab-content" id="tab-validation">
-      <h3>Alignment Quality</h3>
-      <p><strong>GPS Alignment Residual (RMSE):</strong> ${r.alignment?.rmse_m != null ? r.alignment.rmse_m.toFixed(2) + ' m' : 'N/A'}</p>
-      <p><strong>Metric State:</strong> ${esc(r.metric_state)}</p>
-      <hr>
-      <h3>Independent Spatial Validation</h3>
-      <p><strong>Independent Spatial Accuracy:</strong> NOT AVAILABLE</p>
-      <small>No independent checkpoints were provided for verification.</small>
-    </div>
+        <div class="validation-panel">
+          <h3>Alignment Quality</h3>
+          <p><strong>GPS Alignment Residual (RMSE):</strong>
+            \</p>
+          <p><strong>Inliers / Samples:</strong>
+            \</p>
+          <p><strong>Metric State:</strong> \</p>
+          <p style="font-size:11px;color:#888;font-style:italic;">
+            This is a Sim(3) fit residual — it measures how well camera positions match the
+            GPS trajectory used to estimate the georeferencing transform.
+            It is NOT independent spatial accuracy.
+          </p>
+        </div>
+        <hr style="border-color:#333;margin:16px 0;">
+        <div class="validation-panel" id="indep-validation-panel">
+          <h3>Independent Spatial Validation</h3>
+          <p id="indep-validation-status"><em>Loading...</em></p>
+          <div id="indep-validation-detail" style="display:none">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;">
+              <tbody>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Horizontal RMSE</th><td id="vi-rmse-h" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Vertical RMSE</th><td id="vi-rmse-z" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">3D RMSE</th><td id="vi-rmse-3d" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Mean 3D error</th><td id="vi-mean" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Checkpoints used</th><td id="vi-count" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Threshold (SIH)</th><td id="vi-thresh" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Pass rule</th><td id="vi-rule" style="padding:4px 8px;">-</td></tr>
+              </tbody>
+            </table>
+            <div id="vi-warnings" style="color:#c88;margin-top:8px;font-size:11px;"></div>
+            <div id="vi-cptable-wrap" style="margin-top:12px;overflow-x:auto;font-size:12px;"></div>
+          </div>
+          <div style="margin-top:18px;padding:12px;border:1px solid #333;border-radius:6px;background:#141f16;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:600;">Upload Independent Checkpoints CSV</p>
+            <p style="margin:0 0 8px;font-size:11px;color:#8a8;">
+              Used <strong>only for validation</strong>. Not used to fit the georeferencing transform.
+            </p>
+            <input type="file" id="checkpoint-upload-input" accept=".csv" style="font-size:12px;">
+            <button id="checkpoint-upload-btn" style="margin-left:8px;font-size:12px;">Upload</button>
+            <p id="checkpoint-upload-msg" style="font-size:11px;color:#aaa;margin-top:6px;"></p>
+          </div>
+        </div>
+      </div>
 
     <div class="tab-content" id="tab-exports">
       <h3>Export Center</h3>

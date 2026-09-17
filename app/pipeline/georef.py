@@ -191,20 +191,10 @@ def align(sfm, info, gps, input_dir):
     residuals = np.linalg.norm(s * centers @ r.T + t - targets, axis=1)
     rmse_m = float(np.sqrt(np.mean(residuals**2)))
 
-    # Optional Checkpoints
-    checkpoint_csv = input_dir / "checkpoints.csv"
+    # Note: Spatial accuracy validation (checkpoints.csv) is now handled entirely
+    # independently by app.pipeline.accuracy_validation.validate().
+    # It is intentionally decoupled from the georeferencing fit.
     checkpoint_rmse = None
-    if checkpoint_csv.exists():
-        with checkpoint_csv.open() as f:
-            list(csv.DictReader(f))
-
-        # Checkpoints need a way to be mapped to visual space.
-        # Typically, user provides 2D pixel observations, which are triangulated, or we find nearest.
-        # But Phase 4 just asks for foundation. We will parse it and store it if we can evaluate it.
-        pass  # To be fully implemented when pixel observations for GCPs are provided.
-
-    # Do not transform SfM poses inplace.
-    # Preserve them in the local relative frame for numerically stable dense reconstruction.
 
     return {
         "valid": True,

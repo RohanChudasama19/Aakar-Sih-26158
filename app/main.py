@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import os
 import shutil
@@ -157,7 +157,7 @@ def health():
 
 async def save(upload, target, budget):
     total = 0
-    print(f'Inside save: {target.name}, passed budget={budget}')
+    print(f"Inside save: {target.name}, passed budget={budget}")
     with target.open("wb") as f:
         while chunk := await upload.read(1024 * 1024):
             total += len(chunk)
@@ -226,7 +226,8 @@ async def submit(
         ]
         for upload, filename in files:
             if upload:
-                print(f'Remaining before {filename}: {remaining}'); remaining -= await save(
+                print(f"Remaining before {filename}: {remaining}")
+                remaining -= await save(
                     upload,
                     inputs / filename,
                     min(remaining, 10 * 1024**2) if filename.endswith((".csv", ".json")) else remaining,
@@ -265,7 +266,10 @@ async def submit(
             update(jid, status="failed", message="Job could not be queued; check service logs")
         else:
             shutil.rmtree(directory, ignore_errors=True)
-        import traceback; traceback.print_exc(); import traceback; traceback.print_exc(); raise HTTPException(503, f"Job could not be queued. {exc}") from exc
+        import traceback
+
+        traceback.print_exc()
+        raise HTTPException(503, f"Job could not be queued. {exc}") from exc
     return {"id": jid, "status": "queued"}
 
 
@@ -561,7 +565,6 @@ def sample(filename: str):
     return FileResponse(ROOT / "samples" / filename, filename=filename)
 
 
-
 @app.get("/api/jobs/{jid}/map-data")
 async def get_map_data(jid: str):
     job_dir = DATA / jid
@@ -582,24 +585,23 @@ async def get_map_data(jid: str):
     gps_traj = []
     gps_path = job_dir / "inputs/gps.csv"
     if gps_path.exists():
-        lines = gps_path.read_text().strip().split('\n')
+        lines = gps_path.read_text().strip().split("\n")
         if len(lines) > 1:
             for line in lines[1:]:
-                parts = line.split(',')
+                parts = line.split(",")
                 if len(parts) >= 5:
-                    gps_traj.append({
-                        "timestamp": parts[0],
-                        "frame": parts[1],
-                        "lat": float(parts[2]),
-                        "lon": float(parts[3]),
-                        "alt": float(parts[4])
-                    })
+                    gps_traj.append(
+                        {
+                            "timestamp": parts[0],
+                            "frame": parts[1],
+                            "lat": float(parts[2]),
+                            "lon": float(parts[3]),
+                            "alt": float(parts[4]),
+                        }
+                    )
 
     if metric_state != "GEOREFERENCED_METRIC":
-        return {
-            "metric_state": metric_state,
-            "gps_trajectory": gps_traj
-        }
+        return {"metric_state": metric_state, "gps_trajectory": gps_traj}
 
     epsg = align.get("epsg")
     if not epsg:
@@ -607,11 +609,13 @@ async def get_map_data(jid: str):
 
     s = align.get("scale", 1.0)
     import numpy as np
+
     R = np.array(align.get("rotation", np.eye(3)))
     t = np.array(align.get("translation", np.zeros(3)))
     origin = np.array(align.get("origin", np.zeros(3)))
 
     import pyproj
+
     transformer = pyproj.Transformer.from_crs(epsg, "EPSG:4326", always_xy=True)
 
     recon_traj = []
@@ -628,23 +632,13 @@ async def get_map_data(jid: str):
             center_metric = s * (R @ center_rel) + t
             center_utm = center_metric + origin
             lon, lat = transformer.transform(center_utm[0], center_utm[1])
-            recon_traj.append({
-                "camera_id": cid,
-                "lat": float(lat),
-                "lon": float(lon),
-                "alt": float(center_utm[2])
-            })
+            recon_traj.append({"camera_id": cid, "lat": float(lat), "lon": float(lon), "alt": float(center_utm[2])})
 
     bounds = None
     if recon_traj:
         lats = [pt["lat"] for pt in recon_traj]
         lons = [pt["lon"] for pt in recon_traj]
-        bounds = {
-            "min_lat": min(lats),
-            "max_lat": max(lats),
-            "min_lon": min(lons),
-            "max_lon": max(lons)
-        }
+        bounds = {"min_lat": min(lats), "max_lat": max(lats), "min_lon": min(lons), "max_lon": max(lons)}
 
     return {
         "metric_state": metric_state,
@@ -656,9 +650,217 @@ async def get_map_data(jid: str):
         "alignment_quality": {
             "rmse_m": align.get("rmse_m"),
             "inliers": align.get("alignment_inliers"),
-            "samples": align.get("alignment_samples")
-        }
+            "samples": align.get("alignment_samples"),
+        },
     }
 
-app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
 
+# ──────────────────────────────────────────────────────────────────────────────
+# STEP 6 — Independent Spatial Accuracy Validation
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/jobs/{jid}/validation")
+async def get_validation(jid: str):
+    """Return the independent spatial accuracy validation report.
+
+    This report is generated from survey-grade checkpoint CSV files that are
+    NOT used in the Phase-4 GPS/camera Sim(3) alignment fit.
+    GPS alignment RMSE (mission_report.json) and this result are completely
+    separate. The two must never be conflated.
+
+    If no validation report exists, returns NOT_AVAILABLE.
+    No reconstruction is triggered.
+    """
+    job_dir = DATA / jid
+    if not job_dir.exists():
+        raise HTTPException(404, "Job not found")
+
+    report_path = job_dir / "work/outputs/validation/validation_report.json"
+    if report_path.exists():
+        return json.loads(report_path.read_text())
+
+    # No report: check if a checkpoint CSV even exists
+    cp_path = job_dir / "inputs/checkpoints.csv"
+    if cp_path.exists():
+        reason = (
+            "Checkpoint CSV found but validation report not yet generated. "
+            "Re-run the mission or trigger validation manually."
+        )
+    else:
+        reason = (
+            "No independent checkpoints were provided. Upload a checkpoints.csv to enable spatial accuracy validation."
+        )
+    return {
+        "status": "NOT_AVAILABLE",
+        "reason": reason,
+    }
+
+
+@app.post("/api/jobs/{jid}/checkpoints", status_code=202)
+async def upload_checkpoints(jid: str, checkpoints: UploadFile = File(...)):
+    """Upload an independent checkpoint CSV for post-mission spatial accuracy validation.
+
+    IMPORTANT: These checkpoints are used ONLY for validation.
+    They are NOT used to fit the georeferencing transform.
+    This distinction is by design and is enforced in app/pipeline/accuracy_validation.py.
+
+    After upload, call POST /api/jobs/{jid}/run-validation to compute the report,
+    or re-submit the job.
+    """
+    from app.pipeline.accuracy_validation import CheckpointValidationError, parse_checkpoint_csv
+
+    job_dir = DATA / jid
+    if not job_dir.exists():
+        raise HTTPException(404, "Job not found")
+
+    if not checkpoints.filename:
+        raise HTTPException(422, "No file provided")
+    if not checkpoints.filename.endswith(".csv"):
+        raise HTTPException(422, "File must be a .csv")
+
+    # Save with size guard (10 MB)
+    cp_path = job_dir / "inputs/checkpoints.csv"
+    cp_path.parent.mkdir(parents=True, exist_ok=True)
+    content = await checkpoints.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(413, "Checkpoint file exceeds 10 MB limit")
+
+    # Validate schema before saving
+    text = content.decode("utf-8-sig", errors="replace")
+    try:
+        # Write to temp path for parse_checkpoint_csv which needs a file
+        import pathlib
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode="w", encoding="utf-8") as tf:
+            tf.write(text)
+            tmp = pathlib.Path(tf.name)
+        try:
+            parsed = parse_checkpoint_csv(tmp)
+        finally:
+            tmp.unlink(missing_ok=True)
+    except CheckpointValidationError as e:
+        raise HTTPException(422, f"Invalid checkpoint CSV: {e}")
+
+    cp_path.write_bytes(content)
+    n_total = len(parsed)
+    n_check = sum(1 for p in parsed if p["role"].value == "CHECKPOINT")
+    n_ctrl = n_total - n_check
+    return {
+        "status": "accepted",
+        "checkpoint_count": n_check,
+        "control_count": n_ctrl,
+        "message": (
+            f"Checkpoint file accepted ({n_check} CHECKPOINT, {n_ctrl} CONTROL rows). "
+            "These are used ONLY for validation, not for georeferencing."
+        ),
+    }
+
+
+@app.post("/api/jobs/{jid}/run-validation", status_code=202)
+async def run_validation(jid: str):
+    """Trigger (re-)computation of the independent spatial accuracy validation report.
+
+    Reads the existing checkpoint CSV and mission report, runs accuracy_validation.validate(),
+    and writes the result to outputs/validation/validation_report.json.
+    """
+    from app.pipeline.accuracy_validation import VerticalDatum
+    from app.pipeline.accuracy_validation import validate as av_validate
+
+    job_dir = DATA / jid
+    if not job_dir.exists():
+        raise HTTPException(404, "Job not found")
+
+    report_path = job_dir / "work/outputs/mission_report.json"
+    if not report_path.exists():
+        raise HTTPException(409, "Mission report not available; job may not be completed")
+
+    cp_path = job_dir / "inputs/checkpoints.csv"
+    if not cp_path.exists():
+        raise HTTPException(409, "No checkpoint CSV uploaded. Use POST /api/jobs/{jid}/checkpoints first")
+
+    report = json.loads(report_path.read_text())
+    geo = report.get("alignment", {})
+    if not geo.get("epsg") or not geo.get("origin"):
+        raise HTTPException(409, "Mission alignment data incomplete; cannot run validation")
+
+    _mpp = job_dir / "work/outputs/mesh/model_filtered.ply"
+    mesh_ply = _mpp if _mpp.exists() else None  # type: ignore[assignment]
+
+    result = av_validate(
+        geo=geo,
+        ply_path=mesh_ply,
+        checkpoint_csv_path=cp_path,
+        recon_vertical_datum=VerticalDatum.UNKNOWN,
+    )
+
+    out_dir = job_dir / "work/outputs/validation"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "validation_report.json").write_text(json.dumps(result, indent=2))
+
+    # Generate human-readable report
+    _write_validation_txt(out_dir / "validation_report.txt", result)
+
+    return result
+
+
+def _write_validation_txt(path, report: dict):
+    """Write a human-readable plain-text validation summary."""
+    lines = [
+        "AeroRecon Independent Spatial Accuracy Validation Report",
+        "=" * 60,
+        f"Status          : {report.get('status')}",
+        f"CRS             : {report.get('crs')}",
+        f"Method          : {report.get('method')}",
+        f"Data source     : {report.get('data_source', 'UNKNOWN')}",
+        f"Pass rule       : {report.get('pass_rule')}",
+        f"Checkpoints used: {report.get('checkpoint_count_used')} / {report.get('checkpoint_count_checkpoint')}",
+        "",
+        "RMSE Summary",
+        "-" * 40,
+        f"  Horizontal RMSE : {_fmt(report.get('rmse_horizontal_m'))} m",
+        f"  Vertical RMSE   : {_fmt(report.get('rmse_z_m'))} m",
+        f"  3D RMSE         : {_fmt(report.get('rmse_3d_m'))} m",
+        f"  Mean 3D error   : {_fmt(report.get('mean_3d_error_m'))} m",
+        f"  Median 3D error : {_fmt(report.get('median_3d_error_m'))} m",
+        f"  Max 3D error    : {_fmt(report.get('max_3d_error_m'))} m",
+        f"  Threshold       : {report.get('threshold_m')} m",
+        "",
+    ]
+    if report.get("warnings"):
+        lines.append("Warnings")
+        lines.append("-" * 40)
+        for w in report["warnings"]:
+            lines.append(f"  ! {w}")
+        lines.append("")
+
+    cps = report.get("checkpoints", [])
+    if cps:
+        lines.append("Per-Checkpoint Residuals")
+        lines.append("-" * 80)
+        lines.append(
+            f"{'ID':<12} {'Role':<12} {'dX(m)':<9} {'dY(m)':<9} {'dZ(m)':<9} {'Horiz(m)':<10} {'3D(m)':<9} {'Status'}"
+        )
+        for cp in cps:
+            lines.append(
+                f"{cp['checkpoint_id']:<12} "
+                f"{cp.get('role', ''):<12} "
+                f"{_fmt(cp.get('dx')):<9} "
+                f"{_fmt(cp.get('dy')):<9} "
+                f"{_fmt(cp.get('dz')):<9} "
+                f"{_fmt(cp.get('horizontal_error_m')):<10} "
+                f"{_fmt(cp.get('error_3d_m')):<9} "
+                f"{cp.get('checkpoint_status', '')}"
+            )
+
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _fmt(v) -> str:
+    if v is None:
+        return "N/A"
+    return f"{v:.4f}"
+
+
+app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
