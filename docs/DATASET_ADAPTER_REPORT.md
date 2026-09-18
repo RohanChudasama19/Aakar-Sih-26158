@@ -7,7 +7,7 @@ This document reports the status of dataset adapters for external datasets integ
 | Dataset | Access | Real sample obtained? | Adapter implemented? | Real adapter run? | Canonical validation result |
 |---------|--------|-----------------------|----------------------|-------------------|-----------------------------|
 | MARS-LVIG | ACCESS_BLOCKED (Google Drive) | No | Yes (Mocked for logic validation) | No | VALID_WITH_WARNINGS |
-| Zurich Urban MAV | ACCESS_BLOCKED (Requires manual/direct zip location) | No | Yes (Mocked for logic validation) | No | VALID_WITH_WARNINGS |
+| Zurich Urban MAV | VERIFIED (Direct ZIP) | Yes (266MB) | Yes | Yes | VALID_WITH_WARNINGS
 | UseGeo | ACCESS_BLOCKED (Synology Drive page) | No | Yes (Mocked for logic validation) | No | VALID_WITH_WARNINGS |
 | UAVid | ACCESS_BLOCKED (Requires Account) | No | Yes (Mocked for logic validation) | No | VALID_WITH_WARNINGS |
 | H3D | ACCESS_BLOCKED (Requires Application) | No | Yes (Mocked for logic validation) | No | VALID_WITH_WARNINGS |
