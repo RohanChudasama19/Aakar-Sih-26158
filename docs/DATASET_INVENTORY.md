@@ -1,0 +1,207 @@
+# AeroRecon Dataset Inventory
+
+This document catalogs the external datasets used for the Dataset-Driven Completion Program.
+
+## 1. UseGeo
+- **dataset name**: UseGeo
+- **official project**: 3DOM-FBK
+- **official URL**: https://github.com/3DOM-FBK/UseGeo
+- **owner**: Bruno Kessler Foundation (3DOM-FBK)
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: None (GitHub hosted)
+- **approximate full size**: UNKNOWN
+- **downloadable units**: Imagery, LiDAR ground truth, photogrammetric reference
+- **archive format**: ZIP
+- **sensor modalities**: RGB images, LiDAR
+- **image/video availability**: 829 UAV images (3 flights)
+- **image resolution**: UNKNOWN
+- **frame rate where known**: N/A
+- **sequence duration where known**: N/A
+- **GPS**: UNKNOWN
+- **GNSS raw observations**: UNKNOWN
+- **RTK/PPK**: UNKNOWN
+- **IMU**: UNKNOWN
+- **barometer**: UNKNOWN
+- **camera calibration**: Available
+- **extrinsics**: Available
+- **LiDAR**: Dense LiDAR reference available
+- **ground-truth trajectory**: Photogrammetry reference available
+- **semantic labels**: UNKNOWN
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: UNKNOWN
+- **AeroRecon validation uses**: reconstruction accuracy, LiDAR/reference geometry comparison, dense cloud validation, mesh validation
+- **known limitations**: Image-based rather than a continuous single-pass video. Do NOT use to claim video-processing performance.
+
+## 2. MARS-LVIG
+- **dataset name**: MARS-LVIG
+- **official project**: MARS Lab, HKU
+- **official URL**: https://mars.hku.hk/dataset.html
+- **owner**: MARS Lab, HKU
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: None
+- **approximate full size**: UNKNOWN
+- **downloadable units**: ROS Bags
+- **archive format**: ROS Bag
+- **sensor modalities**: RGB camera, LiDAR, raw GNSS, RTK localization ground truth, IMU
+- **image/video availability**: Video/Image stream in ROS Bag
+- **image resolution**: UNKNOWN
+- **frame rate where known**: UNKNOWN
+- **sequence duration where known**: 10-13 minutes (Long sequences)
+- **GPS**: Available
+- **GNSS raw observations**: Available
+- **RTK/PPK**: Available (localization ground truth)
+- **IMU**: Available
+- **barometer**: UNKNOWN
+- **camera calibration**: Available
+- **extrinsics**: Available
+- **LiDAR**: Available (DJI L1 mapping reference)
+- **ground-truth trajectory**: Available
+- **semantic labels**: UNKNOWN
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: ROS Time (Unix epoch)
+- **AeroRecon validation uses**: long-flight processing, ~10-minute benchmark, RTK/GNSS, IMU, LiDAR reference, trajectory evaluation, scalability, sensor synchronization
+- **known limitations**: Requires robust ROS Bag extraction logic to adapt to canonical format.
+
+## 3. PPPH-UAV Example Data
+- **dataset name**: PPPH-UAV Example Data
+- **official project**: UNKNOWN
+- **official URL**: https://zenodo.org/records/18981905
+- **owner**: Bahadur, Berkay et al. / Hacettepe University
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: None
+- **approximate full size**: UNKNOWN
+- **downloadable units**: ZIP archives
+- **archive format**: ZIP
+- **sensor modalities**: GNSS RINEX
+- **image/video availability**: No full matching drone video imagery
+- **image resolution**: N/A
+- **frame rate where known**: N/A
+- **sequence duration where known**: UNKNOWN
+- **GPS**: Available
+- **GNSS raw observations**: Available (RINEX)
+- **RTK/PPK**: Available
+- **IMU**: UNKNOWN
+- **barometer**: UNKNOWN
+- **camera calibration**: Antenna calibration
+- **extrinsics**: UNKNOWN
+- **LiDAR**: UNKNOWN
+- **ground-truth trajectory**: UNKNOWN
+- **semantic labels**: UNKNOWN
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: GPS Time / Unix
+- **AeroRecon validation uses**: PPK / PPP integration, raw RINEX handling, GNSS timestamp handling, precise orbit / clock / bias products, antenna calibration
+- **known limitations**: No full matching drone video imagery. Use primarily for GNSS processing validation.
+
+## 4. Zurich Urban MAV
+- **dataset name**: Zurich Urban MAV Dataset
+- **official project**: UZH Robotics and Perception Group
+- **official URL**: https://rpg.ifi.uzh.ch/zurichmavdataset.html
+- **owner**: UZH RPG
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: None
+- **approximate full size**: UNKNOWN
+- **downloadable units**: Archives
+- **archive format**: ZIP/TAR
+- **sensor modalities**: Imagery, GPS, barometric pressure, Pixhawk/PX4 pose, accelerometer, gyroscope, ground-truth camera positions
+- **image/video availability**: Available
+- **image resolution**: UNKNOWN
+- **frame rate where known**: UNKNOWN
+- **sequence duration where known**: UNKNOWN
+- **GPS**: Available
+- **GNSS raw observations**: UNKNOWN
+- **RTK/PPK**: UNKNOWN
+- **IMU**: Available (accelerometer, gyroscope)
+- **barometer**: Available
+- **camera calibration**: Available
+- **extrinsics**: UNKNOWN
+- **LiDAR**: UNKNOWN
+- **ground-truth trajectory**: Available
+- **semantic labels**: UNKNOWN
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: UNKNOWN
+- **AeroRecon validation uses**: IMU fusion development, barometer fusion, timestamp synchronization, sensor coordinate-frame validation, pose priors, trajectory evaluation
+- **known limitations**: Do not use it alone as proof of modern high-altitude mapping performance.
+
+## 5. UAVid
+- **dataset name**: UAVid
+- **official project**: UAVid Dataset
+- **official URL**: https://uavid.nl/
+- **owner**: UAVid Authors
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: Requires Account / Login
+- **approximate full size**: UNKNOWN
+- **downloadable units**: ZIP archives
+- **archive format**: ZIP
+- **sensor modalities**: RGB Images, Semantic Masks
+- **image/video availability**: Available
+- **image resolution**: UNKNOWN
+- **frame rate where known**: UNKNOWN
+- **sequence duration where known**: UNKNOWN
+- **GPS**: UNKNOWN
+- **GNSS raw observations**: UNKNOWN
+- **RTK/PPK**: UNKNOWN
+- **IMU**: UNKNOWN
+- **barometer**: UNKNOWN
+- **camera calibration**: UNKNOWN
+- **extrinsics**: UNKNOWN
+- **LiDAR**: UNKNOWN
+- **ground-truth trajectory**: UNKNOWN
+- **semantic labels**: building, road, tree, low vegetation, static car, moving car, human, clutter/background
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: UNKNOWN
+- **AeroRecon validation uses**: real semantic segmentation model, training/fine-tuning, validation, IoU / mIoU, precision / recall, confusion matrix
+- **known limitations**: Requires login and explicit data usage agreement.
+
+## 6. H3D Hessigheim
+- **dataset name**: H3D Hessigheim
+- **official project**: IFP Uni-Stuttgart
+- **official URL**: https://ifpwww.ifp.uni-stuttgart.de/benchmark/hessigheim/default.aspx
+- **owner**: IFP Uni-Stuttgart
+- **paper/citation if available**: Bahadur, B., Altuntas, C., Demirel, Y. et al. PPPH-UAV: an open-source software to process raw GNSS data obtained from unmanned aerial vehicles for generating photogrammetric products. GPS Solut 30, 89 (2026).
+- **license / terms**: CC-BY-4.0
+- **redistribution restrictions**: UNKNOWN
+- **login/account requirements**: UNKNOWN
+- **approximate full size**: UNKNOWN
+- **downloadable units**: Archives
+- **archive format**: ZIP/LAZ
+- **sensor modalities**: LiDAR, oblique imagery, textured mesh
+- **image/video availability**: Oblique imagery available
+- **image resolution**: UNKNOWN
+- **frame rate where known**: UNKNOWN
+- **sequence duration where known**: UNKNOWN
+- **GPS**: UNKNOWN
+- **GNSS raw observations**: UNKNOWN
+- **RTK/PPK**: UNKNOWN
+- **IMU**: UNKNOWN
+- **barometer**: UNKNOWN
+- **camera calibration**: UNKNOWN
+- **extrinsics**: UNKNOWN
+- **LiDAR**: Very dense UAV LiDAR
+- **ground-truth trajectory**: UNKNOWN
+- **semantic labels**: 3D semantic reference available
+- **CRS**: UNKNOWN
+- **EPSG where applicable**: UNKNOWN
+- **vertical datum where documented**: UNKNOWN
+- **timestamp format/timebase**: UNKNOWN
+- **AeroRecon validation uses**: LiDAR reference, DTM validation, ground classification, terrain accuracy, mesh / point-cloud comparison, 3D semantic reference where appropriate
+- **known limitations**: Do not use it for video-speed benchmarking.
