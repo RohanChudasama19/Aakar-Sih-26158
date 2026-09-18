@@ -140,11 +140,12 @@ def queue_health():
         }
 
 
-
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     from fastapi.responses import Response
+
     return Response(content=b"", media_type="image/x-icon", status_code=204)
+
 
 @app.get("/api/health")
 def health():
@@ -279,10 +280,10 @@ async def submit(
     return {"id": jid, "status": "queued"}
 
 
-
 @app.post("/api/jobs/{jid}/cancel")
 def cancel_job(jid: str):
     from app.db import Job, Session
+
     with Session() as s:
         job = s.get(Job, jid)
         if not job:
@@ -300,6 +301,7 @@ def cancel_job(jid: str):
             from rq.job import Job as RQJob
 
             from app.config import REDIS_URL
+
             rq_job = RQJob.fetch(jid, connection=Redis.from_url(REDIS_URL))
             if rq_job.get_status() in ("queued", "deferred"):
                 rq_job.cancel()
@@ -311,12 +313,14 @@ def cancel_job(jid: str):
 
     return {"status": "cancelling"}
 
+
 @app.post("/api/jobs/{jid}/retry")
 def retry_job(jid: str):
     import shutil
 
     from app.config import DATA
     from app.db import Job, Session
+
     with Session() as s:
         job = s.get(Job, jid)
         if not job:
@@ -335,17 +339,19 @@ def retry_job(jid: str):
         job.stage = ""
         s.commit()
 
-        from redis import Redis
-        from rq import Queue
-
-        from app.config import REDIS_URL
         try:
-            q = Queue("reconstruction", connection=Redis.from_url(REDIS_URL))
-            q.enqueue("app.worker.process_job", jid, job_id=jid, job_timeout=3600*4)
-        except Exception:
+            from redis import Redis
+            from rq import Queue
+            from app.config import REDIS_URL
+            
+            if REDIS_URL:
+                q = Queue("reconstruction", connection=Redis.from_url(REDIS_URL))
+                q.enqueue("app.worker.process_job", jid, job_id=jid, job_timeout=3600 * 4)
+        except (ImportError, Exception):
             pass
 
     return {"status": "queued"}
+
 
 @app.get("/api/jobs")
 def jobs():
