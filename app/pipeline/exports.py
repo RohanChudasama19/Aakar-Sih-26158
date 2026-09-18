@@ -130,7 +130,6 @@ class ExportManager:
         except Exception:
             self.log_file(glb_path, "GLB", status="FAILED_VALIDATION: Unreadable")
 
-
         # GLTF
         gltf_path = out_mesh / "model.gltf"
         mesh.export(gltf_path)
@@ -151,16 +150,22 @@ class ExportManager:
         try:
             import shutil
             import tempfile
+
             with tempfile.TemporaryDirectory() as td:
                 tmp = Path(td)
                 # copy OBJ, MTL and any image
                 shutil.copy2(obj_path, tmp / obj_path.name)
-                mtl_path = obj_path.with_suffix('.mtl')
+                mtl_path = obj_path.with_suffix(".mtl")
                 if mtl_path.exists():
                     shutil.copy2(mtl_path, tmp / mtl_path.name)
                     # Check MTL for absolute paths
                     mtl_content = mtl_path.read_text(encoding="utf8")
-                    if "C:\\" in mtl_content or "c:\\" in mtl_content.lower() or "/" in mtl_content and "://" not in mtl_content:
+                    if (
+                        "C:\\" in mtl_content
+                        or "c:\\" in mtl_content.lower()
+                        or "/" in mtl_content
+                        and "://" not in mtl_content
+                    ):
                         # Forward slashes might just be relative directories, but absolute paths on Linux start with /
                         # Let's just do a naive check for absolute paths
                         lines = mtl_content.splitlines()
@@ -181,7 +186,6 @@ class ExportManager:
                     self.log_file(obj_path, "OBJ")
         except Exception as e:
             self.log_file(obj_path, "OBJ", status=f"FAILED_VALIDATION: Portability error: {e}")
-
 
         # FBX (if available)
         blender = shutil.which("blender")

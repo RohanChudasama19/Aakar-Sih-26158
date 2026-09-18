@@ -37,11 +37,10 @@ def clean(value):
     return value
 
 
-
-
 def _build_hardware_info() -> dict:
     """Return actual hardware info including real GPU from nvidia-smi."""
     import platform as _platform
+
     _g = _detect_gpu_info()
     return {
         "cpu": _platform.processor() or _platform.machine(),
@@ -55,11 +54,13 @@ def _build_hardware_info() -> dict:
 def _detect_gpu_info() -> dict:
     """Query nvidia-smi for actual GPU name/driver/VRAM. Returns empty dict if unavailable."""
     import subprocess as _sp
+
     try:
         r = _sp.run(
-            ["nvidia-smi", "--query-gpu=name,driver_version,memory.total,memory.used",
-             "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5,
+            ["nvidia-smi", "--query-gpu=name,driver_version,memory.total,memory.used", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if r.returncode == 0 and r.stdout.strip():
             parts = [p.strip() for p in r.stdout.strip().split(",")]
@@ -97,7 +98,6 @@ def run_pipeline(input_dir, work, options=None, callback=None):
             yield
         finally:
             sub_stages[name] = round(time.monotonic() - t0, 3)
-
 
     def progress(p, message):
         e = {
@@ -296,13 +296,13 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     stage("D", 62)
     with timed("mesh"):
         surface, mesh_report = mesh.build_mesh(
-        points, colors, geo, reconstruction, k, originals_dir, out_dir=out, options=opts
-    )
+            points, colors, geo, reconstruction, k, originals_dir, out_dir=out, options=opts
+        )
     stage("E", 78)
     with timed("semantics"):
         semantic_report = semantic.classify(
-        points, colors, geo, surface, out, sfm=reconstruction, k=k, directory=originals_dir, options=opts
-    )
+            points, colors, geo, surface, out, sfm=reconstruction, k=k, directory=originals_dir, options=opts
+        )
 
     stage("F", 93)
     # Load semantic labels for export if available

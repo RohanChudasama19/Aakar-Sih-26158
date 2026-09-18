@@ -1,9 +1,10 @@
-﻿from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from app.db import Job, Session, init_db
 from app.main import app
 
 client = TestClient(app)
+
 
 def test_cancel_api():
     init_db()
@@ -18,6 +19,7 @@ def test_cancel_api():
     with Session() as s:
         job = s.get(Job, "test-cancel-job")
         assert job.status == "cancelling"
+
 
 def test_retry_api():
     init_db()

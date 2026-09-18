@@ -29,7 +29,6 @@ def build_mesh(points, colors, geo, sfm, k, directory, out_dir=None, options=Non
         # Currently no dedicated filter pass in mesh.py, so filtered is same as raw
         mesh_raw.export(out_dir / "mesh_filtered.ply")
 
-
     # 2. Texturing
     options["occlusion_test"] = options.get("occlusion_test", True)
 

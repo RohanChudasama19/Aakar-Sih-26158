@@ -19,7 +19,6 @@ def process_job(job_id):
     directory = DATA / job_id
     stop = threading.Event()
 
-
     def heartbeat():
         import os
 
@@ -45,7 +44,6 @@ def process_job(job_id):
                         os._exit(1)
             except Exception:
                 pass
-
 
     thread = threading.Thread(target=heartbeat, daemon=True)
     thread.start()

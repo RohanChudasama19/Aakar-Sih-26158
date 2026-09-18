@@ -226,7 +226,6 @@ class ColmapPatchMatchBackend(DenseBackend):
         return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
 
 
-
 def execute_dense(
     sfm: Dict[str, Any],
     k: Any,
@@ -244,7 +243,9 @@ def execute_dense(
         # Estimate: 50MB per frame for workspace
         required = len(sfm["poses"]) * 50 * 1024 * 1024
         if free < required:
-            raise RuntimeError(f"Insufficient disk space for dense reconstruction. Required: {required/1024**2:.1f} MB, Free: {free/1024**2:.1f} MB")
+            raise RuntimeError(
+                f"Insufficient disk space for dense reconstruction. Required: {required / 1024**2:.1f} MB, Free: {free / 1024**2:.1f} MB"
+            )
     except RuntimeError as e:
         raise e
     except Exception:
