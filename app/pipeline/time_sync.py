@@ -320,7 +320,7 @@ def run_synchronization(mission_dir: Path):
         for rec in sync_records:
             writer.writerow({k: rec.get(k, "") for k in fields})
 
-    def calc_overlap(stream: Any): # type: ignore
+    def calc_overlap(stream: Any):  # type: ignore
         if stream.start_time is None:
             return None
         os = max(mission_start, stream.start_time)

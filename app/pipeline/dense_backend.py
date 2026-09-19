@@ -153,8 +153,6 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(profile["window_step"]),
                     "--PatchMatchStereo.num_iterations",
                     str(profile["num_iterations"]),
-                    "--PatchMatchStereo.num_matching_views",
-                    str(profile.get("num_matching_views", 8)),
                 ]
                 t_pm0 = time.monotonic()
                 subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True)
