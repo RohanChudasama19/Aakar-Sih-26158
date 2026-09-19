@@ -247,7 +247,7 @@ def run_synchronization(mission_dir: Path):
     sync_records = []
 
     max_gap_gps = 2.0
-    max_gap_imu = 0.05
+    max_gap_imu = 0.2
     max_gap_baro = 0.5
 
     for frm in frames:

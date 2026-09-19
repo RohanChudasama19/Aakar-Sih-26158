@@ -25,5 +25,5 @@ This report tracks the availability and verification status of genuine sensor da
 
 ### Phase E Safety Analysis
 Because spatial conventions (IMU Axes, Camera-IMU extrinsics) are UNKNOWN or NOT_AVAILABLE, Phase E must be split:
-- **Phase E1 (Safe Now):** Frame-agnostic sensor fusion (accel/gyro magnitudes, barometric relative altitude, GNSS position constraints).
-- **Phase E2 (Blocked):** Orientation-dependent fusion (gravity alignment, body-to-camera rotation, quaternion pose fusion) is strictly BLOCKED until conventions are proven.
+- **Phase E1:** IMPLEMENTED / REAL-DATA VALIDATED (Frame-agnostic sensor fusion: accel/gyro magnitudes, barometric relative altitude, GNSS position constraints).
+- **Phase E2:** BLOCKED (Reason: Missing explicit extrinsic mapping and unproven IMU axis conventions prevent safe gravity alignment, body-to-camera rotation, and quaternion pose fusion).

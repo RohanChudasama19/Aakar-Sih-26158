@@ -1,7 +1,8 @@
-import pytest
-import numpy as np
 import json
 from pathlib import Path
+
+import numpy as np
+import pytest
 
 
 def test_rotation_matrix_sanity():
