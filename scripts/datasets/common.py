@@ -15,8 +15,10 @@ def write_conversion_report(
     warnings: list[str],
     errors: list[str],
     output_dir: Path,
+    **kwargs,
 ):
     report = {
+        "additional_info": kwargs.get("additional_info", {}),
         "dataset": dataset,
         "sequence": sequence,
         "input_files": input_files,

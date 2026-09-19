@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 
@@ -5,7 +6,7 @@ from common import write_conversion_report
 from validate_canonical_mission import validate_mission
 
 
-def convert_mars_lvig(input_dir: Path, output_dir: Path):
+def convert_mars_lvig(input_dir: Path, output_dir: Path, allow_synthetic: bool = False):
     print("MARS-LVIG Adapter")
     print(f"Input: {input_dir}")
     print(f"Output: {output_dir}")
@@ -54,4 +55,9 @@ def convert_mars_lvig(input_dir: Path, output_dir: Path):
 
 
 if __name__ == "__main__":
-    convert_mars_lvig(Path("data_external/mars_lvig/raw"), Path("data_external/mars_lvig"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=str, default="data_external/mars_lvig/raw")
+    parser.add_argument("--output", type=str, default="data_external/mars_lvig")
+    parser.add_argument("--allow-synthetic-test-fixture", action="store_true")
+    args = parser.parse_args()
+    convert_mars_lvig(Path(args.input), Path(args.output), args.allow_synthetic_test_fixture)

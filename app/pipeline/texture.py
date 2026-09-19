@@ -63,19 +63,32 @@ class AeroreconTextureBackend(TextureBackend):
                     check = np.concatenate([triuv, triuv.mean(1, keepdims=True)], axis=1).astype(int)
                     inside &= (mask[np.clip(check[:, :, 1], 0, h - 1), np.clip(check[:, :, 0], 0, w - 1)] > 0).all(1)
 
-            # Occlusion testing (if requested and pyembree available)
+            # Occlusion testing using Open3D RaycastingScene (very fast)
             if inside.any() and options.get("occlusion_test", False):
-                # Use raycaster
                 try:
+                    # Initialize Open3D raycaster once per mesh if not already done
+                    if getattr(mesh, "_o3d_ray_scene", None) is None:
+                        import open3d as o3d
+
+                        o3d_mesh = o3d.t.geometry.TriangleMesh()
+                        o3d_mesh.vertex.positions = o3d.core.Tensor(np.asarray(mesh.vertices, dtype=np.float32))
+                        o3d_mesh.triangle.indices = o3d.core.Tensor(np.asarray(mesh.faces, dtype=np.uint32))
+                        scene = o3d.t.geometry.RaycastingScene()
+                        scene.add_triangles(o3d_mesh)
+                        mesh._o3d_ray_scene = scene
+
                     ray_origins = (-pose[:, :3].T @ pose[:, 3]).reshape(1, 3)
                     ray_origins = np.repeat(ray_origins, np.sum(inside), axis=0)
                     ray_directions = centroids[inside] - ray_origins
 
-                    # Normalize
-                    ray_norms = np.linalg.norm(ray_directions, axis=1, keepdims=True)
-                    ray_directions /= ray_norms + 1e-9
+                    # Construct rays tensor [origins, directions]
+                    rays = np.concatenate([ray_origins, ray_directions], axis=1).astype(np.float32)
+                    rays_tensor = o3d.core.Tensor(rays)
 
-                    index_ray = mesh.ray.intersects_first(ray_origins, ray_directions)
+                    # Cast rays
+                    ans = mesh._o3d_ray_scene.cast_rays(rays_tensor)
+                    index_ray = ans["primitive_ids"].numpy()
+
                     visible_faces = np.where(inside)[0]
 
                     # It intersects the target face first
@@ -83,7 +96,10 @@ class AeroreconTextureBackend(TextureBackend):
 
                     # Update inside mask
                     inside[visible_faces[occluded]] = False
-                except Exception:
+                except Exception as e:
+                    import warnings
+
+                    warnings.warn(f"Occlusion testing failed: {e}")
                     pass  # Fallback to no occlusion test
 
             view = (-pose[:, :3].T @ pose[:, 3]) - centroids

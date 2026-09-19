@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 
@@ -5,7 +6,7 @@ from common import write_conversion_report
 from validate_canonical_mission import validate_mission
 
 
-def convert_h3d(input_dir: Path, output_dir: Path):
+def convert_h3d(input_dir: Path, output_dir: Path, allow_synthetic: bool = False):
     print("H3D Adapter")
 
     warnings = []
@@ -48,4 +49,9 @@ def convert_h3d(input_dir: Path, output_dir: Path):
 
 
 if __name__ == "__main__":
-    convert_h3d(Path("data_external/h3d/raw"), Path("data_external/h3d"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=str, default="data_external/h3d/raw")
+    parser.add_argument("--output", type=str, default="data_external/h3d")
+    parser.add_argument("--allow-synthetic-test-fixture", action="store_true")
+    args = parser.parse_args()
+    convert_h3d(Path(args.input), Path(args.output), args.allow_synthetic_test_fixture)

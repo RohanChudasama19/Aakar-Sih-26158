@@ -342,8 +342,9 @@ def retry_job(jid: str):
         try:
             from redis import Redis
             from rq import Queue
+
             from app.config import REDIS_URL
-            
+
             if REDIS_URL:
                 q = Queue("reconstruction", connection=Redis.from_url(REDIS_URL))
                 q.enqueue("app.worker.process_job", jid, job_id=jid, job_timeout=3600 * 4)
