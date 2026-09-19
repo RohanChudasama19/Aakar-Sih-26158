@@ -24,12 +24,12 @@ def convert_mars_lvig(input_dir: Path, output_dir: Path, allow_synthetic: bool =
     (mission_dir / "telemetry").mkdir(parents=True, exist_ok=True)
 
     with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-        f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+        f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
         f.write("0,1600000000.0,1600000000.0,rgb_topic\n")
         f.write("1,1600000000.1,1600000000.1,rgb_topic\n")
 
     with open(mission_dir / "telemetry" / "gps.csv", "w") as f:
-        f.write("canonical_unix_timestamp,lat,lon,alt\n")
+        f.write("canonical_time_s,lat,lon,alt\n")
         f.write("1600000000.0,22.0,114.0,10.0\n")
 
     with open(mission_dir / "telemetry" / "flight_metadata.json", "w") as f:

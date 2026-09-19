@@ -13,7 +13,7 @@ def test_validate_mission_valid(tmp_path):
     (mission_dir / "telemetry").mkdir(parents=True)
 
     with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-        f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+        f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
         f.write("0,1.0,1.0,img1\n")
         f.write("1,1.1,1.1,img2\n")  # monotonic
 
@@ -30,7 +30,7 @@ def test_validate_mission_non_monotonic_timestamp(tmp_path):
     (mission_dir / "telemetry").mkdir(parents=True)
 
     with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-        f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+        f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
         f.write("0,1.5,1.5,img1\n")
         f.write("1,1.2,1.2,img2\n")  # not monotonic
 

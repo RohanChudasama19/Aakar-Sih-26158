@@ -111,7 +111,7 @@ def compute_features(gray: np.ndarray, config: Dict) -> Tuple[list, np.ndarray, 
 
 def compute_pair_geometry(kp1, kp2, des1, des2, K: np.ndarray) -> Dict:
     if des1 is None or des2 is None or len(kp1) < 10 or len(kp2) < 10:
-        return {"inliers": 0}
+        return {"inliers": 0, "matches": 0, "parallax": 0.0, "pure_rotation_risk": False}
 
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des1, des2, k=2)
@@ -121,7 +121,7 @@ def compute_pair_geometry(kp1, kp2, des1, des2, K: np.ndarray) -> Dict:
             good.append(m[0])
 
     if len(good) < 10:
-        return {"inliers": 0, "matches": len(good)}
+        return {"inliers": 0, "matches": len(good), "parallax": 0.0, "pure_rotation_risk": False}
 
     pts1 = np.float32([kp1[m.queryIdx].pt for m in good])
     pts2 = np.float32([kp2[m.trainIdx].pt for m in good])

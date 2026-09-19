@@ -21,7 +21,7 @@ def convert_usegeo(input_dir: Path, output_dir: Path, allow_synthetic: bool = Fa
 
     # Dummy canonical creation for testing logic
     with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-        f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+        f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
         f.write("0,1.0,1.0,IMG_0001.JPG\n")
 
     with open(mission_dir / "telemetry" / "flight_metadata.json", "w") as f:

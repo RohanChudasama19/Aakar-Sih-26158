@@ -51,29 +51,29 @@ mission/
 ### frame_timestamps.csv
 - **frame_index**: int, required, index of the frame in the video/sequence
 - **source_timestamp**: float or string, required, original sensor/ROS timestamp
-- **canonical_unix_timestamp**: float, required, Unix epoch seconds (sub-second precision)
+- **canonical_time_s**: float, required, Unix epoch seconds (sub-second precision)
 - **video_timestamp_s**: float, optional, time in seconds from the start of the video
 - **source_identifier**: string, required, original image filename or ROS topic sequence ID
 
 ### gps.csv
-- **canonical_unix_timestamp**: float, required, Unix epoch seconds
+- **canonical_time_s**: float, required, Unix epoch seconds
 - **lat**: float, required, WGS84 latitude
 - **lon**: float, required, WGS84 longitude
 - **alt**: float, required, Altitude (specify vertical datum in flight_metadata.json)
 
 ### imu.csv
-- **canonical_unix_timestamp**: float, required, Unix epoch seconds
+- **canonical_time_s**: float, required, Unix epoch seconds
 - **accel_x**, **accel_y**, **accel_z**: float, optional, m/s^2
 - **gyro_x**, **gyro_y**, **gyro_z**: float, optional, rad/s
 - **q_w**, **q_x**, **q_y**, **q_z**: float, optional, Normalized orientation quaternion
 
 ### barometer.csv
-- **canonical_unix_timestamp**: float, required, Unix epoch seconds
+- **canonical_time_s**: float, required, Unix epoch seconds
 - **pressure**: float, required, hPa or Pascals
 - **temperature**: float, optional, Celsius
 
 ### rtk_ppk.csv
-- **canonical_unix_timestamp**: float, required, Unix epoch seconds
+- **canonical_time_s**: float, required, Unix epoch seconds
 - **lat**, **lon**, **height**: float, required
 - **quality**: string, required (RTK_FIXED, RTK_FLOAT, DGPS, PPK_FIXED, PPK_FLOAT, GNSS_SINGLE, UNKNOWN)
 - **satellite_count**: int, optional

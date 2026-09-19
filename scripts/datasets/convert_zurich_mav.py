@@ -31,11 +31,11 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         warnings.append("Real data not provided; access blocked. Creating synthetic representation.")
 
         with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-            f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+            f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
             f.write("0,1000000.0,1600000000.0,frame0000.png\n")
 
         with open(mission_dir / "telemetry" / "imu.csv", "w") as f:
-            f.write("canonical_unix_timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z\n")
+            f.write("canonical_time_s,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z\n")
             f.write("1600000000.0,0.0,0.0,9.81,0.0,0.0,0.0\n")
 
         with open(mission_dir / "telemetry" / "flight_metadata.json", "w") as f:
@@ -90,7 +90,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         gps_rows = []
         img_timestamps = {}
         with z.open("AGZ_subset/Log Files/OnboardGPS.csv") as f:
-            lines = [l.decode("utf-8").strip() for l in f.readlines()]
+            lines = [line_item.decode("utf-8").strip() for line_item in f.readlines()]
             for line in lines[1:]:
                 if not line:
                     continue
@@ -107,7 +107,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         gps_sorted, gps_orig, gps_back, gps_dup, gps_neg, gps_reorder = process_and_sort_csv(gps_rows)
 
         with open(mission_dir / "telemetry" / "gps.csv", "w") as f:
-            f.write("canonical_unix_timestamp,lat,lon,alt\n")
+            f.write("canonical_time_s,lat,lon,alt\n")
             for r in gps_sorted:
                 f.write(f"{r[0]},{r[1]},{r[2]},{r[3]}\n")
 
@@ -115,7 +115,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         img_files = [n for n in z.namelist() if n.startswith("AGZ_subset/MAV Images/") and n.lower().endswith(".jpg")]
         img_files.sort()
         with open(mission_dir / "telemetry" / "frame_timestamps.csv", "w") as f:
-            f.write("frame_index,source_timestamp,canonical_unix_timestamp,source_identifier\n")
+            f.write("frame_index,source_timestamp,canonical_time_s,source_identifier\n")
             for idx, n in enumerate(img_files):
                 fname = Path(n).name
                 imgid = int(fname.split(".")[0])
@@ -123,11 +123,11 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
                 f.write(f"{idx},{ts},{ts},{fname}\n")
 
         # IMU Accel & Gyro
-        imu_rows = []  # Will store dicts: {ts: ts, 'accel': (x,y,z), 'gyro': (x,y,z)}
+        # imu_rows removed
         imu_dict = {}
 
         with z.open("AGZ_subset/Log Files/RawAccel.csv") as f:
-            lines = [l.decode("utf-8").strip() for l in f.readlines()]
+            lines = [line_item.decode("utf-8").strip() for line_item in f.readlines()]
             for line in lines[1:]:
                 if not line:
                     continue
@@ -138,7 +138,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
                 imu_dict[ts]["accel"] = (float(parts[2]), float(parts[3]), float(parts[4]))
 
         with z.open("AGZ_subset/Log Files/RawGyro.csv") as f:
-            lines = [l.decode("utf-8").strip() for l in f.readlines()]
+            lines = [line_item.decode("utf-8").strip() for line_item in f.readlines()]
             for line in lines[1:]:
                 if not line:
                     continue
@@ -156,7 +156,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         imu_sorted, imu_orig, imu_back, imu_dup, imu_neg, imu_reorder = process_and_sort_csv(imu_list)
 
         with open(mission_dir / "telemetry" / "imu.csv", "w") as f:
-            f.write("canonical_unix_timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z\n")
+            f.write("canonical_time_s,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z\n")
             for r in imu_sorted:
                 ts = r[0]
                 ax, ay, az = r[1] if r[1] else ("", "", "")
@@ -166,7 +166,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
         # Barometer
         baro_rows = []
         with z.open("AGZ_subset/Log Files/BarometricPressure.csv") as f:
-            lines = [l.decode("utf-8").strip() for l in f.readlines()]
+            lines = [line_item.decode("utf-8").strip() for line_item in f.readlines()]
             for line in lines[1:]:
                 if not line:
                     continue
@@ -178,7 +178,7 @@ def convert_zurich_mav(input_dir: Path, output_dir: Path, allow_synthetic: bool 
 
         baro_sorted, baro_orig, baro_back, baro_dup, baro_neg, baro_reorder = process_and_sort_csv(baro_rows)
         with open(mission_dir / "telemetry" / "barometer.csv", "w") as f:
-            f.write("canonical_unix_timestamp,pressure,temperature\n")
+            f.write("canonical_time_s,pressure,temperature\n")
             for r in baro_sorted:
                 f.write(f"{r[0]},{r[1]},{r[2]}\n")
 

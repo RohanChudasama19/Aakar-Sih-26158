@@ -82,7 +82,7 @@ This document details the architectural specifications, empirical evaluation pro
 - Frame extraction to MP4 video must not discard original sensor timing. An accompanying `frame_timestamps.csv` must record:
   - `frame_index`
   - `source_timestamp` (original ROS / sensor time)
-  - `canonical_unix_timestamp`
+  - `canonical_time_s`
   - `video_timestamp_s`
   - `source_identifier`
 - All downstream sensor synchronization must reference `source_timestamp`.

@@ -17,12 +17,12 @@ def validate_csv_schema(file_path: Path, required_columns: set) -> list[str]:
             if missing:
                 errors.append(f"{file_path.name} is missing required columns: {missing}")
 
-            # Check monotonicity of canonical_unix_timestamp if present
-            if "canonical_unix_timestamp" in reader.fieldnames:
+            # Check monotonicity of canonical_time_s if present
+            if "canonical_time_s" in reader.fieldnames:
                 prev_ts = -1.0
                 for row_idx, row in enumerate(reader):
                     try:
-                        ts = float(row["canonical_unix_timestamp"])
+                        ts = float((row.get("canonical_time_s") or row.get("canonical_unix_timestamp")))
                         if ts < prev_ts:
                             errors.append(
                                 f"{file_path.name} row {row_idx + 2}: timestamp {ts} is strictly earlier than previous {prev_ts} (not monotonic)."
@@ -30,7 +30,7 @@ def validate_csv_schema(file_path: Path, required_columns: set) -> list[str]:
                         prev_ts = ts
                     except ValueError:
                         errors.append(
-                            f"{file_path.name} row {row_idx + 2}: invalid canonical_unix_timestamp '{row['canonical_unix_timestamp']}'"
+                            f"{file_path.name} row {row_idx + 2}: invalid canonical_time_s '{row['canonical_time_s']}'"
                         )
     except Exception as e:
         errors.append(f"Failed to read {file_path.name}: {e}")
@@ -51,13 +51,13 @@ def validate_mission(mission_dir: Path) -> dict:
         "telemetry/frame_timestamps.csv": {
             "frame_index",
             "source_timestamp",
-            "canonical_unix_timestamp",
+            "canonical_time_s",
             "source_identifier",
         },
-        "telemetry/gps.csv": {"canonical_unix_timestamp", "lat", "lon", "alt"},
-        "telemetry/imu.csv": {"canonical_unix_timestamp"},
-        "telemetry/barometer.csv": {"canonical_unix_timestamp", "pressure"},
-        "gnss/rtk_ppk.csv": {"canonical_unix_timestamp", "lat", "lon", "height", "quality"},
+        "telemetry/gps.csv": {"canonical_time_s", "lat", "lon", "alt"},
+        "telemetry/imu.csv": {"canonical_time_s"},
+        "telemetry/barometer.csv": {"canonical_time_s", "pressure"},
+        "gnss/rtk_ppk.csv": {"canonical_time_s", "lat", "lon", "height", "quality"},
         "control/gcps.csv": {"checkpoint_id", "latitude", "longitude", "elevation", "role"},
     }
 
@@ -97,3 +97,4 @@ if __name__ == "__main__":
     rep = validate_mission(Path(sys.argv[1]))
     print(json.dumps(rep, indent=2))
     sys.exit(0 if rep["status"] != "INVALID" else 1)
+
