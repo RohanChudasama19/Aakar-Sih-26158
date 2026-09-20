@@ -17,9 +17,9 @@ def test_minimum_controls():
         GroundControlPoint("c3", 45.0, 9.001, 100.0, ControlRole.CONTROL, 0.0, 1.0, 0.0),
     ]
     quality, warnings = check_control_geometry(pts)
-    assert quality == GeometryQuality.INVALID
+    assert quality == GeometryQuality.WEAK
     assert len(warnings) > 0
-    assert "Insufficient" in warnings[0]
+    assert "NOT_ENOUGH_CONTROLS" in warnings[0]
 
 def test_checkpoint_leakage_protection(tmp_path):
     import pyproj
@@ -42,10 +42,18 @@ def test_checkpoint_leakage_protection(tmp_path):
     quality, warnings = check_control_geometry(pts)
     assert quality == GeometryQuality.GOOD
 
+    # Fit without checkpoint
+    rep_clean = fit_control_alignment(pts, tmp_path, 32632)
+    
     crazy_pt = GroundControlPoint("crazy", 80.0, 120.0, 5000.0, ControlRole.CHECKPOINT, 9999.0, 9999.0, 9999.0)
     pts.append(crazy_pt)
     
     rep = fit_control_alignment(pts, tmp_path, 32632)
+    
+    # Assert bitwise unchanged
+    assert rep_clean["transform"]["scale"] == rep["transform"]["scale"]
+    assert rep_clean["transform"]["rotation"] == rep["transform"]["rotation"]
+    assert rep_clean["transform"]["translation"] == rep["transform"]["translation"]
     assert rep["CONTROL_FIT_RMSE"] < 1e-3
     assert rep["control_count"] == 4
     assert rep["checkpoint_count"] == 1

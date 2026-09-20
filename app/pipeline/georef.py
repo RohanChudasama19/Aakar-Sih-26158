@@ -71,7 +71,21 @@ def _try_gcp_alignment(input_dir, epsg):
                 ))
                 
         control_count = sum(1 for g in gcps if g.role == ControlRole.CONTROL)
-        if control_count >= 3:
+        if control_count > 0:
+            if control_count < 4:
+                return {
+                    "valid": False,
+                    "metric_state": MetricState.RELATIVE.value,
+                    "reason": f"NOT_ENOUGH_CONTROLS: Minimum 4 valid CONTROL points required (found {control_count}). Recommended 6-10.",
+                    "scale": 1.0,
+                    "rotation": np.eye(3).tolist(),
+                    "translation": np.zeros(3).tolist(),
+                    "origin": [0.0, 0.0, 0.0],
+                    "epsg": epsg,
+                    "coordinate_system": "UTM",
+                    "rmse_m": None,
+                }
+                
             rep = fit_control_alignment(gcps, input_dir, epsg)
             
             return {

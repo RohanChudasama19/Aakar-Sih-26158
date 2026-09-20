@@ -45,9 +45,11 @@ class GeometryQuality(str, Enum):
 
 def check_control_geometry(controls: List[GroundControlPoint]) -> Tuple[GeometryQuality, List[str]]:
     warnings = []
-    if len(controls) < 4:
-        warnings.append(f"Insufficient control points: {len(controls)} < 4")
+    if len(controls) < 3:
+        warnings.append(f"NOT_ENOUGH_CONTROLS: {len(controls)} < 3")
         return GeometryQuality.INVALID, warnings
+    if len(controls) == 3:
+        warnings.append("NOT_ENOUGH_CONTROLS: 3 control points is only valid for mathematical unit tests. Production requires minimum 4.")
 
     coords = np.array([[c.latitude, c.longitude, c.elevation] for c in controls])
     lat_mean = np.mean(coords[:, 0])
@@ -78,6 +80,10 @@ def check_control_geometry(controls: List[GroundControlPoint]) -> Tuple[Geometry
 
     if np.min(dists) < 0.1:
         warnings.append("Control points are tightly clustered.")
+
+    area = float(np.max(x) - np.min(x)) * float(np.max(y) - np.min(y))
+    if area < 100.0:
+        warnings.append("Poor scene coverage: control points are confined to a very small area (<100 m^2).")
 
     if len(warnings) > 0:
         return GeometryQuality.WEAK, warnings
@@ -168,7 +174,16 @@ def fit_control_alignment(controls: List[GroundControlPoint], out_dir: Path, tar
     rep = {
         "control_count": len(controls_used),
         "checkpoint_count": len(checkpoints),
-        "transform": {"scale": float(s), "rotation": R.tolist(), "translation": t.tolist()},
+        "transform": {
+            "scale": float(s),
+            "rotation": R.tolist(),
+            "translation": t.tolist(),
+            "xy_scale": float(s) if force_horizontal else None,
+            "xy_rotation": R.tolist() if force_horizontal else None,
+            "xy_translation": [t[0], t[1]] if force_horizontal else None
+        },
+        "vertical_status": "DATUM_INCOMPATIBLE_OR_UNKNOWN" if force_horizontal else "ALIGNED",
+
         "control_residuals": res_details,
         "robust_inliers": int(np.sum(best_inliers)),
         "rejected_controls": len(controls_used) - int(np.sum(best_inliers)),

@@ -89,8 +89,8 @@ class ColmapPatchMatchBackend(DenseBackend):
         if not colmap_exe:
             raise RuntimeError("COLMAP not found in PATH")
 
-        sparse_dir = work_dir / "sparse"
-        if not (sparse_dir / "0" / "cameras.bin").exists() and not (sparse_dir / "0" / "cameras.txt").exists():
+        colmap_model_path = Path(sfm.get("model_path", work_dir / "sparse" / "0"))
+        if not (colmap_model_path / "cameras.bin").exists() and not (colmap_model_path / "cameras.txt").exists():
             progress(50, "COLMAP sparse workspace not found. Falling back to CPU.")
             return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
 
@@ -122,7 +122,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--image_path",
                     str(directory),
                     "--input_path",
-                    str(sparse_dir / "0"),
+                    str(colmap_model_path),
                     "--output_path",
                     str(dense_dir),
                     "--output_type",
