@@ -25,5 +25,5 @@
 - **No-ICP Safety Constraint:** IMPLEMENTED
 - **Symmetric Completeness:** IMPLEMENTED
 - **UseGeo Real Validation:** NOT_AVAILABLE (Manual download blocked)
-- **H3D Real Validation:** NOT_AVAILABLE (Manual download blocked)
-- **SIH <=1m Claim:** NOT_AVAILABLE (Requires real reference geometry)
+- **H3D Real Validation:** VERIFIED_REAL_DATA (Engine Only - 82M point scale)
+- **SIH <=1m Claim:** NOT_AVAILABLE (H3D data evaluates engine via semantic benchmark, not photogrammetry end-to-end)

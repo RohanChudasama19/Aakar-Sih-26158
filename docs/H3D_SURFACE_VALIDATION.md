@@ -1,9 +1,29 @@
 # H3D Hessigheim Surface Validation
 
-**Status**: NOT_AVAILABLE
+**Status**: VERIFIED_REAL_DATA (Engine Only)
 
-## Access Blocker
-The H3D dataset is subject to manual download and registration gates. We lack the matching source imagery and LiDAR reference epoch.
+## File Roles and Metadata
+- `Mar19_test.laz` (Role: **Test/Evaluation Target**): Unclassified raw LiDAR point cloud (Classification: [0]). Contains 82,042,556 points.
+- `Mar19_test_GroundTruth.laz` (Role: **Reference Geometry**): Manually annotated LiDAR point cloud (Classification: [0, 1, 2, ..., 10]). Contains exactly 82,042,556 points, identical to the test cloud.
 
-## Epoch Safety
-Should H3D become available, it is mandatory to execute the evaluation against a matching temporal epoch. Comparing Summer imagery with Winter reference LiDAR would trigger `TEMPORAL_SCENE_CHANGE_RISK`.
+**CRS Validation:**
+- Horizontal CRS: EPSG:32632 (UTM Zone 32N)
+- Vertical Datum: DHHN2016 (Standard normal heights)
+
+Because the two point clouds contain precisely identical geometry (differentiated only by semantic class labels), this test acts as a **SURFACE_VALIDATION_ENGINE_REAL_DATA_TEST**. It validates the memory limits, sampling determinism, and K-D tree evaluation of the validation engine on a massive real-world dataset. 
+
+It does **NOT** represent `AERORECON_END_TO_END_ACCURACY`, as the test cloud was not photogrammetrically reconstructed from video/images by AeroRecon.
+
+## Real Data Metrics (C2C)
+Since the geometries are identical, both accuracy and completeness converge toward 0 error.
+- **POST_HOC_ICP_USED:** FALSE
+- **Test -> GroundTruth (Accuracy):**
+  - RMSE_3D: 0.000 m
+  - Median: 0.000 m
+  - P95: 0.000 m
+- **GroundTruth -> Test (Completeness):**
+  - Coverage (1.0m): 100.0%
+
+## SIH <= 1m Decision
+**Status:** NOT_AVAILABLE
+Although the evaluation engine processed the real data seamlessly, the SIH <=1m spatial accuracy target requires an independent verification of an *AeroRecon-generated* reconstruction against independent reference data. Because we compared two identical LiDAR clouds (a semantic benchmark), this cannot be cited as photogrammetric accuracy.
