@@ -22,7 +22,7 @@ def validate_csv_schema(file_path: Path, required_columns: set) -> list[str]:
                 prev_ts = -1.0
                 for row_idx, row in enumerate(reader):
                     try:
-                        ts = float((row.get("canonical_time_s") or row.get("canonical_unix_timestamp")))
+                        ts = float(row.get("canonical_time_s") or row.get("canonical_unix_timestamp") or "0.0")
                         if ts < prev_ts:
                             errors.append(
                                 f"{file_path.name} row {row_idx + 2}: timestamp {ts} is strictly earlier than previous {prev_ts} (not monotonic)."
@@ -97,4 +97,3 @@ if __name__ == "__main__":
     rep = validate_mission(Path(sys.argv[1]))
     print(json.dumps(rep, indent=2))
     sys.exit(0 if rep["status"] != "INVALID" else 1)
-

@@ -194,7 +194,7 @@ def run_synchronization(mission_dir: Path):
                 frames.append(
                     {
                         "frame_index": int(r["frame_index"]),
-                        "ts": float((r.get("canonical_time_s") or r.get("canonical_unix_timestamp"))),
+                        "ts": float(r.get("canonical_time_s") or r.get("canonical_unix_timestamp") or "0.0"),
                         "source": r.get("source_identifier", ""),
                     }
                 )
@@ -217,7 +217,12 @@ def run_synchronization(mission_dir: Path):
         raw = []
         with open(telemetry_dir / "gps.csv") as f:
             for r in csv.DictReader(f):
-                raw.append((float((r.get("canonical_time_s") or r.get("canonical_unix_timestamp"))), (float(r["lat"]), float(r["lon"]), float(r["alt"]))))
+                raw.append(
+                    (
+                        float(r.get("canonical_time_s") or r.get("canonical_unix_timestamp") or "0.0"),
+                        (float(r["lat"]), float(r["lon"]), float(r["alt"])),
+                    )
+                )
         gps_stream.add_samples(raw)
 
     if (telemetry_dir / "imu.csv").exists():
@@ -226,7 +231,7 @@ def run_synchronization(mission_dir: Path):
         raw_quat = []
         with open(telemetry_dir / "imu.csv") as f:
             for r in csv.DictReader(f):
-                ts = float((r.get("canonical_time_s") or r.get("canonical_unix_timestamp")))
+                ts = float(r.get("canonical_time_s") or r.get("canonical_unix_timestamp") or "0.0")
                 if r.get("accel_x"):
                     raw_accel.append((ts, (float(r["accel_x"]), float(r["accel_y"]), float(r["accel_z"]))))
                 if r.get("gyro_x"):
@@ -241,7 +246,12 @@ def run_synchronization(mission_dir: Path):
         raw = []
         with open(telemetry_dir / "barometer.csv") as f:
             for r in csv.DictReader(f):
-                raw.append((float((r.get("canonical_time_s") or r.get("canonical_unix_timestamp"))), (float(r["pressure"]), 0.0, 0.0)))
+                raw.append(
+                    (
+                        float(r.get("canonical_time_s") or r.get("canonical_unix_timestamp") or "0.0"),
+                        (float(r["pressure"]), 0.0, 0.0),
+                    )
+                )
         baro_stream.add_samples(raw)
 
     sync_records = []
@@ -368,4 +378,3 @@ if __name__ == "__main__":
     import sys
 
     run_synchronization(Path(sys.argv[1]))
-

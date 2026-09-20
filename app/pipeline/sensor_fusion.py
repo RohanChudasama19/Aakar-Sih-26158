@@ -100,7 +100,6 @@ def align_trajectories_umeyama(
 ) -> Tuple[np.ndarray, np.ndarray, float]:
     assert src.shape == dst.shape
     assert src.shape[1] == 3
-    n = src.shape[0]
 
     W = np.sum(weights)
     if W == 0:
