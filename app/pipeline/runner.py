@@ -385,11 +385,16 @@ def run_pipeline(input_dir, work, options=None, callback=None):
                 "reason": "Only this input was timed; no extrapolation to 10 minutes",
             },
             "spatial_accuracy": {
-                "target": "≤ 1 m",
-                "gps_alignment_rmse_m": geo.get("rmse_m"),
+                "target": "<= 1 m",
+                "position_source": geo.get("position_source", "UNKNOWN"),
+                "gps_alignment_rmse_m": geo.get("rmse_m") if geo.get("position_source") != "GCP" else None,
+                "gcp_alignment_rmse_m": geo.get("rmse_m") if geo.get("position_source") == "GCP" else None,
+                "gcp_geometry_quality": geo.get("gcp_report", {}).get("geometry_quality")
+                if geo.get("position_source") == "GCP"
+                else None,
                 "independent_error_m": geo.get("checkpoint_rmse_3d"),
                 "passed": None,
-                "reason": "Requires independent checkpoints; GPS fit residual is not ground truth",
+                "reason": "Requires independent checkpoints; GPS/GCP fit residual is not validation truth",
             },
             "coverage": {
                 "target": "Full visible-scene coverage",

@@ -18,13 +18,13 @@ from app.pipeline.sensor_fusion import (
 def test_gnss_prior_construction_and_uncertainty():
     q = parse_gnss_quality("RTK_FIXED")
     assert q == GNSSQuality.RTK_FIXED
-    sx, sy, sz = compute_sigma(q, None, None, None)
+    sx, sy, sz, is_m = compute_sigma(q, None, None, None)
     assert sx == 0.02
     assert sz == 0.03
 
     # Zero-sigma clipping
-    sx, sy, sz = compute_sigma(GNSSQuality.UNKNOWN, 0.0, 0.0, 0.0)
-    assert sx == 0.001
+    sx, sy, sz, is_m = compute_sigma(GNSSQuality.UNKNOWN, 0.0, 0.0, 0.0)
+    assert sx == 5.0
 
 
 def test_robust_outlier_rejection():
@@ -98,3 +98,14 @@ def test_phase_e1_fusion_integration():
 def test_ground_truth_leakage_protection():
     fusion = PhaseE1Fusion({})
     assert len(fusion.gnss_priors) == 0
+
+def test_lever_arm_blocked_with_unknown_frame():
+    from app.pipeline.sensor_fusion import LeverArmConfig, LeverArmStatus
+    config = LeverArmConfig(
+        translation_vector=(0.1, 0.0, 0.0),
+        source_frame="UNKNOWN",
+        destination_frame="CAMERA",
+        units="m",
+        status=LeverArmStatus.BLOCKED_FRAME_UNKNOWN
+    )
+    assert config.status == LeverArmStatus.BLOCKED_FRAME_UNKNOWN

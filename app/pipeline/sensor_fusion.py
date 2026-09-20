@@ -9,6 +9,21 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 
+class LeverArmStatus(str, Enum):
+    APPLIED = "APPLIED"
+    BLOCKED_FRAME_UNKNOWN = "LEVER_ARM_BLOCKED_FRAME_UNKNOWN"
+    NOT_PROVIDED = "NOT_PROVIDED"
+
+
+@dataclass
+class LeverArmConfig:
+    translation_vector: Tuple[float, float, float]
+    source_frame: str
+    destination_frame: str
+    units: str = "m"
+    status: LeverArmStatus = LeverArmStatus.NOT_PROVIDED
+
+
 class FusionStatus(str, Enum):
     DISABLED = "DISABLED"
     AVAILABLE = "AVAILABLE"
@@ -51,6 +66,8 @@ class PositionPrior:
     sigma_y: float
     sigma_z: float
     source: str
+    satellite_count: Optional[int] = None
+    is_measured_uncertainty: bool = False
 
 
 def parse_gnss_quality(q_str: str) -> GNSSQuality:
@@ -65,12 +82,19 @@ def parse_gnss_quality(q_str: str) -> GNSSQuality:
 
 def compute_sigma(
     quality: GNSSQuality, sig_x: Optional[float], sig_y: Optional[float], sig_z: Optional[float]
-) -> Tuple[float, float, float]:
+) -> Tuple[float, float, float, bool]:
     base = DEFAULT_SIGMA.get(quality, 5.0)
-    sx = max(0.001, sig_x) if sig_x is not None else base
-    sy = max(0.001, sig_y) if sig_y is not None else base
-    sz = max(0.001, sig_z) if sig_z is not None else base * 1.5
-    return sx, sy, sz
+
+    def _safe_sig(val, fallback):
+        if val is None or math.isnan(val) or val <= 0:
+            return fallback
+        return max(0.001, val)
+
+    sx = _safe_sig(sig_x, base)
+    sy = _safe_sig(sig_y, base)
+    sz = _safe_sig(sig_z, base * 1.5)
+    is_meas = (sig_x is not None and sig_x > 0) and (sig_y is not None and sig_y > 0) and (sig_z is not None and sig_z > 0)
+    return sx, sy, sz, is_meas
 
 
 def pressure_to_relative_altitude(pressure_hpa: float, ref_pressure_hpa: float, temp_c: float = 15.0) -> float:
@@ -222,10 +246,11 @@ class PhaseE1Fusion:
         sx: Optional[float] = None,
         sy: Optional[float] = None,
         sz: Optional[float] = None,
+        sat_count: Optional[int] = None,
     ):
         q = parse_gnss_quality(q_str)
-        cx, cy, cz = compute_sigma(q, sx, sy, sz)
-        self.gnss_priors.append(PositionPrior(ts, x, y, z, q, cx, cy, cz, "gnss"))
+        cx, cy, cz, is_meas = compute_sigma(q, sx, sy, sz)
+        self.gnss_priors.append(PositionPrior(ts, x, y, z, q, cx, cy, cz, "gnss", sat_count, is_meas))
         self.report["fusion_status"]["gnss"] = FusionStatus.ACTIVE.value
 
     def process_frame(self, frame_data: dict) -> dict:
