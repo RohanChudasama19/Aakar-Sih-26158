@@ -1,7 +1,7 @@
 import argparse
+import hashlib
 import json
 import shutil
-import hashlib
 from pathlib import Path
 
 from common import write_conversion_report
