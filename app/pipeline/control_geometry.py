@@ -49,7 +49,9 @@ def check_control_geometry(controls: List[GroundControlPoint]) -> Tuple[Geometry
         warnings.append(f"NOT_ENOUGH_CONTROLS: {len(controls)} < 3")
         return GeometryQuality.INVALID, warnings
     if len(controls) == 3:
-        warnings.append("NOT_ENOUGH_CONTROLS: 3 control points is only valid for mathematical unit tests. Production requires minimum 4.")
+        warnings.append(
+            "NOT_ENOUGH_CONTROLS: 3 control points is only valid for mathematical unit tests. Production requires minimum 4."
+        )
 
     coords = np.array([[c.latitude, c.longitude, c.elevation] for c in controls])
     lat_mean = np.mean(coords[:, 0])
@@ -180,10 +182,9 @@ def fit_control_alignment(controls: List[GroundControlPoint], out_dir: Path, tar
             "translation": t.tolist(),
             "xy_scale": float(s) if force_horizontal else None,
             "xy_rotation": R.tolist() if force_horizontal else None,
-            "xy_translation": [t[0], t[1]] if force_horizontal else None
+            "xy_translation": [t[0], t[1]] if force_horizontal else None,
         },
         "vertical_status": "DATUM_INCOMPATIBLE_OR_UNKNOWN" if force_horizontal else "ALIGNED",
-
         "control_residuals": res_details,
         "robust_inliers": int(np.sum(best_inliers)),
         "rejected_controls": len(controls_used) - int(np.sum(best_inliers)),

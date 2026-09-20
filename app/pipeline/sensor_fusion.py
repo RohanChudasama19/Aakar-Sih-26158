@@ -93,7 +93,9 @@ def compute_sigma(
     sx = _safe_sig(sig_x, base)
     sy = _safe_sig(sig_y, base)
     sz = _safe_sig(sig_z, base * 1.5)
-    is_meas = (sig_x is not None and sig_x > 0) and (sig_y is not None and sig_y > 0) and (sig_z is not None and sig_z > 0)
+    is_meas = (
+        (sig_x is not None and sig_x > 0) and (sig_y is not None and sig_y > 0) and (sig_z is not None and sig_z > 0)
+    )
     return sx, sy, sz, is_meas
 
 

@@ -38,13 +38,14 @@ def _try_gcp_alignment(input_dir, epsg):
     cp_path = input_dir / "checkpoints.csv"
     if not cp_path.exists():
         return None
-        
+
     try:
         from app.pipeline.accuracy_validation import parse_checkpoint_csv
+
         cps = parse_checkpoint_csv(cp_path)
-        
+
         from app.pipeline.control_geometry import GroundControlPoint, ControlRole, VerticalDatum, fit_control_alignment
-        
+
         gcps = []
         for c in cps:
             if c.get("recon_x") is not None:
@@ -54,22 +55,24 @@ def _try_gcp_alignment(input_dir, epsg):
                     vd = VerticalDatum(vd_str)
                 except ValueError:
                     vd = VerticalDatum.UNKNOWN
-                    
-                gcps.append(GroundControlPoint(
-                    checkpoint_id=c["checkpoint_id"],
-                    latitude=c["latitude"],
-                    longitude=c["longitude"],
-                    elevation=c["elevation"],
-                    role=role,
-                    recon_x=c["recon_x"],
-                    recon_y=c["recon_y"],
-                    recon_z=c["recon_z"],
-                    vertical_datum=vd,
-                    reference_accuracy_horizontal_m=c.get("reference_accuracy_horizontal_m") or 0.05,
-                    reference_accuracy_vertical_m=c.get("reference_accuracy_vertical_m") or 0.1,
-                    survey_method=c.get("survey_method") or "UNKNOWN"
-                ))
-                
+
+                gcps.append(
+                    GroundControlPoint(
+                        checkpoint_id=c["checkpoint_id"],
+                        latitude=c["latitude"],
+                        longitude=c["longitude"],
+                        elevation=c["elevation"],
+                        role=role,
+                        recon_x=c["recon_x"],
+                        recon_y=c["recon_y"],
+                        recon_z=c["recon_z"],
+                        vertical_datum=vd,
+                        reference_accuracy_horizontal_m=c.get("reference_accuracy_horizontal_m") or 0.05,
+                        reference_accuracy_vertical_m=c.get("reference_accuracy_vertical_m") or 0.1,
+                        survey_method=c.get("survey_method") or "UNKNOWN",
+                    )
+                )
+
         control_count = sum(1 for g in gcps if g.role == ControlRole.CONTROL)
         if control_count > 0:
             if control_count < 4:
@@ -85,9 +88,9 @@ def _try_gcp_alignment(input_dir, epsg):
                     "coordinate_system": "UTM",
                     "rmse_m": None,
                 }
-                
+
             rep = fit_control_alignment(gcps, input_dir, epsg)
-            
+
             return {
                 "valid": True,
                 "metric_state": MetricState.GCP_GEOREFERENCED.value,
@@ -105,13 +108,14 @@ def _try_gcp_alignment(input_dir, epsg):
                 "barometer_used": False,
                 "checkpoint_rmse_3d": None,
                 "position_source": "GCP",
-                "gcp_report": rep
+                "gcp_report": rep,
             }
-            
+
     except Exception as e:
         print(f"Failed to run GCP alignment: {e}")
-        
+
     return None
+
 
 def align(sfm, info, gps, input_dir):
     start_time_utc = info.get("start_time_utc", 0.0)
@@ -120,7 +124,7 @@ def align(sfm, info, gps, input_dir):
     lat0, lon0, alt0 = gps[0]["latitude"], gps[0]["longitude"], gps[0]["altitude_m"]
     zone = min(60, max(1, int((lon0 + 180) // 6) + 1))
     epsg = (32600 if lat0 >= 0 else 32700) + zone
-    
+
     # Check GCP alignment first (Precedence: CONTROL > RTK > GNSS)
     gcp_res = _try_gcp_alignment(input_dir, epsg)
     if gcp_res is not None:
@@ -136,7 +140,7 @@ def align(sfm, info, gps, input_dir):
     origin = absolute_coords[0].copy()
 
     enu_coords = absolute_coords - origin
-    
+
     position_source = "GNSS_SINGLE"
 
     rtk_used = False
@@ -147,6 +151,7 @@ def align(sfm, info, gps, input_dir):
 
         if "timestamp_utc" in rows[0]:
             from datetime import datetime
+
             rtk_times = np.array(
                 [datetime.fromisoformat(r["timestamp_utc"].replace("Z", "+00:00")).timestamp() for r in rows]
             )
@@ -171,6 +176,7 @@ def align(sfm, info, gps, input_dir):
 
         if "timestamp_utc" in rows[0]:
             from datetime import datetime
+
             baro_times = np.array(
                 [datetime.fromisoformat(r["timestamp_utc"].replace("Z", "+00:00")).timestamp() for r in rows]
             )
@@ -231,6 +237,7 @@ def align(sfm, info, gps, input_dir):
         }
 
     from app.pipeline.sensor_fusion import PositionPrior, robust_position_alignment, GNSSQuality, compute_sigma
+
     gnss_priors = []
     for idx in range(len(centers)):
         q = GNSSQuality.RTK_FLOAT if rtk_used else GNSSQuality.DGPS
@@ -242,14 +249,16 @@ def align(sfm, info, gps, input_dir):
                 y=targets[idx][1],
                 z=targets[idx][2],
                 quality=q,
-                sigma_x=cx, sigma_y=cy, sigma_z=cz,
+                sigma_x=cx,
+                sigma_y=cy,
+                sigma_z=cz,
                 source=position_source,
-                is_measured_uncertainty=is_meas
+                is_measured_uncertainty=is_meas,
             )
         )
-        
+
     res, stats = robust_position_alignment(centers, gnss_priors, inlier_threshold=2.0)
-    
+
     if res is None or stats["used_priors"] < 3:
         return {
             "valid": False,
@@ -280,7 +289,7 @@ def align(sfm, info, gps, input_dir):
         "rtk_used": rtk_used,
         "barometer_used": baro_used,
         "checkpoint_rmse_3d": None,
-        "position_source": position_source
+        "position_source": position_source,
     }
 
 
