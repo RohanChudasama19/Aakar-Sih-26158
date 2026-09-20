@@ -19,3 +19,11 @@
 | R15. Performance | <15 mins for 10 min dataset | Benchmarked on RTX 3050 | NOT_AVAILABLE | Hardware requires 4 hours |
 | R16. Accuracy | <=1 m independent check | No independent checkpoints available | NOT_AVAILABLE | Alignment residual is ~0.9m but not a true validation |
 
+
+## Phase J/K: Independent Surface-Reference Validation
+- **C2C and C2M Accuracy Engine:** IMPLEMENTED_SYNTHETICALLY_VERIFIED
+- **No-ICP Safety Constraint:** IMPLEMENTED
+- **Symmetric Completeness:** IMPLEMENTED
+- **UseGeo Real Validation:** NOT_AVAILABLE (Manual download blocked)
+- **H3D Real Validation:** NOT_AVAILABLE (Manual download blocked)
+- **SIH <=1m Claim:** NOT_AVAILABLE (Requires real reference geometry)

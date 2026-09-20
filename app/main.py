@@ -778,6 +778,21 @@ async def get_validation(jid: str):
     }
 
 
+@app.get("/api/jobs/{jid}/surface-validation")
+async def get_surface_validation(jid: str):
+    job_dir = DATA / jid
+    if not job_dir.exists():
+        raise HTTPException(404, "Job not found")
+
+    report_path = job_dir / "work/outputs/validation/surface_validation_report.json"
+    if report_path.exists():
+        import json
+
+        return json.loads(report_path.read_text())
+
+    return {"status": "NOT_AVAILABLE", "reason": "No independent surface reference geometry provided."}
+
+
 @app.post("/api/jobs/{jid}/checkpoints", status_code=202)
 async def upload_checkpoints(jid: str, checkpoints: UploadFile = File(...)):
     """Upload an independent checkpoint CSV for post-mission spatial accuracy validation.

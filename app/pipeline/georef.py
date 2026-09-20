@@ -1,7 +1,5 @@
 import csv
 from enum import Enum
-from pathlib import Path
-import json
 
 import numpy as np
 from pyproj import Transformer
@@ -44,7 +42,7 @@ def _try_gcp_alignment(input_dir, epsg):
 
         cps = parse_checkpoint_csv(cp_path)
 
-        from app.pipeline.control_geometry import GroundControlPoint, ControlRole, VerticalDatum, fit_control_alignment
+        from app.pipeline.control_geometry import ControlRole, GroundControlPoint, VerticalDatum, fit_control_alignment
 
         gcps = []
         for c in cps:
@@ -236,7 +234,7 @@ def align(sfm, info, gps, input_dir):
             "rmse_m": None,
         }
 
-    from app.pipeline.sensor_fusion import PositionPrior, robust_position_alignment, GNSSQuality, compute_sigma
+    from app.pipeline.sensor_fusion import GNSSQuality, PositionPrior, compute_sigma, robust_position_alignment
 
     gnss_priors = []
     for idx in range(len(centers)):

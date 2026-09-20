@@ -1,11 +1,8 @@
-import pytest
-import numpy as np
-from pathlib import Path
 from app.pipeline.control_geometry import (
-    GroundControlPoint,
     ControlRole,
-    VerticalDatum,
     GeometryQuality,
+    GroundControlPoint,
+    VerticalDatum,
     check_control_geometry,
     fit_control_alignment,
 )
