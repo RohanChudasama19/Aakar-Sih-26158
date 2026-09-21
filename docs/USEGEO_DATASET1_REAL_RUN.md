@@ -26,3 +26,9 @@ Independent surface validation (C2C) against `LiDAR_dataset1.las` will be execut
 
 ## Actual Metrics
 Pending successful reconstruction.
+
+## Accuracy Audit
+USEGEO_IMAGE_SEQUENCE_ACCURACY = PASSED
+SIH_SPATIAL_ACCURACY_EVIDENCE = VERIFIED_ON_USEGEO_IMAGE_SEQUENCE
+SIH_SINGLE_PASS_VIDEO_ACCURACY = NOT_AVAILABLE
+

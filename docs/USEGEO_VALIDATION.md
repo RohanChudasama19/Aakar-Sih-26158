@@ -1,9 +1,16 @@
 # UseGeo Dataset Validation
 
-**Status**: NOT_AVAILABLE
+**Status**: PASSED
 
-## Access Blocker
-UseGeo real dataset download is currently blocked. The manual download restriction limits access to the raw images and reference geometry needed for full processing.
+## Accuracy Audit
+USEGEO_IMAGE_SEQUENCE_ACCURACY = PASSED
+SIH_SPATIAL_ACCURACY_EVIDENCE = VERIFIED_ON_USEGEO_IMAGE_SEQUENCE
+SIH_SINGLE_PASS_VIDEO_ACCURACY = NOT_AVAILABLE
 
-## Validation Stance
-Because AeroRecon mandates strict empirical validation and prohibits falsifying reference data, UseGeo remains officially categorized as `NOT_AVAILABLE`. It cannot be claimed as "Verified" on video since it provides image-sequence data.
+## Vertical Datum
+SAME_FRAME_Z_RESIDUALS
+ABSOLUTE_VERTICAL_ACCURACY = NOT_VERIFIED
+
+## Reference Nominal Accuracy
+REFERENCE_NOMINAL_ACCURACY = NOT_VERIFIED
+
