@@ -1,6 +1,6 @@
-import pytest
 import numpy as np
-from app.pipeline.dtm import generate_dsm_dtm, generate_dsm_dtm_tiled, COV_OBSERVED, COV_INTERPOLATED, COV_UNOBSERVED
+
+from app.pipeline.dtm import COV_INTERPOLATED, COV_OBSERVED, COV_UNOBSERVED, generate_dsm_dtm, generate_dsm_dtm_tiled
 
 
 def test_dtm_flat_ground_and_building():

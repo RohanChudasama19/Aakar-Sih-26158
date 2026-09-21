@@ -10,9 +10,9 @@
   "video_fps": 29.97,
   "video_duration_sec": 201.7,
   "home_point": {
-    "latitude": 0.0,
-    "longitude": 0.0,
-    "altitude_m": 3.9624
+    "latitude": 39.62655835,
+    "longitude": -105.0007326,
+    "altitude_m": 1666.9512
   },
   "start_time_utc": "2024-08-03T01:31:03.000Z",
   "end_time_utc": "2024-08-03T01:34:24.000Z",
