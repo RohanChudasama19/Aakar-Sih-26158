@@ -18,3 +18,8 @@ FINAL_RELEASE_SHA256.txt
 *.tar.gz
 *.tar.bz2
 *.tar.xz
+
+# Temporary artifacts
+workspace/
+*.log
+colorado_dataset/
