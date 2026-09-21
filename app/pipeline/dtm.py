@@ -1,28 +1,66 @@
 import numpy as np
 from rasterio.transform import from_origin
 from scipy.interpolate import griddata
-from scipy.ndimage import binary_dilation, grey_opening
+from scipy.ndimage import distance_transform_edt, grey_opening
+
+# Coverage constants
+COV_UNOBSERVED = 0
+COV_OBSERVED = 1
+COV_INTERPOLATED = 2
+
+
+def progressive_morphological_filter(
+    z_grid: np.ndarray, resolution: float, windows_m: list[float], init_dh: float, slope: float, max_dh: float
+) -> np.ndarray:
+    """
+    Multi-scale Progressive Morphological Filter (PMF).
+    """
+    valid_mask = ~np.isnan(z_grid)
+    if not np.any(valid_mask):
+        return z_grid.copy()
+
+    # Fill grid for morphology
+    coords = np.array(np.nonzero(valid_mask)).T
+    values = z_grid[valid_mask]
+    grid_r, grid_c = np.mgrid[0 : z_grid.shape[0], 0 : z_grid.shape[1]]
+
+    # Base surface
+    surf = griddata(coords, values, (grid_r, grid_c), method="nearest")
+
+    prev_surf = surf.copy()
+
+    # Progressively open
+    for i, w_m in enumerate(windows_m):
+        w_px = max(3, int(w_m / resolution))
+        # Morphological opening
+        opened = grey_opening(prev_surf, size=(w_px, w_px))
+
+        # Calculate allowed height difference
+        # dh = initial_dh + slope * (window_size)
+        dh = min(init_dh + slope * w_m, max_dh)
+
+        # Any point in prev_surf that is strictly higher than opened + dh is NOT ground,
+        # so we bring the surface down to `opened` in those areas.
+        # But wait, PMF normally operates on points. Here we operate on the raster.
+        # So we cap the surface elevation.
+        # If the current surface is too high above the opened surface, it's a building/tree.
+        # We replace those pixels with the opened surface.
+        non_ground_mask = (prev_surf - opened) > dh
+        prev_surf = np.where(non_ground_mask, opened, prev_surf)
+
+    return prev_surf
 
 
 def generate_dsm_dtm(
     points: np.ndarray,
-    resolution: float = 0.5,
-    slope_threshold: float = 1.0,
-    window_size_m: float = 15.0,
-    max_gap_m: float = 20.0,
+    resolution: float = 1.0,
+    windows_m: list[float] = [3.0, 10.0, 30.0],
+    init_dh: float = 0.3,
+    slope_threshold: float = 0.15,
+    max_dh: float = 2.5,
+    max_gap_m: float = 30.0,
+    bounds: tuple | None = None,
 ):
-    """
-    Generate Bare-Earth DTM and Top-Surface DSM using a simple grid-based
-    morphological filter.
-
-    1. Grid the points into 2D cells.
-    2. DSM = max Z per cell.
-    3. Min grid = min Z per cell.
-    4. Morphological opening on Min grid to estimate bare earth (remove buildings/trees).
-    5. Filter original points based on distance to bare earth estimate.
-    6. Interpolate ground points to fill gaps up to max_gap_m.
-    """
-    print(f"Generating DTM/DSM for {len(points)} points...")
     if len(points) == 0:
         return None
 
@@ -30,20 +68,24 @@ def generate_dsm_dtm(
     y = points[:, 1]
     z = points[:, 2]
 
-    min_x, max_x = np.min(x), np.max(x)
-    min_y, max_y = np.min(y), np.max(y)
+    if bounds is None:
+        min_x, max_x = np.min(x), np.max(x)
+        min_y, max_y = np.min(y), np.max(y)
+    else:
+        min_x, max_x, min_y, max_y = bounds
 
     # Raster dimensions
     width = int(np.ceil((max_x - min_x) / resolution))
     height = int(np.ceil((max_y - min_y) / resolution))
 
+    if width <= 0 or height <= 0:
+        return None
+
     # Map points to grid cells
     col = np.clip(np.floor((x - min_x) / resolution).astype(int), 0, width - 1)
-    # Origin is usually top-left in rasterio, so invert Y
     row = np.clip(np.floor((max_y - y) / resolution).astype(int), 0, height - 1)
 
-    # 1. DSM
-    # We use a trick: lexsort by Z, then assign to grid, so the last assignment is max Z
+    # 1. DSM (Max Z)
     sort_idx = np.argsort(z)
     col_sorted = col[sort_idx]
     row_sorted = row[sort_idx]
@@ -53,88 +95,68 @@ def generate_dsm_dtm(
     dsm[row_sorted, col_sorted] = z_sorted
 
     # 2. Min Grid
-    # First assignment in sorted is min Z
     min_grid = np.full((height, width), np.nan, dtype=np.float32)
-
-    # Reverse sort for min assignment trick (first is largest, last is smallest)
     sort_idx_rev = sort_idx[::-1]
-    min_grid[row[sort_idx_rev], col[sort_idx_rev]] = z[sort_idx_rev]
+    min_grid[row_sorted[::-1], col_sorted[::-1]] = z_sorted[::-1]
 
-    # Fill nan in min_grid via nearest interpolation just for the filter
-    valid_mask = ~np.isnan(min_grid)
-    if not np.any(valid_mask):
-        return None
+    # 3. PMF (Multi-scale morphology)
+    bare_earth_est = progressive_morphological_filter(min_grid, resolution, windows_m, init_dh, slope_threshold, max_dh)
 
-    coords = np.array(np.nonzero(valid_mask)).T
-    values = min_grid[valid_mask]
-
-    grid_r, grid_c = np.mgrid[0:height, 0:width]
-
-    print("Interpolating base min-grid...")
-    # nearest is fast
-    min_grid_filled = griddata(coords, values, (grid_r, grid_c), method="nearest")
-
-    # 3. Morphological opening
-    # Window size in pixels
-    w_px = max(3, int(window_size_m / resolution))
-    print(f"Applying morphological opening with window size {w_px} px...")
-
-    # grey_opening removes peaks (buildings/trees) that are smaller than window size
-    bare_earth_est = grey_opening(min_grid_filled, size=(w_px, w_px))
-
-    # 4. Filter ground points
-    # Points are ground if their Z is within threshold of bare earth estimate
+    # 4. Filter Ground Points
     pt_bare_z = bare_earth_est[row, col]
-    is_ground = z <= pt_bare_z + slope_threshold
+    # Rejection of elevated flat surfaces (roofs):
+    # The PMF lowers `pt_bare_z` to the ground level beneath buildings.
+    # So `z - pt_bare_z` will be large (e.g. 5m) for roof points.
+    # Sloped terrain points will be within `max_dh` (or slope threshold).
+    # We use a final threshold based on local PMF surface.
+    is_ground = z <= pt_bare_z + 0.5
 
     ground_pts = points[is_ground]
-    print(f"Identified {len(ground_pts)} ground points ({len(ground_pts) / len(points) * 100:.1f}%)")
 
     # 5. DTM Interpolation
     gx = ground_pts[:, 0]
     gy = ground_pts[:, 1]
     gz = ground_pts[:, 2]
+
     gcol = np.clip(np.floor((gx - min_x) / resolution).astype(int), 0, width - 1)
     grow = np.clip(np.floor((max_y - gy) / resolution).astype(int), 0, height - 1)
 
     dtm_sparse = np.full((height, width), np.nan, dtype=np.float32)
-    # just assign mean or min. let's assign min ground Z per cell
     sort_idx_g = np.argsort(gz)[::-1]
     dtm_sparse[grow[sort_idx_g], gcol[sort_idx_g]] = gz[sort_idx_g]
 
     valid_g_mask = ~np.isnan(dtm_sparse)
-    gcoords = np.array(np.nonzero(valid_g_mask)).T
-    gvalues = dtm_sparse[valid_g_mask]
 
-    print("Interpolating final DTM (linear)...")
-    dtm = griddata(gcoords, gvalues, (grid_r, grid_c), method="linear")
+    # Initialize coverage mask
+    coverage_mask = np.full((height, width), COV_UNOBSERVED, dtype=np.uint8)
+    coverage_mask[valid_g_mask] = COV_OBSERVED
 
-    # Fill remaining NaNs with nearest, but mask out large gaps
-    nan_mask = np.isnan(dtm)
-    if np.any(nan_mask):
-        print("Filling remaining gaps with nearest...")
-        dtm_nearest = griddata(gcoords, gvalues, (grid_r, grid_c), method="nearest")
-        dtm[nan_mask] = dtm_nearest[nan_mask]
+    grid_r, grid_c = np.mgrid[0:height, 0:width]
 
-    # Mask out gaps larger than max_gap_m
-    max_gap_px = int(max_gap_m / resolution)
-    observed_mask = valid_g_mask.copy()
-    # Dilate observed cells by max_gap_px
-    if max_gap_px > 0:
-        coverage_mask = binary_dilation(observed_mask, iterations=max_gap_px)
-    else:
-        coverage_mask = observed_mask
+    dtm = np.full((height, width), np.nan, dtype=np.float32)
+    if np.any(valid_g_mask):
+        gcoords = np.array(np.nonzero(valid_g_mask)).T
+        gvalues = dtm_sparse[valid_g_mask]
 
-    dtm[~coverage_mask] = np.nan
+        # Interpolate
+        if len(gvalues) > 3:
+            dtm = griddata(gcoords, gvalues, (grid_r, grid_c), method="linear")
+            nan_mask = np.isnan(dtm)
+            if np.any(nan_mask):
+                dtm_nearest = griddata(gcoords, gvalues, (grid_r, grid_c), method="nearest")
+                dtm[nan_mask] = dtm_nearest[nan_mask]
+        else:
+            dtm = griddata(gcoords, gvalues, (grid_r, grid_c), method="nearest")
 
-    # also mask DSM
-    dsm_obs_mask = ~np.isnan(dsm)
-    if max_gap_px > 0:
-        dsm_cov = binary_dilation(dsm_obs_mask, iterations=max_gap_px)
-    else:
-        dsm_cov = dsm_obs_mask
+    # Mask out gaps > max_gap_m
+    max_gap_px = max_gap_m / resolution
+    if np.any(valid_g_mask):
+        dist = distance_transform_edt(~valid_g_mask)
+        interp_mask = (dist > 0) & (dist <= max_gap_px)
+        coverage_mask[interp_mask] = COV_INTERPOLATED
 
-    dsm[~dsm_cov] = np.nan
+        dtm[coverage_mask == COV_UNOBSERVED] = np.nan
+        dsm[coverage_mask == COV_UNOBSERVED] = np.nan
 
     transform = from_origin(min_x, max_y, resolution, resolution)
 
@@ -146,4 +168,121 @@ def generate_dsm_dtm(
         "coverage_mask": coverage_mask,
         "width": width,
         "height": height,
+        "bounds": (min_x, max_x, min_y, max_y),
+    }
+
+
+def generate_dsm_dtm_tiled(
+    points: np.ndarray, resolution: float = 1.0, tile_size_m: float = 200.0, overlap_m: float = 40.0, **kwargs
+):
+    """
+    Process DTM generation using deterministic spatial tiling to guarantee memory safety.
+    """
+    if len(points) == 0:
+        return None
+
+    x = points[:, 0]
+    y = points[:, 1]
+
+    min_x, max_x = np.min(x), np.max(x)
+    min_y, max_y = np.min(y), np.max(y)
+
+    width = int(np.ceil((max_x - min_x) / resolution))
+    height = int(np.ceil((max_y - min_y) / resolution))
+
+    final_dtm = np.full((height, width), np.nan, dtype=np.float32)
+    final_dsm = np.full((height, width), np.nan, dtype=np.float32)
+    final_cov = np.full((height, width), COV_UNOBSERVED, dtype=np.uint8)
+    final_is_ground = np.zeros(len(points), dtype=bool)
+
+    # Pre-calculate tile boundaries
+    x_steps = np.arange(min_x, max_x, tile_size_m)
+    y_steps = np.arange(min_y, max_y, tile_size_m)
+
+    tile_count = 0
+
+    for tx in x_steps:
+        for ty in y_steps:
+            t_min_x = tx - overlap_m
+            t_max_x = tx + tile_size_m + overlap_m
+            t_min_y = ty - overlap_m
+            t_max_y = ty + tile_size_m + overlap_m
+
+            # Select points in extended tile
+            mask = (x >= t_min_x) & (x < t_max_x) & (y >= t_min_y) & (y < t_max_y)
+            tile_pts = points[mask]
+
+            if len(tile_pts) == 0:
+                continue
+
+            t_bounds = (tx, tx + tile_size_m, ty, ty + tile_size_m)
+
+            # Process extended tile
+            t_res = generate_dsm_dtm(
+                tile_pts, resolution=resolution, bounds=(t_min_x, t_max_x, t_min_y, t_max_y), **kwargs
+            )
+
+            if t_res is None:
+                continue
+
+            tile_count += 1
+
+            # Merge tile into global raster, stripping overlap margins
+            # We only keep the inner bounding box [tx, tx + tile_size_m] x [ty, ty + tile_size_m]
+
+            # Global indices for inner bounding box
+            g_c_min = int(round((tx - min_x) / resolution))
+            g_c_max = int(round((tx + tile_size_m - min_x) / resolution))
+            g_r_max = int(round((max_y - ty) / resolution))
+            g_r_min = int(round((max_y - (ty + tile_size_m)) / resolution))
+
+            g_c_min = max(0, g_c_min)
+            g_c_max = min(width, g_c_max)
+            g_r_min = max(0, g_r_min)
+            g_r_max = min(height, g_r_max)
+
+            # Local indices for inner bounding box
+            l_c_min = int(round((tx - t_min_x) / resolution))
+            l_c_max = l_c_min + (g_c_max - g_c_min)
+            l_r_min = int(round((t_max_y - (ty + tile_size_m)) / resolution))
+            l_r_max = l_r_min + (g_r_max - g_r_min)
+
+            # Bounds protection
+            l_c_max = min(t_res["width"], l_c_max)
+            l_r_max = min(t_res["height"], l_r_max)
+            # Adjust global bounds to match actual local slice sizes if truncated
+            g_c_max = g_c_min + (l_c_max - l_c_min)
+            g_r_max = g_r_min + (l_r_max - l_r_min)
+
+            if (l_r_max <= l_r_min) or (l_c_max <= l_c_min):
+                continue
+
+            final_dtm[g_r_min:g_r_max, g_c_min:g_c_max] = t_res["dtm"][l_r_min:l_r_max, l_c_min:l_c_max]
+            final_dsm[g_r_min:g_r_max, g_c_min:g_c_max] = t_res["dsm"][l_r_min:l_r_max, l_c_min:l_c_max]
+            final_cov[g_r_min:g_r_max, g_c_min:g_c_max] = t_res["coverage_mask"][l_r_min:l_r_max, l_c_min:l_c_max]
+
+            # For boolean array is_ground, we only want to update the original point indices
+            # that fall STRICTLY inside the non-overlap region to avoid double-counting or border effects.
+            inner_mask = (
+                (tile_pts[:, 0] >= tx)
+                & (tile_pts[:, 0] < tx + tile_size_m)
+                & (tile_pts[:, 1] >= ty)
+                & (tile_pts[:, 1] < ty + tile_size_m)
+            )
+
+            global_indices = np.where(mask)[0][inner_mask]
+            final_is_ground[global_indices] = t_res["is_ground"][inner_mask]
+
+    transform = from_origin(min_x, max_y, resolution, resolution)
+
+    return {
+        "dtm": final_dtm,
+        "dsm": final_dsm,
+        "transform": transform,
+        "is_ground": final_is_ground,
+        "coverage_mask": final_cov,
+        "width": width,
+        "height": height,
+        "bounds": (min_x, max_x, min_y, max_y),
+        "tile_count": tile_count,
     }
