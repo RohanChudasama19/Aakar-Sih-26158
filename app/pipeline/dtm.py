@@ -96,7 +96,7 @@ def generate_dsm_dtm(
 
     # 2. Min Grid
     min_grid = np.full((height, width), np.nan, dtype=np.float32)
-    sort_idx_rev = sort_idx[::-1]
+
     min_grid[row_sorted[::-1], col_sorted[::-1]] = z_sorted[::-1]
 
     # 3. PMF (Multi-scale morphology)
@@ -214,8 +214,6 @@ def generate_dsm_dtm_tiled(
 
             if len(tile_pts) == 0:
                 continue
-
-            t_bounds = (tx, tx + tile_size_m, ty, ty + tile_size_m)
 
             # Process extended tile
             t_res = generate_dsm_dtm(

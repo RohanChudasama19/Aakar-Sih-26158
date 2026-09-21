@@ -250,8 +250,13 @@ def execute_dense(
         pass
 
     # Simple check for CUDA/COLMAP
-    colmap_exe = shutil.which("colmap")
-    has_colmap = bool(colmap_exe)
+    colmap_exe = (
+        shutil.which("colmap")
+        or r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\colmap\COLMAP-3.9.1-windows-cuda\bin\colmap.exe"
+    )
+    import os
+
+    has_colmap = bool(colmap_exe) and os.path.exists(colmap_exe)
 
     backend: DenseBackend
     if options.get("use_gpu", True):

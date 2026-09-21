@@ -5,7 +5,7 @@ from app.pipeline.semantic import SEMANTIC_CLASSES, ModelSemanticBackend
 
 def test_heuristic_fallback_triggers():
     with pytest.raises(RuntimeError, match="Semantic AI model load failed"):
-        backend = ModelSemanticBackend("dummy_missing.onnx")
+        _ = ModelSemanticBackend("dummy_missing.onnx")
 
 
 def test_unknown_class(tmp_path):

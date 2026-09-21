@@ -59,7 +59,11 @@ class COLMAPBackend(SfMBackend):
             "caspar_available": False,
         }
         import shutil
-        colmap_exe = shutil.which("colmap") or r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\colmap\COLMAP-3.9.1-windows-cuda\bin\colmap.exe"
+
+        colmap_exe = (
+            shutil.which("colmap")
+            or r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\colmap\COLMAP-3.9.1-windows-cuda\bin\colmap.exe"
+        )
         try:
             result = subprocess.run([colmap_exe, "help"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
