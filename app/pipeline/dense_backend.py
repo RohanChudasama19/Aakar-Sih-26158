@@ -254,7 +254,11 @@ def execute_dense(
     has_colmap = bool(colmap_exe)
 
     backend: DenseBackend
-    if has_colmap and options.get("use_gpu", True):
+    if options.get("use_gpu", True):
+        if not has_colmap:
+            raise RuntimeError(
+                "CRITICAL ERROR: colmap.exe is missing from your computer! The GPU engine cannot run without it."
+            )
         backend = ColmapPatchMatchBackend()
     else:
         backend = CPUFallbackDenseBackend()

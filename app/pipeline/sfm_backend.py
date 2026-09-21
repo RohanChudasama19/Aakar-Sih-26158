@@ -58,8 +58,10 @@ class COLMAPBackend(SfMBackend):
             "cuda_available": False,
             "caspar_available": False,
         }
+        import shutil
+        colmap_exe = shutil.which("colmap") or r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\colmap\COLMAP-3.9.1-windows-cuda\bin\colmap.exe"
         try:
-            result = subprocess.run(["colmap", "help"], capture_output=True, text=True, timeout=5)
+            result = subprocess.run([colmap_exe, "help"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 caps["available"] = True
                 if "CUDA" in result.stdout:
@@ -67,7 +69,7 @@ class COLMAPBackend(SfMBackend):
 
                 # Check for Caspar BA
                 ba_help = subprocess.run(
-                    ["colmap", "bundle_adjuster", "--help"], capture_output=True, text=True, timeout=5
+                    [colmap_exe, "bundle_adjuster", "--help"], capture_output=True, text=True, timeout=5
                 )
                 if "--BundleAdjustment.backend" in ba_help.stdout and "CASPAR" in ba_help.stdout:
                     caps["caspar_available"] = True
@@ -299,11 +301,15 @@ def execute_sfm(
 ) -> Dict[str, Any]:
     colmap_backend = COLMAPBackend()
 
-    if not force_cpu and colmap_backend.capabilities["available"]:
+    if not force_cpu:
+        if not colmap_backend.capabilities["available"]:
+            raise RuntimeError(
+                "CRITICAL ERROR: colmap.exe is missing from your computer! Your external D: drive might be unplugged. The system cannot run the GPU engine."
+            )
         try:
             return colmap_backend.run(frames_dir, info, camera, progress_callback)
         except Exception as e:
-            logger.warning(f"COLMAP backend failed: {e}. Falling back to CPU.")
+            raise RuntimeError(f"COLMAP backend failed: {e}")
 
     cpu_backend = CPUFallbackBackend()
     return cpu_backend.run(frames_dir, info, camera, progress_callback)
