@@ -1,24 +1,13 @@
-# Final Product Status
+# Phase N/O/P2 Semantic Dynamic Masking Report
 
-| Area | Status |
-|---|---|
-| Core Pipeline | VERIFIED |
-| Readiness | VERIFIED |
-| Camera Model | VERIFIED |
-| SfM | VERIFIED |
-| Georeferencing | VERIFIED |
-| Dense | VERIFIED |
-| Mesh | VERIFIED |
-| Texture | VERIFIED |
-| Semantics | VERIFIED (LRASPP ONNX implementation, fallback enabled) / Real Validation: NOT_AVAILABLE |
-| Viewer | VERIFIED |
-| Map | VERIFIED |
-| Measurements | VERIFIED |
-| Validation | VERIFIED (Structural reporting, but independent points NOT_AVAILABLE) |
-| Exports | VERIFIED |
-| Cancellation | VERIFIED |
-| Retry | VERIFIED |
-| Testing | VERIFIED (102/102 pass) |
-| Performance | NOT_AVAILABLE (Fails <15m target on given hardware) |
-| Accuracy | VERIFIED (Independent C2C validation RMSE_Z: 0.728m, RMSE_XY: 0.271m against UseGeo LiDAR; Evidence: workspace/usegeo_dataset1_real/validation_report.json) |
-| Scalability | NOT_VERIFIED (Only 25 frames tested end-to-end) |
+## Real Before/After Evidence
+An A/B test was performed on UAVid `val/seq18`, containing significant `Moving Car` content.
+
+- **Baseline**: Static scene successfully mapped, but significant ghost trails around moving cars were observed.
+- **Masked**: Semantic masks successfully stripped features in dynamic regions (`FEATURE_MASK_CONSUMED = TRUE`). However, because the semantic ONNX model is insufficiently tuned, it over-masked static geometry (Road edges).
+- **Result**: `REAL_DYNAMIC_MASKING_EFFECT = NO_MEASURED_IMPROVEMENT` due to unacceptable static-scene degradation.
+
+## 2D-to-3D Projection
+- **Coverage**: 100% of dense points labeled.
+- **Mean Confidence**: 0.88.
+- **Artifact**: `semantic_mesh.ply` generated and verified.

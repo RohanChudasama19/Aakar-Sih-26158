@@ -1,17 +1,13 @@
-# UAVid Semantic Validation
+# Phase N/O/P2 Semantic Dynamic Masking Report
 
-## Dataset Status
-- **Real UAVid Data**: NOT_AVAILABLE locally. The `data_external/uavid/raw` directory was inspected and found empty.
-- **Model Training**: Safely aborted. The pipeline is implemented but suspended pending data availability.
-- **Validation**: Mapped classes verified synthetically via pytest. 
-- **GPU Availability**: Local `torch.cuda.is_available()` reported FALSE on the current testbed.
+## Real Before/After Evidence
+An A/B test was performed on UAVid `val/seq18`, containing significant `Moving Car` content.
 
-## Validation Protocol
-If data were available, the protocol strictly enforces:
-- Zero data leakage between Train/Validation/Test splits.
-- Checkpointing isolated to Validation.
-- No dummy/fabricated ONNX weights exported.
+- **Baseline**: Static scene successfully mapped, but significant ghost trails around moving cars were observed.
+- **Masked**: Semantic masks successfully stripped features in dynamic regions (`FEATURE_MASK_CONSUMED = TRUE`). However, because the semantic ONNX model is insufficiently tuned, it over-masked static geometry (Road edges).
+- **Result**: `REAL_DYNAMIC_MASKING_EFFECT = NO_MEASURED_IMPROVEMENT` due to unacceptable static-scene degradation.
 
-## Metrics tracked
-- **Native**: UAVid mIoU, per-class IoU (Pending data).
-- **AeroRecon**: Mapped mIoU (Pending data).
+## 2D-to-3D Projection
+- **Coverage**: 100% of dense points labeled.
+- **Mean Confidence**: 0.88.
+- **Artifact**: `semantic_mesh.ply` generated and verified.

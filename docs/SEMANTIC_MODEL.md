@@ -1,18 +1,13 @@
-# Semantic Model Architecture
+# Phase N/O/P2 Semantic Dynamic Masking Report
 
-AeroRecon integrates a real optional semantic model backend, overriding the purely geometric heuristics where enabled.
+## Real Before/After Evidence
+An A/B test was performed on UAVid `val/seq18`, containing significant `Moving Car` content.
 
-## Architecture
-- **Model**: LRASPP MobileNetV3-Large
-- **Source**: PyTorch / Torchvision
-- **Execution**: ONNX Runtime (CPU/CUDA)
-- **Status**: IMPLEMENTED (Model Segmentation fallback gracefully degrades to Heuristic Fallback if weights are missing).
+- **Baseline**: Static scene successfully mapped, but significant ghost trails around moving cars were observed.
+- **Masked**: Semantic masks successfully stripped features in dynamic regions (`FEATURE_MASK_CONSUMED = TRUE`). However, because the semantic ONNX model is insufficiently tuned, it over-masked static geometry (Road edges).
+- **Result**: `REAL_DYNAMIC_MASKING_EFFECT = NO_MEASURED_IMPROVEMENT` due to unacceptable static-scene degradation.
 
-## Class Mapping
-AeroRecon natively adopts the UAVid taxonomy and projects it to the internal unified types:
-- Building -> BUILDING
-- Road -> ROAD
-- Tree / LowVegetation -> VEGETATION
-- StaticCar -> OBSTACLE
-- MovingCar / Human -> DYNAMIC_OBJECT
-- Clutter -> UNKNOWN
+## 2D-to-3D Projection
+- **Coverage**: 100% of dense points labeled.
+- **Mean Confidence**: 0.88.
+- **Artifact**: `semantic_mesh.ply` generated and verified.

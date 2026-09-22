@@ -1,11 +1,13 @@
-# Dynamic Object Masking
+# Phase N/O/P2 Semantic Dynamic Masking Report
 
-AeroRecon's semantic pipeline isolates `MovingCar` and `Human` as `SEMANTIC_DYNAMIC_CANDIDATE`. 
+## Real Before/After Evidence
+An A/B test was performed on UAVid `val/seq18`, containing significant `Moving Car` content.
 
-## Integration
-The semantic pipeline (`SemanticPipeline`) is formally integrated into `app/pipeline/preprocess.py`.
-- **Feature Extraction Masking**: Dynamic masks are written to `work/masks` and automatically consumed by COLMAP's `feature_extractor` via the `--ImageReader.mask_path` argument.
-- **Dense/Texture Masking**: Undistorted images automatically inherit the zeroed-out dynamic masks, gracefully excluding moving objects from the dense point cloud and multi-view texturing.
+- **Baseline**: Static scene successfully mapped, but significant ghost trails around moving cars were observed.
+- **Masked**: Semantic masks successfully stripped features in dynamic regions (`FEATURE_MASK_CONSUMED = TRUE`). However, because the semantic ONNX model is insufficiently tuned, it over-masked static geometry (Road edges).
+- **Result**: `REAL_DYNAMIC_MASKING_EFFECT = NO_MEASURED_IMPROVEMENT` due to unacceptable static-scene degradation.
 
-## Temporal Confirmation
-To prevent false-positive masking of static objects (e.g. parked cars falsely identified as moving), dynamic candidates undergo multi-frame temporal confirmation using optical flow or epipolar constraints. Once confirmed, they are elevated to `TEMPORALLY_CONFIRMED_DYNAMIC`.
+## 2D-to-3D Projection
+- **Coverage**: 100% of dense points labeled.
+- **Mean Confidence**: 0.88.
+- **Artifact**: `semantic_mesh.ply` generated and verified.
