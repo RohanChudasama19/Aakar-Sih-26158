@@ -205,3 +205,9 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **timestamp format/timebase**: UNKNOWN
 - **AeroRecon validation uses**: LiDAR reference, DTM validation, ground classification, terrain accuracy, mesh / point-cloud comparison, 3D semantic reference where appropriate
 - **known limitations**: Do not use it for video-speed benchmarking.
+
+## UAVid-v1
+- **Path**: data_external/uavid/raw
+- **Size**: ~6.47 GB
+- **Purpose**: Semantic segmentation model training
+- **License**: Academic Non-Commercial

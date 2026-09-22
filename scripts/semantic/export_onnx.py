@@ -2,6 +2,17 @@ import argparse
 from pathlib import Path
 
 import numpy as np
+import onnxruntime as ort
+import torch
+from torchvision.models.segmentation import lraspp_mobilenet_v3_large
+from torchvision.models.segmentation.lraspp import LRASPPHead
+
+
+def build_model(num_classes=8):
+    model = lraspp_mobilenet_v3_large(weights=None)
+    model.classifier.low_classifier = torch.nn.Conv2d(40, num_classes, 1)
+    model.classifier.high_classifier = torch.nn.Conv2d(128, num_classes, 1)
+    return model
 
 
 def main():
@@ -13,29 +24,16 @@ def main():
 
     print(f"Exporting model to ONNX (opset {args.opset})...")
 
-    # Check if real weights exist, otherwise mock the export test
     if not Path(args.weights).exists():
-        print("Weights not found. Running ONNX export stub and consistency test.")
-        # Simulating ONNX numerical agreement output
-        print("Exporting mock ONNX...")
-        print("Testing PyTorch vs ONNX Runtime agreement...")
-        print("Max absolute difference: 1.2e-6")
-        print("Numerical Agreement: VERIFIED")
-        return
+        raise FileNotFoundError(f"Weights file not found: {args.weights}")
 
-    import onnxruntime as ort
-    import torch
-    import torchvision
-
-    # Load Model
-    model = torchvision.models.segmentation.lraspp_mobilenet_v3_large(num_classes=8)
-    model.load_state_dict(torch.load(args.weights, map_location="cpu"))
+    model = build_model(num_classes=8)
+    checkpoint = torch.load(args.weights, map_location="cpu")
+    model.load_state_dict(checkpoint["model_state"])
     model.eval()
 
-    # Dummy Input (1, 3, 512, 1024)
     dummy_input = torch.randn(1, 3, 512, 1024)
 
-    # Export
     torch.onnx.export(
         model,
         dummy_input,
@@ -61,6 +59,9 @@ def main():
 
     np.testing.assert_allclose(torch_out.numpy(), ort_outs[0], rtol=1e-03, atol=1e-05)
     print("Numerical Agreement: VERIFIED")
+
+    diff = np.abs(torch_out.numpy() - ort_outs[0])
+    print(f"Max absolute difference: {np.max(diff)}")
 
 
 if __name__ == "__main__":

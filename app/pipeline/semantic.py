@@ -86,13 +86,13 @@ class HeuristicSemanticBackend(SemanticBackend):
         return face_labels, face_confidences, face_support_views, labels, confidences, {}
 
 
-from .semantic_model import SemanticModelBackend
+from .semantic_model import SemanticPipeline
 
 
 class ModelSemanticBackend(SemanticBackend):
     def __init__(self, model_path="models/semantic/model.onnx"):
         self.backend_name = "MODEL_SEGMENTATION"
-        self.ai = SemanticModelBackend(model_path)
+        self.ai = SemanticPipeline(model_path)
         if self.ai.status != "MODEL_SEGMENTATION":
             raise RuntimeError(f"Semantic AI model load failed: {self.ai.status}")
 
