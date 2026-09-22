@@ -1,6 +1,6 @@
 import argparse
-import logging
 from pathlib import Path
+
 import numpy as np
 
 
@@ -23,9 +23,9 @@ def main():
         print("Numerical Agreement: VERIFIED")
         return
 
+    import onnxruntime as ort
     import torch
     import torchvision
-    import onnxruntime as ort
 
     # Load Model
     model = torchvision.models.segmentation.lraspp_mobilenet_v3_large(num_classes=8)

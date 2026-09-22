@@ -10,7 +10,7 @@
 | Dense | VERIFIED |
 | Mesh | VERIFIED |
 | Texture | VERIFIED |
-| Semantics | VERIFIED (LRASPP ONNX implementation, fallback enabled) |
+| Semantics | VERIFIED (LRASPP ONNX implementation, fallback enabled) / Real Validation: NOT_AVAILABLE |
 | Viewer | VERIFIED |
 | Map | VERIFIED |
 | Measurements | VERIFIED |

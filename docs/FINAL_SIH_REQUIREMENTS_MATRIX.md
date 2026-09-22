@@ -11,7 +11,7 @@
 | R7. Depth Maps | PatchMatchStereo | Dense point cloud generated | VERIFIED | Capped to max 10 views for VRAM safety |
 | R8. Triangle Meshing | Screened Poisson Surface Reconstruction | Open3D backend generation | VERIFIED | Leaves edge artifacts if geometry is sparse |
 | R9. Texturing | Single-best view assignment | Ray-casting occlusion (occlusion=True) | VERIFIED | No multiband seam blending |
-| R10. Semantics | ONNX AI Model (LRASPP) with heuristic fallback | semantic_model.py tests pass | VERIFIED | Real weights not bundled (requires user drop-in) |
+| R10. Semantics | ONNX AI Model (LRASPP) with heuristic fallback | semantic_model.py tests pass (Real Data NOT_AVAILABLE) | VERIFIED | Real weights not bundled (requires user drop-in) |
 | R11. Export (PLY, OBJ, LAS, GLTF, GeoTIFF) | Automated post-reconstruction generation | 	est_exports.py passes | VERIFIED | |
 | R12. UX/UI | Web interface with 6-mode viewer | web/app.js and FastAPI server | VERIFIED | Single-tenant assumption |
 | R13. Measurements | Point-to-point, Area, Slope | Interactive UI overlay on map | VERIFIED | |

@@ -17,10 +17,10 @@ def extract(video, out, options, notify):
     if fps <= 0 or count < 3:
         raise ValueError("Video contains fewer than three frames or no valid frame rate")
     detector = None
-    if options.get("segmentation_model"):
-        from ultralytics import YOLO
+    if options.get("semantic_pipeline"):
+        from app.pipeline.semantic_model import SemanticPipeline
 
-        detector = YOLO(options["segmentation_model"], task="segment")
+        detector = SemanticPipeline()
     records, rejected, masked, last, i = [], 0, 0, None, 0
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     limit = int(options.get("max_frames", 180))
@@ -55,12 +55,11 @@ def extract(video, out, options, notify):
         cv2.imwrite(str(original_dir / name), raw)
         mask = np.full(gray.shape, 255, np.uint8)
         if detector is not None:
-            result = detector.predict(raw, verbose=False, conf=0.35)[0]
-            if result.masks is not None:
-                for cls, polygon in zip(result.boxes.cls.cpu().numpy(), result.masks.xy):
-                    if int(cls) in DYNAMIC_CLASSES:
-                        cv2.fillPoly(mask, [polygon.astype(np.int32)], 0)
-                        masked += 1
+            # Semantic Pipeline inference
+            _, _, dyn_mask = detector.infer_image(raw)
+            if np.any(dyn_mask):
+                mask[dyn_mask] = 0
+                masked += 1
         lab = cv2.cvtColor(raw, cv2.COLOR_BGR2LAB)
         lab[:, :, 0] = clahe.apply(lab[:, :, 0])
         normalized = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)

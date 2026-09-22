@@ -1,10 +1,12 @@
 import argparse
-import json
+from pathlib import Path
+
+import laspy
 import numpy as np
 import trimesh
-import laspy
-from pathlib import Path
-from app.pipeline.surface_validation import evaluate_surface_accuracy, ReferenceMetadata, save_report
+
+from app.pipeline.surface_validation import ReferenceMetadata, evaluate_surface_accuracy, save_report
+
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate dense point cloud against LiDAR LAS reference.")
@@ -31,6 +33,7 @@ def main():
 
     print("Saving report...")
     save_report(res, Path(args.out))
+
 
 if __name__ == "__main__":
     main()
