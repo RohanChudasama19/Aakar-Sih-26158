@@ -156,26 +156,26 @@ async function showResults(j) {
           <div id="indep-validation-detail" style="display:none">
             <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;">
               <tbody>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Horizontal RMSE</th><td id="vi-rmse-h" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Vertical RMSE</th><td id="vi-rmse-z" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">3D RMSE</th><td id="vi-rmse-3d" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Mean 3D error</th><td id="vi-mean" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Checkpoints used</th><td id="vi-count" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Threshold (SIH)</th><td id="vi-thresh" style="padding:4px 8px;">-</td></tr>
-                <tr><th style="text-align:left;padding:4px 8px;color:#aaa;">Pass rule</th><td id="vi-rule" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Horizontal RMSE</th><td id="vi-rmse-h" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Vertical RMSE</th><td id="vi-rmse-z" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">3D RMSE</th><td id="vi-rmse-3d" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Mean 3D error</th><td id="vi-mean" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Checkpoints used</th><td id="vi-count" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Threshold (SIH)</th><td id="vi-thresh" style="padding:4px 8px;">-</td></tr>
+                <tr><th style="text-align:left;padding:4px 8px;color:var(--text-secondary);">Pass rule</th><td id="vi-rule" style="padding:4px 8px;">-</td></tr>
               </tbody>
             </table>
             <div id="vi-warnings" style="color:#c88;margin-top:8px;font-size:11px;"></div>
             <div id="vi-cptable-wrap" style="margin-top:12px;overflow-x:auto;font-size:12px;"></div>
           </div>
-          <div style="margin-top:18px;padding:12px;border:1px solid #333;border-radius:6px;background:#141f16;">
-            <p style="margin:0 0 8px;font-size:13px;font-weight:600;">Upload Independent Checkpoints CSV</p>
-            <p style="margin:0 0 8px;font-size:11px;color:#8a8;">
+          <div style="margin-top:18px;padding:12px;border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--surface-hover);">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:600;">Upload Independent Checkpoints CSV</p><button type="button" class="text-button" style="padding:0;font-size:11px;color:var(--accent-primary);margin-bottom:8px;" onclick="showHelp(checkpoints)">View Schema</button>
+            <p style="margin:0 0 8px;font-size:11px;color:var(--text-secondary);">
               Used <strong>only for validation</strong>. Not used to fit the georeferencing transform.
             </p>
             <input type="file" id="checkpoint-upload-input" accept=".csv" style="font-size:12px;">
             <button id="checkpoint-upload-btn" style="margin-left:8px;font-size:12px;">Upload</button>
-            <p id="checkpoint-upload-msg" style="font-size:11px;color:#aaa;margin-top:6px;"></p>
+            <p id="checkpoint-upload-msg" style="font-size:11px;color:var(--text-secondary);margin-top:6px;"></p>
           </div>
         </div>
       </div>
