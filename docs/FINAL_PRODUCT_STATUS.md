@@ -10,7 +10,7 @@
 | Dense | VERIFIED |
 | Mesh | VERIFIED |
 | Texture | VERIFIED |
-| Semantics | PARTIAL (Heuristic fallback only) |
+| Semantics | VERIFIED (LRASPP ONNX implementation, fallback enabled) |
 | Viewer | VERIFIED |
 | Map | VERIFIED |
 | Measurements | VERIFIED |
