@@ -2,22 +2,37 @@
 
 import os
 import subprocess
+import shutil
 
 import numpy as np
 from scipy.spatial.transform import Rotation
 
 
 def run(args, work):
+    cmd_list = list(map(str, args))
+    env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
+    
+    if cmd_list[0] == "colmap":
+        colmap_path = shutil.which("colmap")
+        if colmap_path and colmap_path.lower().endswith(".bat"):
+            # Workaround for COLMAP.bat argument quoting bug on Windows
+            script_path = os.path.dirname(colmap_path)
+            exe_path = os.path.join(script_path, "bin", "colmap.exe")
+            if os.path.exists(exe_path):
+                cmd_list[0] = exe_path
+                env["PATH"] = os.path.join(script_path, "bin") + os.pathsep + env.get("PATH", "")
+                env["QT_PLUGIN_PATH"] = os.path.join(script_path, "plugins") + os.pathsep + env.get("QT_PLUGIN_PATH", "")
+
     with (work / "colmap.log").open("a") as log:
-        log.write("\nCOMMAND: " + " ".join(map(str, args)) + "\n")
+        log.write("\nCOMMAND: " + " ".join(cmd_list) + "\n")
         log.flush()
         subprocess.run(
-            list(map(str, args)),
+            cmd_list,
             stdout=log,
             stderr=subprocess.STDOUT,
             check=True,
             timeout=7200,
-            env={**os.environ, "QT_QPA_PLATFORM": "offscreen"},
+            env=env,
         )
 
 

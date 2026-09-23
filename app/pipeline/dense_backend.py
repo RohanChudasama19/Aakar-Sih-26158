@@ -39,6 +39,10 @@ class CPUFallbackDenseBackend(DenseBackend):
 
 
 def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[str, Any]:
+    forced = options.get("force_profile")
+    if forced == "FAST": num_frames = 250
+    elif forced == "BALANCED": num_frames = 100
+    elif forced == "QUALITY": num_frames = 10
     """Select PatchMatch profile based on frame count.
 
     Profiles target the RTX 3050 Laptop (4 GB VRAM, 2048 CUDA cores).
@@ -85,7 +89,17 @@ class ColmapPatchMatchBackend(DenseBackend):
     def run(self, sfm, k, directory, work_dir, options, geo, progress):
         import subprocess
 
-        colmap_exe = shutil.which("colmap")
+        colmap_exe = shutil.which('colmap')
+        import os
+        env = {**os.environ, 'QT_QPA_PLATFORM': 'offscreen'}
+        if colmap_exe and colmap_exe.lower().endswith('.bat'):
+            script_path = os.path.dirname(colmap_exe)
+            exe_path = os.path.join(script_path, 'bin', 'colmap.exe')
+            if os.path.exists(exe_path):
+                colmap_exe = exe_path
+                env['PATH'] = os.path.join(script_path, 'bin') + os.pathsep + env.get('PATH', '')
+                env['QT_PLUGIN_PATH'] = os.path.join(script_path, 'plugins') + os.pathsep + env.get('QT_PLUGIN_PATH', '')
+
         if not colmap_exe:
             raise RuntimeError("COLMAP not found in PATH")
 
@@ -131,7 +145,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(profile["max_image_size"]),
                 ]
                 t_u0 = time.monotonic()
-                subprocess.run(cmd_undistort, check=True, capture_output=True, text=True)
+                subprocess.run(cmd_undistort, check=True, capture_output=True, text=True, env=env)
                 t_undistort = round(time.monotonic() - t_u0, 1)
 
                 # 2. PatchMatch Stereo
@@ -155,7 +169,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(profile["num_iterations"]),
                 ]
                 t_pm0 = time.monotonic()
-                subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True)
+                subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True, env=env)
                 t_patchmatch = round(time.monotonic() - t_pm0, 1)
 
                 # 3. Stereo Fusion
@@ -173,7 +187,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(dense_dir / "fused.ply"),
                 ]
                 t_f0 = time.monotonic()
-                subprocess.run(cmd_fusion, check=True, capture_output=True, text=True)
+                subprocess.run(cmd_fusion, check=True, capture_output=True, text=True, env=env)
                 t_fusion = round(time.monotonic() - t_f0, 1)
 
                 if (dense_dir / "fused.ply").exists():
@@ -250,10 +264,7 @@ def execute_dense(
         pass
 
     # Simple check for CUDA/COLMAP
-    colmap_exe = (
-        shutil.which("colmap")
-        or r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\colmap\COLMAP-3.9.1-windows-cuda\bin\colmap.exe"
-    )
+    colmap_exe = shutil.which('colmap')
     import os
 
     has_colmap = bool(colmap_exe) and os.path.exists(colmap_exe)
@@ -288,3 +299,4 @@ def execute_dense(
         return filtered_points, filtered_colors, report
 
     return points, colors, report
+
