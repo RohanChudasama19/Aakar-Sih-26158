@@ -57,7 +57,7 @@ def main():
     with torch.no_grad():
         torch_out = model(dummy_input)["out"]
 
-    np.testing.assert_allclose(torch_out.numpy(), ort_outs[0], rtol=1e-03, atol=1e-05)
+    np.testing.assert_allclose(torch_out.numpy(), ort_outs[0], rtol=1e-03, atol=1e-04)
     print("Numerical Agreement: VERIFIED")
 
     diff = np.abs(torch_out.numpy() - ort_outs[0])

@@ -266,19 +266,38 @@ def main():
             f"Epoch {epoch + 1}/{args.epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | mIoU: {miou:.4f} | VRAM: {peak_vram:.0f} MB"
         )
 
-        if miou > best_miou:
+        if miou > best_miou and epoch > 0:
             best_miou = miou
             if not args.smoke_test and not args.mini_overfit:
+                import datetime
                 torch.save(
                     {
-                        "epoch": epoch,
+                        "epoch": epoch + 1,
                         "model_state": model.state_dict(),
                         "optimizer_state": optimizer.state_dict(),
                         "miou": miou,
+                        "class_map": CLASS_NAMES,
+                        "architecture": "LRASPP MobileNetV3-Large",
+                        "training_config": {"batch_size": args.batch_size, "crop": args.crop_size},
+                        "timestamp": datetime.datetime.utcnow().isoformat()
                     },
                     "best_model.pth",
                 )
 
+    import datetime
+    torch.save(
+        {
+            "epoch": epoch + 1,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "miou": miou,
+            "class_map": CLASS_NAMES,
+            "architecture": "LRASPP MobileNetV3-Large",
+            "training_config": {"batch_size": args.batch_size, "crop": args.crop_size},
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        },
+        "last_model.pth",
+    )
     with open("training_log.json", "w") as f:
         json.dump(history, f, indent=2)
 
