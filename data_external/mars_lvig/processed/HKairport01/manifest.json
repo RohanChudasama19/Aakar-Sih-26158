@@ -1,0 +1,20 @@
+{
+  "bag_path": "data_external/mars_lvig/raw/HKairport01/HKairport01.bag",
+  "duration": 779.845,
+  "camera_topic": "/left_camera/image/compressed",
+  "camera_frame_count": 7799,
+  "camera_fps": 10.0,
+  "lidar_topic": "/livox/lidar",
+  "imu_topic": "/dji_osdk_ros/imu",
+  "gnss_topic": "/dji_osdk_ros/gps_position",
+  "ground_truth_file": "data_external/mars_lvig/raw/ground_truth/Ground Truth/HKairport01_traj.csv",
+  "time_ranges": {
+    "start": 1671606413.0,
+    "end": 1671607192.8
+  },
+  "sync_offset_metadata": {
+    "img_time_offset": 0.1,
+    "exposure_time_init": 0.0
+  },
+  "source_provenance": "MARS-LVIG"
+}

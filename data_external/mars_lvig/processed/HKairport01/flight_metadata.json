@@ -1,0 +1,10 @@
+{
+  "mission_name": "HKairport01",
+  "source_dataset": "MARS-LVIG",
+  "camera_resolution": "2448x2048",
+  "camera_fps": 10.0,
+  "duration_sec": 779.845,
+  "start_time_utc": 1671606413.0,
+  "end_time_utc": 1671607192.8,
+  "sensor_provenance": "ROS Bag (/left_camera/image/compressed)"
+}
