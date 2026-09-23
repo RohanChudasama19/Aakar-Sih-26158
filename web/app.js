@@ -7,7 +7,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function toast(s){$('#toast').textContent=s;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000);}
 function newMission(){ $('#upload-error').textContent='';$('#submit-dialog').showModal(); }
 ['#new-mission','#empty-new','#nav-new'].forEach(x=>$(x).onclick=newMission);
-$('#close-submit').onclick=()=>$('#submit-dialog').close();
+$('#close-submit-drawer').onclick=()=>$('#submit-dialog').close();
 ['#nav-guide','#sample-guide','#quality-guide'].forEach(x=>$(x).onclick=e=>{e.preventDefault();$('#guide-dialog').showModal();});
 $('#close-guide').onclick=()=>$('#guide-dialog').close();
 $('#auth-button').onclick=()=>{const value=prompt('API access token (leave empty for local mode)',token);if(value!==null){token=value;sessionStorage.setItem('aerorecon-token',token);refresh();}};
