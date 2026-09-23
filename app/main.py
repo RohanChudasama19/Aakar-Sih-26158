@@ -201,7 +201,7 @@ async def submit(
     health = queue_health()
     if not health["available"]:
         raise HTTPException(503, health["message"])
-    if engine == "colmap" and os.getenv("ENABLE_COLMAP", "0") != "1":
+    if engine == "colmap" and os.getenv("ENABLE_COLMAP", "1") != "1":
         raise HTTPException(422, "COLMAP worker is not enabled. Follow GPU setup instructions first.")
     if segmentation and os.getenv("ALLOW_TRUSTED_PT", "0") != "1":
         raise HTTPException(
