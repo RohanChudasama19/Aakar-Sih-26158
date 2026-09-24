@@ -1,8 +1,47 @@
+import os
+import shutil
+from typing import Optional
+
+
+def resolve_colmap_executable() -> Optional[str]:
+    r"""
+    Resolve the COLMAP executable path.
+    1. configured explicit COLMAP path (C:\Tools\COLMAP\COLMAP.bat or bin\colmap.exe)
+    2. PATH / shutil.which
+    3. known validated Windows install path
+    4. None if not found
+    """
+    candidates = [r"C:\Tools\COLMAP\bin\colmap.exe", r"C:\Tools\COLMAP\COLMAP.bat"]
+
+    which_colmap = shutil.which("colmap")
+    if which_colmap:
+        candidates.insert(1, which_colmap)
+
+    for p in candidates:
+        if os.path.exists(p):
+            if p.lower().endswith(".bat"):
+                exe_path = os.path.join(os.path.dirname(p), "bin", "colmap.exe")
+                if os.path.exists(exe_path):
+                    return exe_path
+            return p
+
+    return None
+
+
+def get_colmap_env() -> dict:
+    env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
+    colmap_exe = resolve_colmap_executable()
+    if colmap_exe:
+        bin_dir = os.path.dirname(colmap_exe)
+        plugins_dir = os.path.join(os.path.dirname(bin_dir), "plugins")
+        if os.path.exists(plugins_dir):
+            env["QT_PLUGIN_PATH"] = plugins_dir + os.pathsep + env.get("QT_PLUGIN_PATH", "")
+    return env
+
+
 """External COLMAP 3.9 CLI integration; every command is checked and logged."""
 
-import os
 import subprocess
-import shutil
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -11,11 +50,11 @@ from scipy.spatial.transform import Rotation
 def run(args, work):
     cmd_list = list(map(str, args))
     env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
-    
+
     colmap_path = cmd_list[0]
     if colmap_path == "colmap":
         colmap_path = shutil.which("colmap") or "colmap"
-        
+
     if colmap_path and colmap_path.lower().endswith(".bat"):
         # Workaround for COLMAP.bat argument quoting bug on Windows
         script_path = os.path.dirname(colmap_path)
@@ -33,7 +72,7 @@ def run(args, work):
             stdout=log,
             stderr=subprocess.STDOUT,
             check=True,
-            timeout=7200,
+            timeout=None,
             env=env,
         )
 

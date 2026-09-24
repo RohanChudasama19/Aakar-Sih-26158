@@ -254,7 +254,7 @@ async def submit(
             from rq import Queue
 
             Queue("reconstruction", connection=Redis.from_url(REDIS_URL)).enqueue(
-                "app.worker.process_job", jid, job_id=jid, job_timeout=10800, result_ttl=86400, failure_ttl=604800
+                "app.worker.process_job", jid, job_id=jid, job_timeout=86400, result_ttl=86400, failure_ttl=604800
             )
         else:
             from .worker import process_job
@@ -347,7 +347,7 @@ def retry_job(jid: str):
 
             if REDIS_URL:
                 q = Queue("reconstruction", connection=Redis.from_url(REDIS_URL))
-                q.enqueue("app.worker.process_job", jid, job_id=jid, job_timeout=3600 * 4)
+                q.enqueue("app.worker.process_job", jid, job_id=jid, job_timeout=86400)
         except (ImportError, Exception):
             pass
 

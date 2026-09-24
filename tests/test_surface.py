@@ -13,5 +13,5 @@ def test_vertical_facade_preserved_in_three_dimensions():
     assert np.ptp(mesh.vertices[:, 1]) > 3.5
     assert np.ptp(mesh.vertices[:, 2]) > 2.5
     assert np.quantile(abs(mesh.vertices[:, 0]), 0.95) < 0.1
-    assert report["largest_component_area_fraction"] > 0.9
+    assert report["largest_component_fraction"] > 0.9
     assert report["method"].startswith("3D_")

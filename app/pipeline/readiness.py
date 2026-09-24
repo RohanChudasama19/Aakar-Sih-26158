@@ -430,3 +430,98 @@ def perform_analysis(
         )
 
     return report
+
+
+def evaluate_extracted(frames_data: List[Dict], gps_rows: List[Dict], meta: Dict, intrinsics: Optional[CameraModel] = None) -> Dict:
+    if len(frames_data) < 3:
+        return {"status": "NOT_READY", "blocking_reasons": ["Could not extract enough valid frames."]}
+        
+    n = len(frames_data)
+    edges = []
+    max_dist = CONFIG["overlap"]["max_local_distance"]
+    K_scaled = None
+    if intrinsics is not None:
+        scaled_cam = intrinsics.scale(
+            CONFIG["sampling"]["analysis_width_px"],
+            int(intrinsics.height * (CONFIG["sampling"]["analysis_width_px"] / intrinsics.width)),
+        )
+        K_scaled = scaled_cam.to_matrix()
+
+    for i in range(n):
+        for j in range(i + 1, min(i + 1 + max_dist, n)):
+            geom = compute_pair_geometry(
+                frames_data[i]["_kps"], frames_data[j]["_kps"], frames_data[i]["_des"], frames_data[j]["_des"], K_scaled
+            )
+            edges.append({"from": i, "to": j, "geom": geom})
+
+    # Graph connectivity
+    adj = {i: [] for i in range(n)}
+    for e in edges:
+        if e["geom"]["inliers"] >= CONFIG["overlap"]["min_inliers"]:
+            adj[e["from"]].append(e["to"])
+            adj[e["to"]].append(e["from"])
+
+    visited = set()
+    ccs = []
+    for i in range(n):
+        if i not in visited:
+            cc = set()
+            queue = [i]
+            while queue:
+                node = queue.pop(0)
+                if node not in cc:
+                    cc.add(node)
+                    visited.add(node)
+                    queue.extend([nbr for nbr in adj[node] if nbr not in cc])
+            ccs.append(cc)
+
+    largest_cc = len(max(ccs, key=len)) if ccs else 0
+    lcc_ratio = largest_cc / n
+    isolated = len([c for c in ccs if len(c) == 1]) / n
+
+    telem_report = analyze_telemetry(gps_rows, meta, CONFIG["telemetry"])
+
+    blur_ratio = sum(1 for f in frames_data if f["sharpness"] < CONFIG["blur"]["warning_threshold"]) / n
+    dark_ratio = sum(1 for f in frames_data if f["exposure"]["is_dark"]) / n
+    sum(1 for f in frames_data if f["features"]["is_concentrated"]) / n
+
+    warnings = telem_report.get("warnings", [])
+    blocking = telem_report.get("blocking_reasons", [])
+    positive = []
+
+    if blur_ratio > CONFIG["blur"]["block_ratio"]:
+        blocking.append(f"Excessive blur ({blur_ratio * 100:.1f}% frames blurry).")
+    elif blur_ratio > 0.1:
+        warnings.append(f"Moderate blur detected ({blur_ratio * 100:.1f}% frames blurry).")
+
+    if lcc_ratio < CONFIG["connectivity"]["block_largest_cc_ratio"]:
+        blocking.append(f"Disconnected dataset. Largest contiguous segment is only {lcc_ratio * 100:.1f}%.")
+
+    if isolated > 0.2:
+        warnings.append(f"Many isolated frames ({isolated * 100:.1f}%).")
+
+    if dark_ratio > CONFIG["exposure"]["block_dark_frame_ratio"]:
+        blocking.append(f"Too dark ({dark_ratio * 100:.1f}% frames dark).")
+
+    if not blocking:
+        positive.append("Connectivity and overlap are sufficient.")
+        positive.append("Image quality meets baseline requirements.")
+
+    status = "NOT_READY" if blocking else ("WARNING" if warnings else "READY")
+    score = 100.0 - (blur_ratio * 30) - ((1.0 - lcc_ratio) * 40) - (dark_ratio * 20) - (isolated * 20)
+    score = max(0.0, min(100.0, score))
+
+    return {
+        "status": status,
+        "scores": {"overall_readiness_score": score, "connectivity_ratio": lcc_ratio, "sharpness_ratio": 1.0 - blur_ratio},
+        "blocking_reasons": blocking,
+        "warnings": warnings,
+        "recommendations": [],
+        "positive_factors": positive,
+        "metrics": {
+            "frames_analyzed": n,
+            "connected_components": len(ccs),
+            "largest_component_size": largest_cc,
+        },
+    }
+

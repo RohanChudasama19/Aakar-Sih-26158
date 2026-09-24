@@ -94,7 +94,7 @@ def reconstruct_surface(points, colors, cameras, max_points=150000, options=None
             groups = np.asarray(groups)
             counts = np.asarray(counts)
             areas = np.asarray(areas)
-            largest = float(areas.max() / max(areas.sum(), 1e-12)) if len(areas) > 0 else 0.0
+            largest = float(counts.max() / max(counts.sum(), 1)) if len(counts) > 0 else 0.0
 
             minimum = max(25, int(len(surface.triangles) * 0.002))
             surface.remove_triangles_by_mask(counts[groups] < minimum)
@@ -135,7 +135,7 @@ def reconstruct_surface(points, colors, cameras, max_points=150000, options=None
                 "input_points": len(xyz),
                 "vertices": len(vertices),
                 "faces": len(faces),
-                "largest_component_area_fraction": largest,
+                "largest_component_fraction": largest,
                 "supported_face_ratio": float(np.mean(supported)),
                 "weak_face_ratio": float(np.mean(weak)),
                 "unobserved_face_ratio": float(np.mean(unobserved)),

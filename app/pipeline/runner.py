@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from ..schemas import intrinsics, metadata, telemetry
-from . import exports, georef, mesh, preprocess, readiness, semantic
+from . import exports, georef, mesh, preprocess, semantic
 
 
 class ReadinessBlockedError(Exception):
@@ -131,23 +131,20 @@ def run_pipeline(input_dir, work, options=None, callback=None):
 
     stage("A", 1)
 
-    # Run Readiness Analysis
+    # Run combined Readiness Analysis and Preprocessing
     progress(2, "Running input quality and readiness analysis")
 
-    # Attempt to parse intrinsics for readiness if available (meta or override), using dummy width/height as it relies on resolution
-    # Readiness scales it anyway
     import app.schemas as schemas
 
     k_test = None
     try:
-        # Default analysis resolution is 960 width
-        # The schema might raise an error if K is bad, we just ignore K if so
         k_test = schemas.intrinsics(meta, 960, 540, override)
     except Exception:
         pass
 
-    with timed("readiness_analysis"):
-        ready_report = readiness.perform_analysis(video, gps, meta, k_test)
+    with timed("frame_extraction"):
+        ready_report, info = preprocess.extract(video, work / "frames", opts, gps, meta, k_test, progress)
+
     (out / "cv_quality_report.json").write_text(json.dumps(ready_report, indent=2))
 
     lines = [
@@ -160,7 +157,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         lines.extend(["BLOCKING REASONS:", *[f"- {r}" for r in ready_report["blocking_reasons"]], ""])
     if ready_report["warnings"]:
         lines.extend(["WARNINGS:", *[f"- {r}" for r in ready_report["warnings"]], ""])
-    if ready_report["recommendations"]:
+    if ready_report.get("recommendations"):
         lines.extend(["RECOMMENDATIONS:", *[f"- {r}" for r in ready_report["recommendations"]], ""])
     (out / "cv_quality_report.txt").write_text("\n".join(lines))
 
@@ -171,9 +168,6 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         progress(5, "Readiness analysis produced warnings. Proceeding.")
     else:
         progress(5, "Readiness analysis passed.")
-
-    with timed("frame_extraction"):
-        info = preprocess.extract(video, work / "frames", opts, progress)
 
     camera = intrinsics(meta, info["width"], info["height"], override)
 
@@ -240,7 +234,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     force_cpu = not (opts.get("engine", "") or "").lower().startswith("colmap")
 
     with timed("sfm"):
-        reconstruction = execute_sfm(frames_dir, info, active_camera, progress, force_cpu=force_cpu)
+        reconstruction = execute_sfm(frames_dir, info, active_camera, progress, force_cpu=force_cpu, options=opts)
 
     # Write SfM Report
     sfm_report = reconstruction.get("sfm_report", {})
@@ -376,6 +370,15 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         "processing_time_sec": round(elapsed, 3),
         "video_duration_sec": info["duration_sec"],
         "engine": reconstruction["engine"],
+        "backends": {
+            "SFM_BACKEND": sfm_report.get("backend", "unknown"),
+            "DENSE_BACKEND": dense_report.get("backend", "unknown"),
+            "COLMAP_EXECUTABLE": sfm_report.get("colmap_exe", "") or dense_report.get("colmap_exe", ""),
+            "GPU_FEATURE_EXTRACTION": opts.get("use_gpu", True) and "COLMAP" in sfm_report.get("backend", ""),
+            "GPU_MATCHING": opts.get("use_gpu", True) and "COLMAP" in sfm_report.get("backend", ""),
+            "GPU_PATCHMATCH": "COLMAP_PATCHMATCH" in dense_report.get("backend", ""),
+            "FALLBACK_REASON": sfm_report.get("fallback_reason", "") or dense_report.get("fallback_reason", ""),
+        },
         "hardware": _build_hardware_info(),
         "targets": {
             "processing_time": {

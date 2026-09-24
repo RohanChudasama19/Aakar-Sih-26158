@@ -8,6 +8,8 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 
+from .profiles import FAST_QUALITY_V1
+
 
 class DenseBackend(ABC):
     @abstractmethod
@@ -45,34 +47,24 @@ class CPUFallbackDenseBackend(DenseBackend):
 
 
 def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[str, Any]:
-    forced = options.get("force_profile")
-    if forced == "FAST":
-        num_frames = 250
-    elif forced == "BALANCED":
-        num_frames = 100
-    elif forced == "QUALITY":
-        num_frames = 10
-    """Select PatchMatch profile based on frame count.
+    if options.get("profile") == "FAST_QUALITY":
+        profile = FAST_QUALITY_V1["dense_settings"].copy()
+        profile["name"] = "FAST_QUALITY"
+        profile["min_num_pixels"] = FAST_QUALITY_V1["fusion_settings"]["min_num_pixels"]
+        return profile
 
-    Profiles target the RTX 3050 Laptop (4 GB VRAM, 2048 CUDA cores).
-    num_matching_views caps the number of source images per reference to
-    reduce VRAM pressure without significant quality loss for UAV sequences.
-
-    QUALITY  (≤50 frames):  max_image_size=2048, window_radius=6, geom=True,  iters=7, src=10
-    BALANCED (≤200 frames): max_image_size=1600, window_radius=5, geom=True,  iters=5, src=8
-    FAST     (>200 frames): max_image_size=1024, window_radius=4, geom=False, iters=3, src=7
-    """
-    if num_frames > 200:
+    if num_frames < 50:
         return {
-            "name": "FAST",
-            "max_image_size": 1600,
-            "window_radius": 4,
-            "window_step": 2,
-            "num_iterations": 3,
+            "name": "QUALITY",
+            "max_image_size": 2048,
+            "window_radius": 6,
+            "window_step": 1,
+            "num_iterations": 7,
             "geom_consistency": True,
-            "num_matching_views": 6,
+            "num_matching_views": 10,
+            "min_num_pixels": 4,
         }
-    elif num_frames > 50:
+    elif num_frames <= 200:
         return {
             "name": "BALANCED",
             "max_image_size": 1600,
@@ -85,13 +77,13 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
         }
     else:
         return {
-            "name": "QUALITY",
-            "max_image_size": 2048,
-            "window_radius": 6,
-            "window_step": 1,
-            "num_iterations": 7,
-            "geom_consistency": True,
-            "num_matching_views": 10,
+            "name": "FAST",
+            "max_image_size": 1024,
+            "window_radius": 4,
+            "window_step": 2,
+            "num_iterations": 3,
+            "geom_consistency": False,
+            "num_matching_views": 7,
             "min_num_pixels": 4,
         }
 
@@ -137,20 +129,52 @@ class ColmapPatchMatchBackend(DenseBackend):
             try:
                 # 1. Undistort
                 progress(45, f"Running COLMAP image_undistorter ({profile['name']} profile)")
-                cmd_undistort = [
-                    colmap_exe,
-                    "image_undistorter",
-                    "--image_path",
-                    str(directory),
-                    "--input_path",
-                    str(colmap_model_path),
-                    "--output_path",
-                    str(dense_dir),
-                    "--output_type",
-                    "COLMAP",
-                    "--max_image_size",
-                    str(profile["max_image_size"]),
-                ]
+                # ADAPTIVE DENSE REFERENCE SELECTION
+                target_refs = (
+                    FAST_QUALITY_V1["dense_settings"]["reference_target"] if profile["name"] == "FAST_QUALITY" else 140
+                )
+
+                # Check how many images are in the input directory
+                images = sorted(list(directory.glob("*.png")))
+                if len(images) > target_refs:
+                    step = len(images) / max(1, target_refs)
+                    selected_images = [images[int(i * step)].name for i in range(target_refs)]
+
+                    list_path = dense_dir / "image_list.txt"
+                    dense_dir.mkdir(parents=True, exist_ok=True)
+                    list_path.write_text("\n".join(selected_images))
+
+                    cmd_undistort = [
+                        colmap_exe,
+                        "image_undistorter",
+                        "--image_path",
+                        str(directory),
+                        "--input_path",
+                        str(colmap_model_path),
+                        "--output_path",
+                        str(dense_dir),
+                        "--output_type",
+                        "COLMAP",
+                        "--max_image_size",
+                        str(profile["max_image_size"]),
+                        "--image_list_path",
+                        str(list_path),
+                    ]
+                else:
+                    cmd_undistort = [
+                        colmap_exe,
+                        "image_undistorter",
+                        "--image_path",
+                        str(directory),
+                        "--input_path",
+                        str(colmap_model_path),
+                        "--output_path",
+                        str(dense_dir),
+                        "--output_type",
+                        "COLMAP",
+                        "--max_image_size",
+                        str(profile["max_image_size"]),
+                    ]
                 t_u0 = time.monotonic()
                 subprocess.run(cmd_undistort, check=True, capture_output=True, text=True, env=env)
                 t_undistort = round(time.monotonic() - t_u0, 1)

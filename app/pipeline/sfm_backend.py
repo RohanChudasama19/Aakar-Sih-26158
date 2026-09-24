@@ -23,12 +23,21 @@ class SfMProfile:
     mapper_strategy: str  # INCREMENTAL, GLOBAL, HIERARCHICAL
 
 
-def determine_profile(info: Dict[str, Any], readiness_report: Optional[Dict] = None, options: Optional[Dict] = None) -> SfMProfile:
+def determine_profile(
+    info: Dict[str, Any], readiness_report: Optional[Dict] = None, options: Optional[Dict] = None
+) -> SfMProfile:
     num_frames = len(info.get("frames", []))
     options = options or {}
 
     if options.get("profile") == "FAST_QUALITY":
-        return SfMProfile("FAST_QUALITY", 250, 10, "GLOBAL")
+        from .profiles import FAST_QUALITY_V1
+
+        return SfMProfile(
+            "FAST_QUALITY",
+            FAST_QUALITY_V1["sfm_budget"],
+            FAST_QUALITY_V1["matching_settings"]["overlap"],
+            "GLOBAL_FAST",
+        )
 
     # Simple duration/frame count heuristic
     if num_frames < 200:
@@ -43,7 +52,9 @@ def determine_profile(info: Dict[str, Any], readiness_report: Optional[Dict] = N
 
 class SfMBackend(ABC):
     @abstractmethod
-    def run(self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None) -> Dict[str, Any]:
+    def run(
+        self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None
+    ) -> Dict[str, Any]:
         pass
 
     @abstractmethod
@@ -63,6 +74,7 @@ class COLMAPBackend(SfMBackend):
             "caspar_available": False,
         }
         from .colmap import get_colmap_env, resolve_colmap_executable
+
         colmap_exe = resolve_colmap_executable()
         if not colmap_exe:
             return caps
@@ -75,7 +87,9 @@ class COLMAPBackend(SfMBackend):
                     caps["cuda_available"] = True
 
                 # Check for Caspar BA
-                ba_help = subprocess.run([colmap_exe, "bundle_adjuster", "--help"], capture_output=True, text=True, timeout=30, env=env)
+                ba_help = subprocess.run(
+                    [colmap_exe, "bundle_adjuster", "--help"], capture_output=True, text=True, timeout=30, env=env
+                )
                 if "--BundleAdjustment.backend" in ba_help.stdout and "CASPAR" in ba_help.stdout:
                     caps["caspar_available"] = True
 
@@ -84,7 +98,9 @@ class COLMAPBackend(SfMBackend):
 
         return caps
 
-    def run(self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None) -> Dict[str, Any]:
+    def run(
+        self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None
+    ) -> Dict[str, Any]:
         if not self.capabilities["available"]:
             raise RuntimeError("COLMAP is not available.")
 
@@ -104,6 +120,7 @@ class COLMAPBackend(SfMBackend):
         progress_callback(22, f"COLMAP feature extraction ({profile.name})")
 
         from .colmap import resolve_colmap_executable
+
         colmap_exe = resolve_colmap_executable() or r"C:\Tools\COLMAP\COLMAP.bat"
 
         extractor_cmd = [
@@ -133,7 +150,6 @@ class COLMAPBackend(SfMBackend):
         if profile.name == "FAST_QUALITY":
             extractor_cmd.extend(["--SiftExtraction.max_num_features", "4096"])
 
-
         colmap.run(extractor_cmd, work)
 
         # 2. Matching
@@ -141,15 +157,23 @@ class COLMAPBackend(SfMBackend):
 
         # UAV-aware hybrid matching (sequential + spatial) can be emulated via sequential overlap for now,
         # but in production we might run spatial_matcher or vocab_tree_matcher for very large datasets
-        colmap.run([
-            colmap_exe,
-            "sequential_matcher",
-            "--database_path", db,
-            "--SequentialMatching.overlap", str(profile.matching_overlap),
-            "--SequentialMatching.quadratic_overlap", "1",
-            "--SequentialMatching.loop_detection", "0" if profile.name == "FAST_QUALITY" else "1",
-            "--FeatureMatching.use_gpu", "1" if self.capabilities["cuda_available"] else "0"
-        ], work)
+        colmap.run(
+            [
+                colmap_exe,
+                "sequential_matcher",
+                "--database_path",
+                db,
+                "--SequentialMatching.overlap",
+                str(profile.matching_overlap),
+                "--SequentialMatching.quadratic_overlap",
+                "1",
+                "--SequentialMatching.loop_detection",
+                "0" if profile.name == "FAST_QUALITY" else "1",
+                "--FeatureMatching.use_gpu",
+                "1" if self.capabilities["cuda_available"] else "0",
+            ],
+            work,
+        )
 
         # 3. Mapping
         progress_callback(32, f"COLMAP {profile.mapper_strategy} mapping")
@@ -167,40 +191,62 @@ class COLMAPBackend(SfMBackend):
             mapper_cmd = [
                 colmap_exe,
                 "global_mapper",
-                "--database_path", db,
-                "--image_path", frames_dir,
-                "--output_path", models,
-                "--GlobalMapper.ba_num_iterations", "3",
-                "--GlobalMapper.ba_refine_focal_length", refine_focal,
-                "--GlobalMapper.ba_refine_principal_point", "0",
-                "--GlobalMapper.ba_refine_extra_params", refine_extra,
-                "--GlobalMapper.ba_ceres_max_num_iterations", "30"
+                "--database_path",
+                db,
+                "--image_path",
+                frames_dir,
+                "--output_path",
+                models,
+                "--GlobalMapper.ba_num_iterations",
+                "3",
+                "--GlobalMapper.ba_refine_focal_length",
+                refine_focal,
+                "--GlobalMapper.ba_refine_principal_point",
+                "0",
+                "--GlobalMapper.ba_refine_extra_params",
+                refine_extra,
+                "--GlobalMapper.ba_ceres_max_num_iterations",
+                "30",
             ]
         elif profile.mapper_strategy == "HIERARCHICAL":
             mapper_cmd = [
                 colmap_exe,
                 "hierarchical_mapper",
-                "--database_path", db,
-                "--image_path", frames_dir,
-                "--output_path", models,
+                "--database_path",
+                db,
+                "--image_path",
+                frames_dir,
+                "--output_path",
+                models,
             ]
         else:
             mapper_cmd = [
                 colmap_exe,
                 "mapper",
-                "--database_path", db,
-                "--image_path", frames_dir,
-                "--output_path", models,
-                "--Mapper.ba_refine_focal_length", refine_focal,
-                "--Mapper.ba_refine_principal_point", "0",
-                "--Mapper.ba_refine_extra_params", refine_extra,
+                "--database_path",
+                db,
+                "--image_path",
+                frames_dir,
+                "--output_path",
+                models,
+                "--Mapper.ba_refine_focal_length",
+                refine_focal,
+                "--Mapper.ba_refine_principal_point",
+                "0",
+                "--Mapper.ba_refine_extra_params",
+                refine_extra,
             ]
             if profile.name == "FAST":
-                mapper_cmd.extend([
-                    "--Mapper.ba_global_max_num_iterations", "30",
-                    "--Mapper.ba_local_max_num_iterations", "20",
-                    "--Mapper.ba_global_max_refinements", "2"
-                ])
+                mapper_cmd.extend(
+                    [
+                        "--Mapper.ba_global_max_num_iterations",
+                        "30",
+                        "--Mapper.ba_local_max_num_iterations",
+                        "20",
+                        "--Mapper.ba_global_max_refinements",
+                        "2",
+                    ]
+                )
 
         if self.capabilities["caspar_available"]:
             if profile.mapper_strategy != "GLOBAL_FAST":
@@ -304,7 +350,9 @@ class CPUFallbackBackend(SfMBackend):
     def check_capabilities(self) -> Dict[str, Any]:
         return {"available": True, "cuda_available": False, "caspar_available": False}
 
-    def run(self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None) -> Dict[str, Any]:
+    def run(
+        self, frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, options: Dict = None
+    ) -> Dict[str, Any]:
         start_time = time.monotonic()
         determine_profile(info)
 
@@ -337,7 +385,12 @@ class CPUFallbackBackend(SfMBackend):
 
 
 def execute_sfm(
-    frames_dir: Path, info: Dict[str, Any], camera: CameraModel, progress_callback, force_cpu: bool = False, options: Dict = None
+    frames_dir: Path,
+    info: Dict[str, Any],
+    camera: CameraModel,
+    progress_callback,
+    force_cpu: bool = False,
+    options: Dict = None,
 ) -> Dict[str, Any]:
     options = options or {}
     colmap_backend = COLMAPBackend()

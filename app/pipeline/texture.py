@@ -14,10 +14,19 @@ class TextureBackend(ABC):
 
 class AeroreconTextureBackend(TextureBackend):
     def run(self, mesh, geo, sfm, k, directory, options):
+
         xyz = mesh.vertices
         if geo["metric_state"] != "RELATIVE":
-            # Ensure we are checking projection in the relative frame
             xyz = (mesh.vertices - geo["translation"]) @ geo["rotation"] / geo["scale"]
+
+        cam_centers = np.array([-pose[:, :3].T @ pose[:, 3] for pose in sfm["poses"].values()])
+        c_min, c_max = cam_centers.min(0), cam_centers.max(0)
+        m_min, m_max = xyz.min(0), xyz.max(0)
+
+        # Sane bounds check (camera centers should be reasonably close to the scene)
+        if np.any(m_max < c_min - 1000) or np.any(m_min > c_max + 1000):
+            raise ValueError("Coordinate-frame mismatch detected in texture projection.")
+
 
         triangles = xyz[mesh.faces]
         centroids = triangles.mean(1)
@@ -71,7 +80,7 @@ class AeroreconTextureBackend(TextureBackend):
                         import open3d as o3d
 
                         o3d_mesh = o3d.t.geometry.TriangleMesh()
-                        o3d_mesh.vertex.positions = o3d.core.Tensor(np.asarray(mesh.vertices, dtype=np.float32))
+                        o3d_mesh.vertex.positions = o3d.core.Tensor(np.asarray(xyz, dtype=np.float32))
                         o3d_mesh.triangle.indices = o3d.core.Tensor(np.asarray(mesh.faces, dtype=np.uint32))
                         scene = o3d.t.geometry.RaycastingScene()
                         scene.add_triangles(o3d_mesh)
