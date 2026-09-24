@@ -6,9 +6,9 @@ async function api(path,opts={}){const r=await fetch(path,{...opts,headers:{...h
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(s){$('#toast').textContent=s;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000);}
 function newMission(){ $('#upload-error').textContent='';$('#submit-dialog').showModal(); }
-['#new-mission','#empty-new','#nav-new'].forEach(x=>$(x).onclick=newMission);
+['#new-mission','#empty-new','#nav-new'].forEach(x=>{ if($(x)) $(x).onclick=newMission; });
 $('#close-submit-drawer').onclick=()=>$('#submit-dialog').close();
-['#nav-guide','#sample-guide','#quality-guide'].forEach(x=>$(x).onclick=e=>{e.preventDefault();$('#guide-dialog').showModal();});
+['#nav-guide','#sample-guide','#quality-guide'].forEach(x=>{ if($(x)) $(x).onclick=e=>{e.preventDefault();$('#guide-dialog').showModal();}; });
 $('#close-guide').onclick=()=>$('#guide-dialog').close();
 
 $('#video-file').onchange=e=>$('#video-name').textContent=e.target.files[0]?.name||'Choose video file';
@@ -46,7 +46,7 @@ async function refresh(){
         <div class="card-body">
           <h3 style="display:flex; align-items:center;">${esc(j.name)} ${demoBadge}</h3>
           <span class="status ${j.status}">${esc(j.status)}</span>
-          <p>${new Date(j.created*1000).toLocaleString()} A ${esc(j.options.engine.toUpperCase())}</p>
+          <p>${new Date(j.created*1000).toLocaleString()} A ${esc((j.options?.engine || 'UNKNOWN').toUpperCase())}</p>
           <progress max="100" value="${j.progress}"></progress>
         </div>
       </button>`;
@@ -316,7 +316,7 @@ async function showResults(j) {
         <h3 style="margin-bottom:24px; font-size:16px; color:var(--text-primary);">Performance Analysis</h3>
         
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px; margin-bottom:32px;">
-          ${renderMetric('Profile', j.options.engine.toUpperCase(), 'prov-user-configured', 'USER-CONFIGURED', 'The active reconstruction pipeline definition.')}
+          ${renderMetric('Profile', (j.options?.engine || 'UNKNOWN').toUpperCase(), 'prov-user-configured', 'USER-CONFIGURED', 'The active reconstruction pipeline definition.')}
           ${renderMetric('Total Runtime', j.runtime ? Math.round(j.runtime)+'s' : 'N/A', 'prov-computed', 'COMPUTED', 'End-to-end processing time.')}
           ${j.options.engine.toLowerCase() === 'fast_quality' ? renderMetric('Target Status', (j.runtime && j.runtime <= 900) ? 'PASSED (<= 900s)' : 'OVER TARGET', 'prov-computed', 'COMPUTED', 'FAST_QUALITY V1 target is 15 minutes (900s).') : ''}
         </div>

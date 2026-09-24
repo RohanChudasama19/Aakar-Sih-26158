@@ -199,7 +199,7 @@ GCP-01,48.74920,9.10350,411.0,CONTROL</pre>
 
 
 // -- Native Drag & Drop Visuals --
-document.querySelectorAll('.drop-zone').forEach(zone => {
+document.querySelectorAll('.drop-zone, .upload-card').forEach(zone => {
   const input = zone.querySelector('input[type="file"]');
   if (!input) return;
   zone.addEventListener('dragover', (e) => {
