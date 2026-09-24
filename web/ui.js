@@ -214,3 +214,139 @@ document.querySelectorAll('.drop-zone').forEach(zone => {
     });
   });
 });
+
+
+// -- Settings & Theme Drawer --
+const settingsBtn = document.getElementById("settings-btn");
+const settingsOverlay = document.getElementById("settings-overlay");
+const settingsDrawer = document.getElementById("settings-drawer");
+const closeSettingsBtn = document.getElementById("close-settings");
+
+const themes = [
+  { id: "aerospace", name: "Aerospace Dark (Recommended)", color: "#071014" },
+  { id: "light", name: "Light Theme", color: "#F8FAF9" },
+  { id: "dark", name: "Dark Theme", color: "#0F1115" },
+  { id: "solarized", name: "Solarized", color: "#FDF6E3" },
+  { id: "neumorphic", name: "Neumorphic", color: "#E0E5EC" },
+  { id: "glassmorphic", name: "Glassmorphic", color: "#F4F7FB" },
+  { id: "poppy", name: "Poppy", color: "#FFF5F5" },
+  { id: "cartoonic", name: "Cartoonic", color: "#F0FDF4" },
+  { id: "turquoise", name: "Turquoise", color: "#F0FDFB" },
+  { id: "saffron", name: "Saffron", color: "#FFFBEB" },
+  { id: "emerald", name: "Emerald", color: "#F0FDF4" },
+  { id: "indigo", name: "Indigo", color: "#EEF2FF" },
+  { id: "rose", name: "Rose", color: "#FFF1F2" },
+  { id: "slate", name: "Slate", color: "#F8FAFC" }
+];
+
+function openSettings() {
+  settingsOverlay.classList.add("open");
+  settingsDrawer.classList.add("open");
+  
+  // Populate API Token
+  const tokenInput = document.getElementById("api-token-input");
+  if(tokenInput) {
+    tokenInput.value = sessionStorage.getItem("aerorecon-token") || "";
+  }
+}
+
+function closeSettings() {
+  settingsOverlay.classList.remove("open");
+  settingsDrawer.classList.remove("open");
+}
+
+if(settingsBtn) settingsBtn.addEventListener("click", openSettings);
+if(closeSettingsBtn) closeSettingsBtn.addEventListener("click", closeSettings);
+if(settingsOverlay) settingsOverlay.addEventListener("click", closeSettings);
+
+// API Token Saving
+const saveTokenBtn = document.getElementById("save-token-btn");
+if(saveTokenBtn) {
+  saveTokenBtn.addEventListener("click", () => {
+    const val = document.getElementById("api-token-input").value;
+    if(val) {
+      sessionStorage.setItem("aerorecon-token", val);
+    } else {
+      sessionStorage.removeItem("aerorecon-token");
+    }
+    closeSettings();
+    // Refresh missions list if window.refresh is available (defined in app.js, maybe we can just reload)
+    window.location.reload();
+  });
+}
+
+// Theme Logic
+const themeGrid = document.getElementById("theme-grid");
+if(themeGrid) {
+  themes.forEach(theme => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.padding = "12px";
+    btn.style.borderRadius = "8px";
+    btn.style.border = "1px solid var(--border)";
+    btn.style.background = "var(--surface)";
+    btn.style.cursor = "pointer";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.gap = "12px";
+    btn.style.textAlign = "left";
+    
+    // Color swatch
+    const swatch = document.createElement("div");
+    swatch.style.width = "24px";
+    swatch.style.height = "24px";
+    swatch.style.borderRadius = "50%";
+    swatch.style.background = theme.color;
+    swatch.style.border = "1px solid rgba(0,0,0,0.1)";
+    
+    const label = document.createElement("span");
+    label.textContent = theme.name;
+    label.style.fontSize = "13px";
+    label.style.fontWeight = "500";
+    label.style.color = "var(--text-primary)";
+    
+    btn.appendChild(swatch);
+    btn.appendChild(label);
+    
+    btn.addEventListener("click", () => {
+      setTheme(theme.id);
+    });
+    
+    themeGrid.appendChild(btn);
+  });
+}
+
+function setTheme(themeId) {
+  document.documentElement.setAttribute("data-theme", themeId);
+  localStorage.setItem("aerorecon-theme", themeId);
+  updateThemeSelectionUI(themeId);
+}
+
+function updateThemeSelectionUI(activeThemeId) {
+  if(!themeGrid) return;
+  const buttons = themeGrid.querySelectorAll("button");
+  themes.forEach((theme, idx) => {
+    const btn = buttons[idx];
+    if(theme.id === activeThemeId) {
+      btn.style.borderColor = "var(--accent-primary)";
+      btn.style.background = "var(--surface-active)";
+    } else {
+      btn.style.borderColor = "var(--border)";
+      btn.style.background = "var(--surface)";
+    }
+  });
+}
+
+// Init theme on load
+const savedTheme = localStorage.getItem("aerorecon-theme") || "aerospace";
+setTheme(savedTheme);
+
+
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape") {
+    if(typeof closeDrawer === "function") closeDrawer();
+    if(typeof closeSettings === "function") closeSettings();
+    if(typeof closeSchema === "function") closeSchema();
+  }
+});
+
