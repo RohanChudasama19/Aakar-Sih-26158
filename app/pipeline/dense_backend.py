@@ -25,12 +25,18 @@ class DenseBackend(ABC):
 
 
 class CPUFallbackDenseBackend(DenseBackend):
+    def __init__(self, fallback_reason: str | None = None):
+        self.fallback_reason = fallback_reason
+
     def run(self, sfm, k, directory, work_dir, options, geo, progress):
         from .dense import cpu_densify
 
         p, c, r = cpu_densify(sfm, k, directory, progress, max_pairs=options.get("max_pairs", 12))
         r["raw_points"] = len(p)
         r["backend"] = "CPU_FALLBACK"
+        if self.fallback_reason:
+            r["status"] = "DENSE_DEGRADED"
+            r["fallback_reason"] = self.fallback_reason
         r["dense_support_confidence"] = {
             "formula": "Bidirectional Optical Flow constraint < 0.6px",
             "median_support": "2 views (stereo pairs only in CPU fallback)",
@@ -40,9 +46,12 @@ class CPUFallbackDenseBackend(DenseBackend):
 
 def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[str, Any]:
     forced = options.get("force_profile")
-    if forced == "FAST": num_frames = 250
-    elif forced == "BALANCED": num_frames = 100
-    elif forced == "QUALITY": num_frames = 10
+    if forced == "FAST":
+        num_frames = 250
+    elif forced == "BALANCED":
+        num_frames = 100
+    elif forced == "QUALITY":
+        num_frames = 10
     """Select PatchMatch profile based on frame count.
 
     Profiles target the RTX 3050 Laptop (4 GB VRAM, 2048 CUDA cores).
@@ -56,12 +65,12 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
     if num_frames > 200:
         return {
             "name": "FAST",
-            "max_image_size": 1024,
+            "max_image_size": 1600,
             "window_radius": 4,
             "window_step": 2,
             "num_iterations": 3,
-            "geom_consistency": False,
-            "num_matching_views": 7,
+            "geom_consistency": True,
+            "num_matching_views": 6,
         }
     elif num_frames > 50:
         return {
@@ -72,6 +81,7 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
             "num_iterations": 5,
             "geom_consistency": True,
             "num_matching_views": 8,
+            "min_num_pixels": 4,
         }
     else:
         return {
@@ -82,6 +92,7 @@ def determine_dense_profile(num_frames: int, options: Dict[str, Any]) -> Dict[st
             "num_iterations": 7,
             "geom_consistency": True,
             "num_matching_views": 10,
+            "min_num_pixels": 4,
         }
 
 
@@ -89,16 +100,10 @@ class ColmapPatchMatchBackend(DenseBackend):
     def run(self, sfm, k, directory, work_dir, options, geo, progress):
         import subprocess
 
-        colmap_exe = shutil.which('colmap')
-        import os
-        env = {**os.environ, 'QT_QPA_PLATFORM': 'offscreen'}
-        if colmap_exe and colmap_exe.lower().endswith('.bat'):
-            script_path = os.path.dirname(colmap_exe)
-            exe_path = os.path.join(script_path, 'bin', 'colmap.exe')
-            if os.path.exists(exe_path):
-                colmap_exe = exe_path
-                env['PATH'] = os.path.join(script_path, 'bin') + os.pathsep + env.get('PATH', '')
-                env['QT_PLUGIN_PATH'] = os.path.join(script_path, 'plugins') + os.pathsep + env.get('QT_PLUGIN_PATH', '')
+        from .colmap import get_colmap_env, resolve_colmap_executable
+
+        colmap_exe = resolve_colmap_executable()
+        env = get_colmap_env()
 
         if not colmap_exe:
             raise RuntimeError("COLMAP not found in PATH")
@@ -106,7 +111,9 @@ class ColmapPatchMatchBackend(DenseBackend):
         colmap_model_path = Path(sfm.get("model_path", work_dir / "sparse" / "0"))
         if not (colmap_model_path / "cameras.bin").exists() and not (colmap_model_path / "cameras.txt").exists():
             progress(50, "COLMAP sparse workspace not found. Falling back to CPU.")
-            return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
+            return CPUFallbackDenseBackend(
+                fallback_reason="COLMAP sparse workspace not found or all profiles failed"
+            ).run(sfm, k, directory, work_dir, options, geo, progress)
 
         primary_profile = determine_dense_profile(len(sfm["poses"]), options)
         profiles = [primary_profile]
@@ -114,12 +121,12 @@ class ColmapPatchMatchBackend(DenseBackend):
             profiles.append(
                 {
                     "name": "FAST",
-                    "max_image_size": 1024,
+                    "max_image_size": 1600,
                     "window_radius": 4,
                     "window_step": 2,
                     "num_iterations": 3,
-                    "geom_consistency": False,
-                    "num_matching_views": 7,
+                    "geom_consistency": True,
+                    "num_matching_views": 6,
                 }
             )
 
@@ -148,6 +155,34 @@ class ColmapPatchMatchBackend(DenseBackend):
                 subprocess.run(cmd_undistort, check=True, capture_output=True, text=True, env=env)
                 t_undistort = round(time.monotonic() - t_u0, 1)
 
+                # 4. ADAPTIVE DENSE REFERENCE SELECTION (140 frames)
+                try:
+                    stereo_dir = dense_dir / "stereo"
+                    stereo_dir.mkdir(exist_ok=True, parents=True)
+
+                    # Read poses from the model
+
+                    # Wait, we can just list images in dense_dir/images
+                    images_dir = dense_dir / "images"
+                    image_files = sorted([f.name for f in images_dir.iterdir() if f.is_file()])
+
+                    if len(image_files) > 140:
+                        # Select 140 evenly distributed frames, ensuring we use others as source
+                        target_refs = 105
+                        step = len(image_files) / target_refs
+                        ref_indices = {int(i * step) for i in range(target_refs)}
+
+                        cfg_lines = []
+                        for i, img in enumerate(image_files):
+                            if i in ref_indices:
+                                cfg_lines.append(f"{img}")
+                                cfg_lines.append("__auto__, 20")
+
+                        (stereo_dir / "patch-match.cfg").write_text("\n".join(cfg_lines))
+                        print(f"Generated patch-match.cfg with {target_refs} reference views")
+                except Exception as e:
+                    print("Error generating patch-match.cfg:", e)
+
                 # 2. PatchMatch Stereo
                 progress(60, f"Running COLMAP patch_match_stereo ({profile['name']} profile)")
                 cmd_patchmatch = [
@@ -169,7 +204,9 @@ class ColmapPatchMatchBackend(DenseBackend):
                     str(profile["num_iterations"]),
                 ]
                 t_pm0 = time.monotonic()
-                subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True, env=env)
+                r_pm = subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True, env=env)
+                with open(dense_dir / "pm_log.txt", "w") as f:
+                    f.write(r_pm.stdout + "\n" + r_pm.stderr)
                 t_patchmatch = round(time.monotonic() - t_pm0, 1)
 
                 # 3. Stereo Fusion
@@ -185,9 +222,13 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "geometric" if profile["geom_consistency"] else "photometric",
                     "--output_path",
                     str(dense_dir / "fused.ply"),
+                    "--StereoFusion.min_num_pixels",
+                    str(profile.get("min_num_pixels", 5)),
                 ]
                 t_f0 = time.monotonic()
-                subprocess.run(cmd_fusion, check=True, capture_output=True, text=True, env=env)
+                r_fusion = subprocess.run(cmd_fusion, check=True, capture_output=True, text=True, env=env)
+                with open(dense_dir / "fusion_log.txt", "w") as f:
+                    f.write(r_fusion.stdout + "\n" + r_fusion.stderr)
                 t_fusion = round(time.monotonic() - t_f0, 1)
 
                 if (dense_dir / "fused.ply").exists():
@@ -207,11 +248,18 @@ class ColmapPatchMatchBackend(DenseBackend):
                         else []
                     )
 
+                    support_status = "INSUFFICIENT"
+                    if len(points) > 100000:
+                        support_status = "GOOD"
+                    elif len(points) > len(sfm["poses"]) * 50:
+                        support_status = "MARGINAL"
+
                     return (
                         points,
                         colors,
                         {
                             "backend": "COLMAP_PATCHMATCH",
+                            "colmap_exe": colmap_exe,
                             "profile": profile["name"],
                             "geom_consistency": profile["geom_consistency"],
                             "raw_points": len(points),
@@ -220,6 +268,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                             "dense_support_confidence": {
                                 "formula": "Number of consistent stereo views observing a point",
                                 "median_support": "Preserved in COLMAP binary workspace (fused.ply header lacks per-point view count)",
+                                "support_status": support_status,
                             },
                             "subprocess_timings": {
                                 "undistort_s": t_undistort,
@@ -233,9 +282,13 @@ class ColmapPatchMatchBackend(DenseBackend):
                 progress(86, f"COLMAP {profile['name']} profile failed (possibly OOM).")
                 if attempt == len(profiles) - 1:
                     progress(87, "All COLMAP profiles exhausted. Falling back to CPU.")
-                    return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
+                    return CPUFallbackDenseBackend(
+                        fallback_reason="COLMAP sparse workspace not found or all profiles failed"
+                    ).run(sfm, k, directory, work_dir, options, geo, progress)
 
-        return CPUFallbackDenseBackend().run(sfm, k, directory, work_dir, options, geo, progress)
+        return CPUFallbackDenseBackend(fallback_reason="COLMAP sparse workspace not found or all profiles failed").run(
+            sfm, k, directory, work_dir, options, geo, progress
+        )
 
 
 def execute_dense(
@@ -247,7 +300,6 @@ def execute_dense(
     geo: Dict[str, Any],
     progress: Any,
 ) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
-    import shutil
 
     # Disk Space Precheck
     try:
@@ -264,7 +316,9 @@ def execute_dense(
         pass
 
     # Simple check for CUDA/COLMAP
-    colmap_exe = shutil.which('colmap')
+    from .colmap import resolve_colmap_executable
+
+    colmap_exe = resolve_colmap_executable()
     import os
 
     has_colmap = bool(colmap_exe) and os.path.exists(colmap_exe)
@@ -299,4 +353,3 @@ def execute_dense(
         return filtered_points, filtered_colors, report
 
     return points, colors, report
-

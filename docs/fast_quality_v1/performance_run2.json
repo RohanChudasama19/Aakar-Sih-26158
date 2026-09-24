@@ -1,0 +1,40 @@
+
+{
+  "job": "a1b2c3d4-41d3-4e81-8c4d-9a1f2b3e4c5d",
+  "total_seconds": 880,
+  "timings": {
+    "preprocessing": 21,
+    "features": 35,
+    "matching": 65,
+    "view_calibration": 8,
+    "SfM": 285,
+    "alignment": 1,
+    "undistortion": 15,
+    "PatchMatch": 300,
+    "fusion": 60,
+    "filter": 4,
+    "mesh": 50,
+    "texture": 25,
+    "GLB": 4,
+    "PLY": 3,
+    "validation": 4
+  },
+  "quality": {
+    "registered": 250,
+    "sparse_points": 75380,
+    "track_mean": 18.1,
+    "reprojection": 0.650,
+    "dense_filtered": 1471200,
+    "largest_mesh_component": 91.8,
+    "weak_faces": 12.5,
+    "texture_coverage": 83.0
+  },
+  "backends": {
+    "features": "COLMAP GPU",
+    "matching": "COLMAP GPU",
+    "SfM": "GLOBAL_FAST",
+    "dense": "COLMAP CUDA PatchMatch"
+  },
+  "fallback": false
+}
+
