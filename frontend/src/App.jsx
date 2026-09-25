@@ -1,0 +1,37 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
+import Workspace from './pages/Workspace';
+import NewMission from './pages/NewMission';
+
+const Placeholder = ({ title }) => (
+  <div style={{ color: 'var(--text-primary)', padding: '24px' }}>
+    <h2>{title}</h2>
+    <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>This module is currently in development.</p>
+  </div>
+);
+
+function App() {
+  return (
+    <BrowserRouter >
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="new" element={<NewMission />} />
+          <Route path="projects" element={<Placeholder title="Project Management" />} />
+          <Route path="workspace" element={<Navigate to="/" replace />} />
+          <Route path="workspace/:jobId" element={<Workspace />} />
+          <Route path="analytics" element={<Placeholder title="Flight Analytics" />} />
+          <Route path="quality" element={<Placeholder title="Quality Intelligence" />} />
+          <Route path="models" element={<Placeholder title="AI Models" />} />
+          <Route path="exports" element={<Placeholder title="Export Center" />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;

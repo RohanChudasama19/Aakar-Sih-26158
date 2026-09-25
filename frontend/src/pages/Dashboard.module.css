@@ -1,0 +1,284 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.kpiCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpiHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.kpiIcon {
+  color: var(--accent-primary);
+}
+
+.kpiValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+.kpiTrend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.trendUp {
+  color: var(--color-success);
+}
+
+.trendText {
+  color: var(--text-secondary);
+}
+
+.sparkline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  opacity: 0.5;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.missionCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 32px;
+}
+
+.missionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.missionHeader h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.missionStatus {
+  background-color: rgba(25, 211, 197, 0.1);
+  color: var(--accent-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(25, 211, 197, 0.2);
+}
+
+.progressCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent-primary);
+}
+
+.timeline {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.timelineStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  width: 80px;
+}
+
+.stepDot {
+  width: 24px;
+  height: 24px;
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.timelineStep span {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.timelineStep.completed .stepDot {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background-color: rgba(25, 211, 197, 0.1);
+}
+
+.timelineStep.active .stepDot {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background-color: var(--bg-elevated);
+  box-shadow: 0 0 10px rgba(25, 211, 197, 0.3);
+}
+
+.timelineStep.completed span, .timelineStep.active span {
+  color: var(--text-primary);
+}
+
+.missionDetails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  background-color: var(--bg-elevated);
+  padding: 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.detailValue {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.alertsPanel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.panelHeader h3 {
+  font-size: 16px;
+}
+
+.badge {
+  background-color: rgba(242, 184, 75, 0.1);
+  color: var(--color-warning);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.alertsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alertItem {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.alertItem.warning {
+  border-left-color: var(--color-warning);
+}
+
+.alertItem.warning svg {
+  color: var(--color-warning);
+}
+
+.alertItem.info {
+  border-left-color: var(--accent-secondary);
+}
+
+.alertItem.info svg {
+  color: var(--accent-secondary);
+}
+
+.alertTime {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: monospace;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.alertItem p {
+  font-size: 13px;
+  margin: 0;
+}
