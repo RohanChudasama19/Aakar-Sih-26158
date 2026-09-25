@@ -75,7 +75,10 @@ def reconstruct_surface(points, colors, cameras, max_points=150000, options=None
             tree_orig = cKDTree(xyz)
             local_spacing = tree_orig.query(xyz, k=6)[0][:, -1]
             distance, nearest_orig = tree_orig.query(vertices)
-            tolerance = np.clip(local_spacing[nearest_orig] * 1.8, spacing * 3, spacing * 15)
+            
+            mesh_resolution = extent / (2 ** depth)
+            effective_spacing = max(spacing, mesh_resolution)
+            tolerance = np.clip(local_spacing[nearest_orig] * 1.8, effective_spacing * 1.5, effective_spacing * 5)
             density = np.asarray(density)
 
             remove = (distance > tolerance) | (density < np.quantile(density, options.get("density_quantile", 0.02)))
@@ -117,8 +120,8 @@ def reconstruct_surface(points, colors, cameras, max_points=150000, options=None
             dist_to_cloud, _ = tree_orig.query(centroids)
 
             # Categorize support
-            strong_thresh = spacing * 5
-            weak_thresh = spacing * 15
+            strong_thresh = max(spacing * 5, mesh_resolution * 1.5)
+            weak_thresh = max(spacing * 15, mesh_resolution * 3.0)
 
             supported = dist_to_cloud <= strong_thresh
             unobserved = dist_to_cloud > weak_thresh
@@ -160,8 +163,12 @@ def reconstruct_surface(points, colors, cameras, max_points=150000, options=None
 
     mesh, report = runner.run(xyz, rgb, cameras, max_points, options)
 
-    # Add dummy variables for report since clustering was done internally by backend
-    report["connected_components"] = len(np.unique(mesh.faces))  # Simplified proxy
+    import open3d as o3d
+    o3d_mesh = o3d.geometry.TriangleMesh()
+    o3d_mesh.vertices = o3d.utility.Vector3dVector(mesh.vertices)
+    o3d_mesh.triangles = o3d.utility.Vector3iVector(mesh.faces)
+    _, counts, _ = o3d_mesh.cluster_connected_triangles()
+    report["connected_components"] = len(counts)
     report["degenerate_face_count"] = int(np.sum(mesh.area_faces < 1e-10))
     report["non_manifold_edge_count"] = 0
 

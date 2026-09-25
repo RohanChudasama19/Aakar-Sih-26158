@@ -155,9 +155,12 @@ def intrinsics(meta: Dict[str, Any], width: int, height: int, override: Optional
         orig_w = int(x.get("image_width_px", width))
         orig_h = int(x.get("image_height_px", height))
 
-        # Reasonable prior for wide-angle UAV cameras: 75-85 deg FOV
-        # fx roughly equals 0.85 * width.
-        focal_guess = 0.85 * orig_w
+        if "focal_length_mm" in x and "sensor_width_mm" in x and float(x["sensor_width_mm"]) > 0:
+            focal_guess = (float(x["focal_length_mm"]) / float(x["sensor_width_mm"])) * orig_w
+        else:
+            # Reasonable prior for wide-angle UAV cameras: 75-85 deg FOV
+            # fx roughly equals 0.85 * width.
+            focal_guess = 0.85 * orig_w
         
         cam = CameraModel(
             model_type=CameraModelType.SIMPLE_RADIAL,

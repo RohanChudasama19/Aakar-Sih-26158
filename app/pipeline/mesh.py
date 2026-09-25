@@ -16,7 +16,7 @@ def build_mesh(points, colors, geo, sfm, k, directory, out_dir=None, options=Non
 
     # 1. Reconstruct Surface
     surface, report = reconstruct_surface(
-        local, colors, cameras, max_points=options.get("max_points", 150000), options=options
+        local, colors, cameras, max_points=options.get("max_points", 5000000), options=options
     )
 
     # Check if surface is valid

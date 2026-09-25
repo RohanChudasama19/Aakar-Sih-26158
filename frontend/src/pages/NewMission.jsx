@@ -80,7 +80,7 @@ const NewMission = () => {
                 outline: 'none'
               }}
             >
-              <option value="fast_quality">FAST_QUALITY V1 (Recommended)</option>
+              <option value="fast_quality">FAST_QUALITY V1 (Experimental)</option>
               <option value="fast_c">FAST_C</option>
               <option value="colmap">QUALITY</option>
             </select>

@@ -41,7 +41,7 @@ class AeroreconTextureBackend(TextureBackend):
         projections = {}
 
         for j, pose in sfm["poses"].items():
-            image_path = directory / f"{j:06d}.png"
+            image_path = directory / f"{int(j):06d}.png"
             if not image_path.exists():
                 continue
 
@@ -65,7 +65,7 @@ class AeroreconTextureBackend(TextureBackend):
             ).all(1)
 
             # Dynamic masks
-            mask_path = directory.parent / "masks" / f"{j:06d}.png.png"
+            mask_path = directory.parent / "masks" / f"{int(j):06d}.png.png"
             if mask_path.exists():
                 mask = cv2.imread(str(mask_path), 0)
                 if mask is not None:
@@ -131,9 +131,9 @@ class AeroreconTextureBackend(TextureBackend):
         coords = []
 
         loaded = {
-            j: cv2.imread(str(directory / f"{j:06d}.png"))
+            j: cv2.imread(str(directory / f"{int(j):06d}.png"))
             for j in sfm["poses"]
-            if (directory / f"{j:06d}.png").exists()
+            if (directory / f"{int(j):06d}.png").exists()
         }
         aa, bb = np.meshgrid(np.linspace(0, 1, tile), np.linspace(0, 1, tile))
         b = np.minimum(bb, 1 - aa)
