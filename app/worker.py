@@ -107,7 +107,7 @@ def process_job(job_id):
 
 if __name__ == "__main__":
     from redis import Redis
-    from rq import Queue, Worker
+    from rq import Queue, SimpleWorker as Worker
 
     init_db()
     connection = Redis.from_url(REDIS_URL)

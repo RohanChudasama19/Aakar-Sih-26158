@@ -129,81 +129,47 @@ class ColmapPatchMatchBackend(DenseBackend):
             try:
                 # 1. Undistort
                 progress(45, f"Running COLMAP image_undistorter ({profile['name']} profile)")
-                # ADAPTIVE DENSE REFERENCE SELECTION
-                target_refs = (
-                    FAST_QUALITY_V1["dense_settings"]["reference_target"] if profile["name"] == "FAST_QUALITY" else 140
-                )
-
-                # Check how many images are in the input directory
-                images = sorted(list(directory.glob("*.png")))
-                if len(images) > target_refs:
-                    step = len(images) / max(1, target_refs)
-                    selected_images = [images[int(i * step)].name for i in range(target_refs)]
-
-                    list_path = dense_dir / "image_list.txt"
-                    dense_dir.mkdir(parents=True, exist_ok=True)
-                    list_path.write_text("\n".join(selected_images))
-
-                    cmd_undistort = [
-                        colmap_exe,
-                        "image_undistorter",
-                        "--image_path",
-                        str(directory),
-                        "--input_path",
-                        str(colmap_model_path),
-                        "--output_path",
-                        str(dense_dir),
-                        "--output_type",
-                        "COLMAP",
-                        "--max_image_size",
-                        str(profile["max_image_size"]),
-                        "--image_list_path",
-                        str(list_path),
-                    ]
-                else:
-                    cmd_undistort = [
-                        colmap_exe,
-                        "image_undistorter",
-                        "--image_path",
-                        str(directory),
-                        "--input_path",
-                        str(colmap_model_path),
-                        "--output_path",
-                        str(dense_dir),
-                        "--output_type",
-                        "COLMAP",
-                        "--max_image_size",
-                        str(profile["max_image_size"]),
-                    ]
+                cmd_undistort = [
+                    colmap_exe,
+                    "image_undistorter",
+                    "--image_path",
+                    str(directory),
+                    "--input_path",
+                    str(colmap_model_path),
+                    "--output_path",
+                    str(dense_dir),
+                    "--output_type",
+                    "COLMAP",
+                    "--max_image_size",
+                    str(profile["max_image_size"]),
+                ]
                 t_u0 = time.monotonic()
                 subprocess.run(cmd_undistort, check=True, capture_output=True, text=True, env=env)
                 t_undistort = round(time.monotonic() - t_u0, 1)
 
-                # 4. ADAPTIVE DENSE REFERENCE SELECTION (140 frames)
+                # 4. ADAPTIVE DENSE REFERENCE SELECTION
                 try:
+                    target_refs = (
+                        FAST_QUALITY_V1["dense_settings"]["reference_target"] if profile["name"] == "FAST_QUALITY" else 140
+                    )
                     stereo_dir = dense_dir / "stereo"
                     stereo_dir.mkdir(exist_ok=True, parents=True)
 
-                    # Read poses from the model
-
-                    # Wait, we can just list images in dense_dir/images
                     images_dir = dense_dir / "images"
                     image_files = sorted([f.name for f in images_dir.iterdir() if f.is_file()])
 
-                    if len(image_files) > 140:
-                        # Select 140 evenly distributed frames, ensuring we use others as source
-                        target_refs = 105
-                        step = len(image_files) / target_refs
+                    if len(image_files) > target_refs:
+                        step = len(image_files) / max(1, target_refs)
                         ref_indices = {int(i * step) for i in range(target_refs)}
 
                         cfg_lines = []
                         for i, img in enumerate(image_files):
                             if i in ref_indices:
                                 cfg_lines.append(f"{img}")
-                                cfg_lines.append("__auto__, 20")
+                                cfg_lines.append(f"__auto__, {profile.get('num_matching_views', 10)}")
 
                         (stereo_dir / "patch-match.cfg").write_text("\n".join(cfg_lines))
-                        print(f"Generated patch-match.cfg with {target_refs} reference views")
+                        print(f"Generated patch-match.cfg with {target_refs} reference views (source views available: {len(image_files)})")
                 except Exception as e:
                     print("Error generating patch-match.cfg:", e)
 
@@ -227,6 +193,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--PatchMatchStereo.num_iterations",
                     str(profile["num_iterations"]),
                 ]
+                cmd_patchmatch.extend(["--PatchMatchStereo.allow_missing_files", "1"])
                 t_pm0 = time.monotonic()
                 r_pm = subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True, env=env)
                 with open(dense_dir / "pm_log.txt", "w") as f:

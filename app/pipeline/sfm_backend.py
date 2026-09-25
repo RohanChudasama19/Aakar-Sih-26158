@@ -148,7 +148,7 @@ class COLMAPBackend(SfMBackend):
             extractor_cmd.extend(["--ImageReader.mask_path", mask_dir])
 
         if profile.name == "FAST_QUALITY":
-            extractor_cmd.extend(["--SiftExtraction.max_num_features", "4096"])
+            pass
 
         colmap.run(extractor_cmd, work)
 
