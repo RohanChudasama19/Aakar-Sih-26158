@@ -207,6 +207,8 @@ class COLMAPBackend(SfMBackend):
                 refine_extra,
                 "--GlobalMapper.ba_ceres_max_num_iterations",
                 "30",
+                "--GlobalMapper.skip_retriangulation",
+                "1",
             ]
         elif profile.mapper_strategy == "HIERARCHICAL":
             mapper_cmd = [
