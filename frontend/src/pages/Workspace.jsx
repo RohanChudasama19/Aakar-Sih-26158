@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Maximize, Minimize, MousePointer2, Move, BoxSelect, 
-  MapPin, Layers, Video, Share2, Layers as LayerIcon 
+  MapPin, Layers, Video, Share2, Layers as LayerIcon,
+  Ruler, Navigation, SplitSquareVertical, Navigation2, Square, X
 } from 'lucide-react';
-import '@google/model-viewer';
+import { AeroReconViewer } from '../components/viewer/AeroReconViewer';
 import styles from './Workspace.module.css';
 import { fetchJob } from '../api/jobs';
 
@@ -14,6 +15,7 @@ const Workspace = () => {
   const [activeLayer, setActiveLayer] = useState('textured');
   const [mission, setMission] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [measureData, setMeasureData] = useState([]);
 
   useEffect(() => {
     const loadMission = async () => {
@@ -28,6 +30,7 @@ const Workspace = () => {
     };
 
     loadMission();
+    
     const token = sessionStorage.getItem("aerorecon-token") || "";
     const es = new EventSource(`/api/jobs/${jobId}/events?token=${token}`);
     es.onmessage = (e) => {
@@ -55,11 +58,16 @@ const Workspace = () => {
     return <Layers size={14} />;
   };
 
-  const modelUrl = mission.status === 'completed' ? `/api/jobs/${mission.id}/files/representations/scene_textured.glb` : null;
+  const handleMeasureUpdate = (points, mode) => {
+    // Viewer handles internal measurement state, we just trigger UI updates if necessary.
+    // In legacy viewer, it displays values on the canvas, we could also capture them here if we wanted side-panel display.
+  };
+
+  const metric = mission.report?.metric_state || 'RELATIVE';
+  const metricSafe = metric !== 'RELATIVE';
 
   return (
     <div className={styles.container}>
-      {/* Top Action Bar */}
       <div className={styles.actionBar}>
         <div className={styles.breadcrumb}>
           <span className={styles.crumbMuted}>Projects</span>
@@ -74,7 +82,6 @@ const Workspace = () => {
 
       <div className={styles.workspaceGrid}>
         
-        {/* Left: Pipeline Panel */}
         <div className={styles.pipelinePanel}>
           <div className={styles.panelHeader}>
             <h3>Reconstruction Pipeline</h3>
@@ -82,7 +89,6 @@ const Workspace = () => {
           </div>
           
           <div className={styles.pipelineList}>
-            {/* Displaying simple status mapping for now */}
             <div className={`${styles.pipelineStep} ${['completed','failed'].includes(mission.status) ? styles.done : styles.active}`}>
               <div className={styles.stepIcon}>{getStepIcon('ESTIMATION')}</div>
               <div className={styles.stepInfo}>
@@ -101,18 +107,14 @@ const Workspace = () => {
           </div>
         </div>
 
-        {/* Center: 3D Viewport */}
         <div className={styles.viewport}>
-          {mission.status === 'completed' && modelUrl ? (
-            <div style={{ width: '100%', height: '100%', borderRadius: '8px', overflow: 'hidden' }}>
-              <model-viewer 
-                src={modelUrl} 
-                alt="3D Model Reconstruction" 
-                auto-rotate 
-                camera-controls 
-                style={{ width: '100%', height: '100%', backgroundColor: '#1a1a1a' }}
-              ></model-viewer>
-            </div>
+          {mission.status === 'completed' ? (
+            <AeroReconViewer 
+              mission={mission}
+              activeLayer={activeLayer}
+              activeTool={activeTool}
+              onMeasureUpdate={handleMeasureUpdate}
+            />
           ) : (
             <div className={styles.viewportMockup}>
               <div className={styles.pointCloudContainer}>
@@ -135,13 +137,17 @@ const Workspace = () => {
 
           <div className={styles.toolbar}>
             <button className={`${styles.toolBtn} ${activeTool === 'orbit' ? styles.active : ''}`} onClick={() => setActiveTool('orbit')} title="Orbit Tool"><MousePointer2 size={16} /></button>
-            <button className={`${styles.toolBtn} ${activeTool === 'pan' ? styles.active : ''}`} onClick={() => setActiveTool('pan')} title="Pan Tool"><Move size={16} /></button>
             <div className={styles.toolbarDivider}></div>
-            <button className={styles.toolBtn} title="Reset View"><Maximize size={16} /></button>
+            <button className={`${styles.toolBtn} ${activeTool === 'distance' ? styles.active : ''}`} onClick={() => setActiveTool('distance')} title="3D Distance"><Ruler size={16} /></button>
+            <button className={`${styles.toolBtn} ${activeTool === 'horizontal' ? styles.active : ''}`} onClick={() => setActiveTool('horizontal')} title="Horizontal Distance"><Navigation size={16} /></button>
+            <button className={`${styles.toolBtn} ${activeTool === 'vertical' ? styles.active : ''}`} onClick={() => setActiveTool('vertical')} title="Vertical Difference"><SplitSquareVertical size={16} /></button>
+            <button className={`${styles.toolBtn} ${activeTool === 'xyz' ? styles.active : ''}`} onClick={() => setActiveTool('xyz')} title="XYZ Delta"><Navigation2 size={16} /></button>
+            <button className={`${styles.toolBtn} ${activeTool === 'area' ? styles.active : ''}`} onClick={() => setActiveTool('area')} title="Surface Area"><Square size={16} /></button>
+            <div className={styles.toolbarDivider}></div>
+            <button className={styles.toolBtn} onClick={() => setActiveTool('orbit')} title="Clear Measurement"><X size={16} /></button>
           </div>
         </div>
 
-        {/* Right: Intelligence Panel */}
         <div className={styles.intelligencePanel}>
           <div className={styles.panelHeader}>
             <h3>Intelligence</h3>
@@ -163,7 +169,7 @@ const Workspace = () => {
               <div className={styles.metricCard}>
                 <div className={styles.metricHeader}>
                   <span>Georeference</span>
-                  <span className={`${styles.badge} ${styles.badgeSuccess}`}>VERIFIED</span>
+                  <span className={`${styles.badge} ${metricSafe ? styles.badgeSuccess : styles.badgeWarning}`}>{metricSafe ? 'VERIFIED' : 'RELATIVE'}</span>
                 </div>
                 <div className={styles.metricValue}>{mission.report?.metric_state || 'UNKNOWN'}</div>
               </div>
@@ -185,11 +191,9 @@ const Workspace = () => {
                   {mission.report?.dense_points?.toLocaleString() || '-'}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

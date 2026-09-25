@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import NewMission from './pages/NewMission';
+import Exports from './pages/Exports';
 
 const Placeholder = ({ title }) => (
   <div style={{ color: 'var(--text-primary)', padding: '24px' }}>
@@ -26,7 +27,7 @@ function App() {
           <Route path="analytics" element={<Placeholder title="Flight Analytics" />} />
           <Route path="quality" element={<Placeholder title="Quality Intelligence" />} />
           <Route path="models" element={<Placeholder title="AI Models" />} />
-          <Route path="exports" element={<Placeholder title="Export Center" />} />
+          <Route path="exports" element={<Exports />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
