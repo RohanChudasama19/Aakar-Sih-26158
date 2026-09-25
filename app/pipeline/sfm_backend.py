@@ -150,6 +150,9 @@ class COLMAPBackend(SfMBackend):
         if profile.name == "FAST_QUALITY":
             pass
 
+        with open(work / "DEBUG_CMD.txt", "w") as f:
+            f.write(str(extractor_cmd))
+
         colmap.run(extractor_cmd, work)
 
         # 2. Matching

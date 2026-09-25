@@ -185,7 +185,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--PatchMatchStereo.max_image_size",
                     str(profile["max_image_size"]),
                     "--PatchMatchStereo.geom_consistency",
-                    "true" if profile["geom_consistency"] else "false",
+                    "1" if profile["geom_consistency"] else "0",
                     "--PatchMatchStereo.window_radius",
                     str(profile["window_radius"]),
                     "--PatchMatchStereo.window_step",
