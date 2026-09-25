@@ -147,35 +147,39 @@ class ColmapPatchMatchBackend(DenseBackend):
                 subprocess.run(cmd_undistort, check=True, capture_output=True, text=True, env=env)
                 t_undistort = round(time.monotonic() - t_u0, 1)
 
-                # 4. ADAPTIVE DENSE REFERENCE SELECTION
-                try:
-                    target_refs = (
-                        FAST_QUALITY_V1["dense_settings"]["reference_target"] if profile["name"] == "FAST_QUALITY" else 140
-                    )
-                    stereo_dir = dense_dir / "stereo"
-                    stereo_dir.mkdir(exist_ok=True, parents=True)
+                t_pm0 = time.monotonic()
 
-                    images_dir = dense_dir / "images"
-                    image_files = sorted([f.name for f in images_dir.iterdir() if f.is_file()])
+                # ADAPTIVE DENSE REFERENCE SELECTION
+                target_refs = (
+                    FAST_QUALITY_V1["dense_settings"]["reference_target"] if profile["name"] == "FAST_QUALITY" else 140
+                )
+                stereo_dir = dense_dir / "stereo"
+                stereo_dir.mkdir(exist_ok=True, parents=True)
 
-                    if len(image_files) > target_refs:
-                        step = len(image_files) / max(1, target_refs)
-                        ref_indices = {int(i * step) for i in range(target_refs)}
+                images_dir = dense_dir / "images"
+                image_files = sorted([f.name for f in images_dir.iterdir() if f.is_file()])
 
-                        cfg_lines = []
-                        for i, img in enumerate(image_files):
-                            if i in ref_indices:
-                                cfg_lines.append(f"{img}")
-                                cfg_lines.append(f"__auto__, {profile.get('num_matching_views', 10)}")
+                step = len(image_files) / max(1, target_refs) if len(image_files) > target_refs else 1
+                ref_indices = {int(i * step) for i in range(min(len(image_files), target_refs))}
+                ref_images = [img for i, img in enumerate(image_files) if i in ref_indices]
 
-                        (stereo_dir / "patch-match.cfg").write_text("\n".join(cfg_lines))
-                        print(f"Generated patch-match.cfg with {target_refs} reference views (source views available: {len(image_files)})")
-                except Exception as e:
-                    print("Error generating patch-match.cfg:", e)
+                # ==========================================
+                # PASS 1: PHOTOMETRIC
+                # ==========================================
+                cfg_lines_photo = []
+                for img in ref_images:
+                    cfg_lines_photo.append(f"{img}")
+                    cfg_lines_photo.append(f"__auto__, {profile.get('num_matching_views', 10)}")
 
-                # 2. PatchMatch Stereo
-                progress(60, f"Running COLMAP patch_match_stereo ({profile['name']} profile)")
-                cmd_patchmatch = [
+                photo_cfg_path = stereo_dir / "patch-match-photometric.cfg"
+                photo_cfg_path.write_text("\n".join(cfg_lines_photo))
+
+                import shutil
+
+                shutil.copyfile(str(photo_cfg_path), str(stereo_dir / "patch-match.cfg"))
+
+                progress(55, f"Running COLMAP patch_match_stereo PASS 1 (Photometric) ({profile['name']})")
+                cmd_pm_photo = [
                     colmap_exe,
                     "patch_match_stereo",
                     "--workspace_path",
@@ -185,7 +189,7 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--PatchMatchStereo.max_image_size",
                     str(profile["max_image_size"]),
                     "--PatchMatchStereo.geom_consistency",
-                    "1" if profile["geom_consistency"] else "0",
+                    "0",
                     "--PatchMatchStereo.window_radius",
                     str(profile["window_radius"]),
                     "--PatchMatchStereo.window_step",
@@ -193,13 +197,128 @@ class ColmapPatchMatchBackend(DenseBackend):
                     "--PatchMatchStereo.num_iterations",
                     str(profile["num_iterations"]),
                 ]
-                cmd_patchmatch.extend(["--PatchMatchStereo.allow_missing_files", "1"])
-                t_pm0 = time.monotonic()
-                r_pm = subprocess.run(cmd_patchmatch, check=True, capture_output=True, text=True, env=env)
-                with open(dense_dir / "pm_log.txt", "w") as f:
-                    f.write(r_pm.stdout + "\n" + r_pm.stderr)
+                r_pm_photo = subprocess.run(cmd_pm_photo, check=True, capture_output=True, text=True, env=env)
+                with open(dense_dir / "pm_photo_log.txt", "w") as f:
+                    f.write(r_pm_photo.stdout + "\n" + r_pm_photo.stderr)
+
+                # Verify Photometric Output
+                depth_dir = stereo_dir / "depth_maps"
+                normal_dir = stereo_dir / "normal_maps"
+                for img in ref_images:
+                    if not (depth_dir / f"{img}.photometric.bin").exists():
+                        raise RuntimeError(f"Pass 1 Photometric failed: missing depth map for {img}")
+                    if not (normal_dir / f"{img}.photometric.bin").exists():
+                        raise RuntimeError(f"Pass 1 Photometric failed: missing normal map for {img}")
+
+                # ==========================================
+                # PASS 2: GEOMETRIC
+                # ==========================================
+                t_pm_geom0 = time.monotonic()
+                if profile.get("geom_consistency", False) or profile.get("name") == "FAST_QUALITY":
+                    progress(70, f"Running COLMAP patch_match_stereo PASS 2 (Geometric) ({profile['name']})")
+
+                    # Read sparse points to compute overlap
+                    points_map = {}
+                    sparse_txt = work_dir / "sparse_txt" / "points3D.txt"
+                    img_txt = work_dir / "sparse_txt" / "images.txt"
+
+                    # We can get image points from images.txt
+                    if img_txt.exists():
+                        lines = img_txt.read_text().splitlines()
+                        i = 0
+                        while i < len(lines):
+                            header = lines[i].strip()
+                            i += 1
+                            if not header or header.startswith("#"):
+                                continue
+                            parts = header.split()
+                            if len(parts) >= 10:
+                                name = parts[9]
+                                pts_line = lines[i].strip()
+                                i += 1
+                                pts_parts = pts_line.split()
+                                # X Y POINT3D_ID
+                                pt_ids = {
+                                    int(pts_parts[j]) for j in range(2, len(pts_parts), 3) if int(pts_parts[j]) != -1
+                                }
+                                points_map[name] = pt_ids
+
+                    cfg_lines_geom = []
+                    source_counts = []
+                    for img in ref_images:
+                        cfg_lines_geom.append(f"{img}")
+
+                        img_pts = points_map.get(img, set())
+                        overlaps = []
+                        for other in ref_images:
+                            if other == img:
+                                continue
+                            other_pts = points_map.get(other, set())
+                            shared = len(img_pts.intersection(other_pts))
+                            overlaps.append((shared, other))
+
+                        # Sort by shared points, fallback to filename proximity
+                        overlaps.sort(
+                            key=lambda x: (x[0], -abs(ref_images.index(img) - ref_images.index(x[1]))), reverse=True
+                        )
+
+                        # Pick top N
+                        num_views = profile.get("num_matching_views", 6)
+                        best_sources = [x[1] for x in overlaps[:num_views]]
+
+                        source_counts.append(len(best_sources))
+                        if len(best_sources) == 0:
+                            raise RuntimeError(f"Zero valid sources for {img} during geometric pass")
+
+                        cfg_lines_geom.append(", ".join(best_sources))
+
+                    geom_cfg_path = stereo_dir / "patch-match-geometric.cfg"
+                    geom_cfg_path.write_text("\n".join(cfg_lines_geom))
+                    shutil.copyfile(str(geom_cfg_path), str(stereo_dir / "patch-match.cfg"))
+
+                    # Log source counts
+                    if source_counts:
+                        import statistics
+
+                        print(
+                            f"Geometric pass sources - min: {min(source_counts)}, median: {statistics.median(source_counts)}, max: {max(source_counts)}"
+                        )
+
+                    cmd_pm_geom = [
+                        colmap_exe,
+                        "patch_match_stereo",
+                        "--workspace_path",
+                        str(dense_dir),
+                        "--workspace_format",
+                        "COLMAP",
+                        "--PatchMatchStereo.max_image_size",
+                        str(profile["max_image_size"]),
+                        "--PatchMatchStereo.geom_consistency",
+                        "1",
+                        "--PatchMatchStereo.window_radius",
+                        str(profile["window_radius"]),
+                        "--PatchMatchStereo.window_step",
+                        str(profile["window_step"]),
+                        "--PatchMatchStereo.num_iterations",
+                        str(profile["num_iterations"]),
+                    ]
+                    r_pm_geom = subprocess.run(cmd_pm_geom, check=True, capture_output=True, text=True, env=env)
+                    with open(dense_dir / "pm_geom_log.txt", "w") as f:
+                        f.write(r_pm_geom.stdout + "\n" + r_pm_geom.stderr)
+
+                    # Verify Geometric Output
+                    for img in ref_images:
+                        if not (depth_dir / f"{img}.geometric.bin").exists():
+                            raise RuntimeError(f"Pass 2 Geometric failed: missing depth map for {img}")
+                        if not (normal_dir / f"{img}.geometric.bin").exists():
+                            raise RuntimeError(f"Pass 2 Geometric failed: missing normal map for {img}")
+
                 t_patchmatch = round(time.monotonic() - t_pm0, 1)
 
+                # 3. Stereo Fusion
+                progress(85, f"Running COLMAP stereo_fusion ({profile['name']} profile)")
+                # 3. Stereo Fusion
+                progress(85, f"Running COLMAP stereo_fusion ({profile['name']} profile)")
                 # 3. Stereo Fusion
                 progress(85, f"Running COLMAP stereo_fusion ({profile['name']} profile)")
                 cmd_fusion = [
