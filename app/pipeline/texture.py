@@ -36,11 +36,17 @@ class AeroreconTextureBackend(TextureBackend):
         normal_norm = np.linalg.norm(normal, axis=1, keepdims=True) + 1e-12
         normal /= normal_norm
 
+        # Normalize all pose keys to int so str-key callers ("1","2"…) and
+        # int-key callers (1,2…) both work.  This must happen before `selected`
+        # is populated and before `loaded` is built, so every dict shares the
+        # same key type and `selected[f] in loaded` is always a valid lookup.
+        poses_int: dict = {int(k): v for k, v in sfm["poses"].items()}
+
         score = np.zeros(len(triangles))
         selected = np.full(len(triangles), -1, int)
         projections = {}
 
-        for j, pose in sfm["poses"].items():
+        for j, pose in poses_int.items():
             image_path = directory / f"{int(j):06d}.png"
             if not image_path.exists():
                 continue
@@ -132,7 +138,7 @@ class AeroreconTextureBackend(TextureBackend):
 
         loaded = {
             j: cv2.imread(str(directory / f"{int(j):06d}.png"))
-            for j in sfm["poses"]
+            for j in poses_int
             if (directory / f"{int(j):06d}.png").exists()
         }
         aa, bb = np.meshgrid(np.linspace(0, 1, tile), np.linspace(0, 1, tile))
