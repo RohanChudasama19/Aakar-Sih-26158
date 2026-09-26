@@ -19,6 +19,7 @@ const Workspace = () => {
 
   useEffect(() => {
     const loadMission = async () => {
+      if (!jobId || jobId === 'undefined' || jobId === 'null') { setLoading(false); return; }
       try {
         const data = await fetchJob(jobId);
         setMission(data);
@@ -31,24 +32,53 @@ const Workspace = () => {
 
     loadMission();
     
+    if (!jobId || jobId === "undefined" || jobId === "null") return;
+    
+    let es = null;
     const token = sessionStorage.getItem("aerorecon-token") || "";
-    const es = new EventSource(`/api/jobs/${jobId}/events?token=${token}`);
-    es.onmessage = (e) => {
-        try {
-            const data = JSON.parse(e.data);
-            if(data.type === "job_update") setMission(data.job);
-        } catch(err){}
-    };
+    const url = token ? `/api/jobs/${jobId}/events?token=${token}` : `/api/jobs/${jobId}/events`;
+    
+    try {
+      es = new EventSource(url);
+      es.onmessage = (e) => {
+          try {
+              const data = JSON.parse(e.data);
+              if(data.type === "job_update") setMission(data.job);
+          } catch(err){}
+      };
+    } catch (e) {
+      console.error("SSE Error:", e);
+    }
+    
     const interval = setInterval(loadMission, 30000); // Polling as fallback only
-    return () => { es.close(); clearInterval(interval); };
+    return () => { 
+      if (es) es.close(); 
+      clearInterval(interval); 
+    };
   }, [jobId]);
+
+  if (!jobId || jobId === "undefined" || jobId === "null") {
+    return (
+      <div className={styles.container} style={{ padding: "24px", color: "var(--color-danger)" }}>
+        <h2>Invalid Mission ID</h2>
+        <p>The requested mission ID is invalid.</p>
+        <button onClick={() => window.location.href = "/"} className={styles.primaryBtn}>Return to Dashboard</button>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className={styles.container} style={{ padding: '24px', color: 'var(--text-primary)' }}>Loading Workspace...</div>;
   }
 
   if (!mission) {
-    return <div className={styles.container} style={{ padding: '24px', color: 'var(--text-primary)' }}>Error: Mission not found or backend not running.</div>;
+    return (
+      <div className={styles.container} style={{ padding: "24px", color: "var(--text-primary)" }}>
+        <h2>Mission Not Found</h2>
+        <p>The mission could not be loaded. It may have been deleted or the ID is incorrect.</p>
+        <button onClick={() => window.location.href = "/"} className={styles.primaryBtn}>Return to Dashboard</button>
+      </div>
+    );
   }
 
   const getStepIcon = (name) => {

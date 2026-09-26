@@ -29,7 +29,7 @@ const NewMission = () => {
 
     try {
       const result = await createJob(fd);
-      navigate(`/workspace/${result.job_id}`);
+      navigate(`/workspace/${result.id}`);
     } catch (e) {
       setError(e.message);
       setUploading(false);
