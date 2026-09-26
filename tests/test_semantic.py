@@ -1,5 +1,5 @@
 import numpy as np
-import torch
+import pytest; torch = pytest.importorskip("torch")
 
 from app.pipeline.semantic_model import UAVID_TO_AERORECON, AeroReconClass, SemanticPipeline, UAVidClass
 from scripts.semantic.train import build_model, compute_iou, rgb_to_mask
