@@ -178,8 +178,7 @@ def extract(video, out, options, gps_rows, meta, k_test, notify):
 
             selected = [candidates[idx] for idx in sorted(list(selected_indices))]
         else:
-            selected = []
-            selected.append(candidates[0])
+            selected_indices = set([0, len(candidates) - 1])
             remaining = candidates[1:-1]
             step = len(remaining) / max(1, (sfm_target - 2))
             for j in range(sfm_target - 2):
@@ -188,8 +187,17 @@ def extract(video, out, options, gps_rows, meta, k_test, notify):
                 chunk = remaining[idx_start:idx_end]
                 if chunk:
                     best = max(chunk, key=lambda x: x["sharpness"] * min(1.0, max(0.1, x["motion_px"]) / 20.0))
-                    selected.append(best)
-            selected.append(candidates[-1])
+                    selected_indices.add(candidates.index(best))
+            
+            # Bridge frame reinsertion for else block
+            sorted_idx = sorted(list(selected_indices))
+            for k in range(len(sorted_idx) - 1):
+                curr, nxt = sorted_idx[k], sorted_idx[k + 1]
+                # If gap is > 1.5x expected step
+                if nxt - curr > (len(candidates) / sfm_target) * 1.5:
+                    selected_indices.add((curr + nxt) // 2)
+            
+            selected = [candidates[idx] for idx in sorted(list(selected_indices))]
 
     for f in selected:
         shutil.copy(str(out.parent / "candidates" / f["name"]), str(out / f["name"]))
