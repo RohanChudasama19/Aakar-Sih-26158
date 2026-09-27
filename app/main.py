@@ -360,10 +360,12 @@ def jobs():
         return [serialize(j) for j in s.scalars(select(Job).order_by(Job.created.desc()).limit(100))]
 
 
+import re as _re
+_JID_RE = _re.compile(r'^[a-zA-Z0-9_-]{1,64}$')
+
+
 def get_job(jid):
-    try:
-        uuid.UUID(jid)
-    except ValueError:
+    if not jid or not _JID_RE.match(jid):
         raise HTTPException(404, "Unknown job")
     with Session() as s:
         j = s.get(Job, jid)
