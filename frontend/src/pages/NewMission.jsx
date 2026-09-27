@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, MapPin, Layers, Info } from 'lucide-react';
 import styles from './Dashboard.module.css';
 import { createJob } from '../api/jobs';
+import { fetchProjects } from '../api/projects';
 
 const NewMission = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: 'Campus Survey', engine: 'fast_quality' });
+  const [formData, setFormData] = useState({ name: 'Campus Survey', engine: 'fast_quality', project_id: 'default-legacy-project' });
   const [files, setFiles] = useState({ video: null, gps: null, flight: null });
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    fetchProjects().then(data => {
+      setProjects(data);
+      if (data.length > 0 && !data.find(p => p.id === 'default-legacy-project')) {
+        setFormData(prev => ({ ...prev, project_id: data[0].id }));
+      }
+    }).catch(err => console.error('Error fetching projects', err));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +33,7 @@ const NewMission = () => {
 
     const fd = new FormData();
     fd.append('name', formData.name);
+    fd.append('project_id', formData.project_id);
     fd.append('options', JSON.stringify({ engine: formData.engine }));
     fd.append('video', files.video);
     fd.append('gps', files.gps);
@@ -48,6 +60,27 @@ const NewMission = () => {
         <div className={styles.missionCard} style={{ padding: '24px', backgroundColor: 'var(--bg-card)' }}>
           <h3 style={{ marginBottom: '16px' }}>01 Mission Setup</h3>
           
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+            <label style={{ color: 'var(--text-primary)', fontSize: '13px', fontWeight: '600' }}>Project</label>
+            <select 
+              value={formData.project_id}
+              onChange={e => setFormData({ ...formData, project_id: e.target.value })}
+              style={{
+                padding: '10px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                outline: 'none'
+              }}
+            >
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+              {projects.length === 0 && <option value="default-legacy-project">Legacy Missions</option>}
+            </select>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
             <label style={{ color: 'var(--text-primary)', fontSize: '13px', fontWeight: '600' }}>Mission Name</label>
             <input 

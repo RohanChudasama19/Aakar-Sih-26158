@@ -6,6 +6,8 @@ import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import NewMission from './pages/NewMission';
 import Exports from './pages/Exports';
+import ProjectList from './pages/ProjectList';
+import ProjectDetail from './pages/ProjectDetail';
 
 const Placeholder = ({ title }) => (
   <div style={{ color: 'var(--text-primary)', padding: '24px' }}>
@@ -16,13 +18,14 @@ const Placeholder = ({ title }) => (
 
 function App() {
   return (
-    <BrowserRouter >
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="new" element={<NewMission />} />
-          <Route path="projects" element={<Placeholder title="Project Management" />} />
-          <Route path="workspace" element={<Navigate to="/" replace />} />
+          <Route path="projects" element={<ProjectList />} />
+          <Route path="projects/:projectId" element={<ProjectDetail />} />
+          <Route path="workspace" element={<Navigate to="/projects" replace />} />
           <Route path="workspace/:jobId" element={<Workspace />} />
           <Route path="analytics" element={<Placeholder title="Flight Analytics" />} />
           <Route path="quality" element={<Placeholder title="Quality Intelligence" />} />

@@ -98,8 +98,8 @@ const Workspace = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.actionBar}>
-        <div className={styles.breadcrumb}>
+      <div className={styles.topBar}>
+        <div className={styles.missionInfo}>
           <span className={styles.crumbMuted}>Projects</span>
           <span className={styles.crumbSeparator}>/</span>
           <span className={styles.crumbActive}>{mission.name}</span>
@@ -110,27 +110,27 @@ const Workspace = () => {
         </div>
       </div>
 
-      <div className={styles.workspaceGrid}>
+      <div className={styles.workspaceArea}>
         
-        <div className={styles.pipelinePanel}>
+        <div className={styles.sidePanel}>
           <div className={styles.panelHeader}>
             <h3>Reconstruction Pipeline</h3>
-            <span className={`${styles.statusBadge} ${styles[mission.status]}`}>{mission.status}</span>
+            <span className={`${styles.status} ${styles[mission.status]}`}>{mission.status}</span>
           </div>
           
-          <div className={styles.pipelineList}>
-            <div className={`${styles.pipelineStep} ${['completed','failed'].includes(mission.status) ? styles.done : styles.active}`}>
-              <div className={styles.stepIcon}>{getStepIcon('ESTIMATION')}</div>
-              <div className={styles.stepInfo}>
-                <span className={styles.stepName}>Processing</span>
+          <div className={styles.pipeline}>
+            <div className={`${styles.pipeStep} ${['completed','failed'].includes(mission.status) ? styles.done : styles.active}`}>
+              <div className={styles.pipeIcon}>{getStepIcon('ESTIMATION')}</div>
+              <div className={styles.pipeText}>
+                <span className={styles.pipeText}>Processing</span>
                 <span className={styles.stepTime}>{mission.runtime}s</span>
               </div>
             </div>
             
-            <div className={`${styles.pipelineStep} ${mission.status === 'completed' ? styles.done : styles.pending}`}>
-              <div className={styles.stepIcon}>{getStepIcon('MESH')}</div>
-              <div className={styles.stepInfo}>
-                <span className={styles.stepName}>Mesh Generation</span>
+            <div className={`${styles.pipeStep} ${mission.status === 'completed' ? styles.done : styles.pending}`}>
+              <div className={styles.pipeIcon}>{getStepIcon('MESH')}</div>
+              <div className={styles.pipeText}>
+                <span className={styles.pipeText}>Mesh Generation</span>
                 <span className={styles.stepTime}>-</span>
               </div>
             </div>
@@ -165,60 +165,59 @@ const Workspace = () => {
             </div>
           )}
 
-          <div className={styles.toolbar}>
+          <div className={styles.viewportOverlay}>
+            <div className={styles.tools}>
             <button className={`${styles.toolBtn} ${activeTool === 'orbit' ? styles.active : ''}`} onClick={() => setActiveTool('orbit')} title="Orbit Tool"><MousePointer2 size={16} /></button>
-            <div className={styles.toolbarDivider}></div>
+            <div className={styles.toolsDivider}></div>
             <button className={`${styles.toolBtn} ${activeTool === 'distance' ? styles.active : ''}`} onClick={() => setActiveTool('distance')} title="3D Distance"><Ruler size={16} /></button>
             <button className={`${styles.toolBtn} ${activeTool === 'horizontal' ? styles.active : ''}`} onClick={() => setActiveTool('horizontal')} title="Horizontal Distance"><Navigation size={16} /></button>
             <button className={`${styles.toolBtn} ${activeTool === 'vertical' ? styles.active : ''}`} onClick={() => setActiveTool('vertical')} title="Vertical Difference"><SplitSquareVertical size={16} /></button>
             <button className={`${styles.toolBtn} ${activeTool === 'xyz' ? styles.active : ''}`} onClick={() => setActiveTool('xyz')} title="XYZ Delta"><Navigation2 size={16} /></button>
             <button className={`${styles.toolBtn} ${activeTool === 'area' ? styles.active : ''}`} onClick={() => setActiveTool('area')} title="Surface Area"><Square size={16} /></button>
-            <div className={styles.toolbarDivider}></div>
+            <div className={styles.toolsDivider}></div>
             <button className={styles.toolBtn} onClick={() => setActiveTool('orbit')} title="Clear Measurement"><X size={16} /></button>
+          </div>
           </div>
         </div>
 
-        <div className={styles.intelligencePanel}>
+        <div className={styles.sidePanel}>
           <div className={styles.panelHeader}>
             <h3>Intelligence</h3>
           </div>
           
           <div className={styles.panelBody}>
-            <div className={styles.layerControl}>
-              <span className={styles.sectionLabel}>ACTIVE LAYER</span>
-              <div className={styles.layerOptions}>
-                <button className={`${styles.layerBtn} ${activeLayer === 'textured' ? styles.active : ''}`} onClick={() => setActiveLayer('textured')}>Textured Mesh</button>
-                <button className={`${styles.layerBtn} ${activeLayer === 'mesh' ? styles.active : ''}`} onClick={() => setActiveLayer('mesh')}>Geometry (Wireframe)</button>
-                <button className={`${styles.layerBtn} ${activeLayer === 'dense' ? styles.active : ''}`} onClick={() => setActiveLayer('dense')}>Dense Point Cloud</button>
+              <div className={styles.viewModes}>
+                <button className={`${styles.modeBtn} ${activeLayer === 'textured' ? styles.active : ''}`} onClick={() => setActiveLayer('textured')}>Textured Mesh</button>
+                <button className={`${styles.modeBtn} ${activeLayer === 'mesh' ? styles.active : ''}`} onClick={() => setActiveLayer('mesh')}>Geometry (Wireframe)</button>
+                <button className={`${styles.modeBtn} ${activeLayer === 'dense' ? styles.active : ''}`} onClick={() => setActiveLayer('dense')}>Dense Point Cloud</button>
               </div>
-            </div>
 
-            <div className={styles.metricsSection}>
-              <span className={styles.sectionLabel}>QUALITY METRICS</span>
+            <div className={styles.telemetryGrid}>
+              <span className={styles.panelHeader}>QUALITY METRICS</span>
               
-              <div className={styles.metricCard}>
-                <div className={styles.metricHeader}>
+              <div className={styles.telemetryCard}>
+                <div className={styles.telemetryLabel}>
                   <span>Georeference</span>
                   <span className={`${styles.badge} ${metricSafe ? styles.badgeSuccess : styles.badgeWarning}`}>{metricSafe ? 'VERIFIED' : 'RELATIVE'}</span>
                 </div>
-                <div className={styles.metricValue}>{mission.report?.metric_state || 'UNKNOWN'}</div>
+                <div className={styles.telemetryValue}>{mission.report?.metric_state || 'UNKNOWN'}</div>
               </div>
 
-              <div className={styles.metricCard}>
-                <div className={styles.metricHeader}>
+              <div className={styles.telemetryCard}>
+                <div className={styles.telemetryLabel}>
                   <span>Cameras Registered</span>
                 </div>
-                <div className={styles.metricValue}>
-                  {mission.report?.sparse_registered_images || 0} / {mission.report?.sparse_total_images || 0}
+                <div className={styles.telemetryValue}>
+                  {mission.report?.sfm?.registered_cameras || 0} / {mission.report?.sfm?.input_frames || 0}
                 </div>
               </div>
               
-              <div className={styles.metricCard}>
-                <div className={styles.metricHeader}>
+              <div className={styles.telemetryCard}>
+                <div className={styles.telemetryLabel}>
                   <span>Dense Points</span>
                 </div>
-                <div className={styles.metricValue}>
-                  {mission.report?.dense_points?.toLocaleString() || '-'}
+                <div className={styles.telemetryValue}>
+                  {mission.report?.dense?.filtered_points?.toLocaleString() || '-'}
                 </div>
               </div>
             </div>
