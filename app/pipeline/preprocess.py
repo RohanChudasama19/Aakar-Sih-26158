@@ -162,12 +162,18 @@ def extract(video, out, options, gps_rows, meta, k_test, notify):
                     selected_indices.add(candidates.index(best))
 
             # Bridge frame reinsertion
-            # Simple heuristic: if the gap between selected frames is too large, insert bridge
+            # Fix: Use overlap graph to ensure connectivity and reduce max gap tolerance
+            adj = set()
+            for e in edges:
+                if e["geom"]["inliers"] >= 15:
+                    adj.add((e["from"], e["to"]))
+                    adj.add((e["to"], e["from"]))
+            
             sorted_idx = sorted(list(selected_indices))
             for k in range(len(sorted_idx) - 1):
                 curr, nxt = sorted_idx[k], sorted_idx[k + 1]
-                if nxt - curr > (len(candidates) / sfm_target) * 3:
-                    # Reinsert middle frame
+                # If gap is > 1.5x expected step, or if there is no verified match between them
+                if nxt - curr > (len(candidates) / sfm_target) * 1.5 or (curr, nxt) not in adj:
                     selected_indices.add((curr + nxt) // 2)
 
             selected = [candidates[idx] for idx in sorted(list(selected_indices))]
