@@ -353,18 +353,24 @@ def retry_job(jid: str):
 
     return {"status": "queued"}
 
-
 @app.get("/api/jobs")
 def jobs():
     with Session() as s:
-        return [serialize(j) for j in s.scalars(select(Job).order_by(Job.created.desc()).limit(100))]
-
+        res = []
+        for j in s.scalars(select(Job).order_by(Job.created.desc()).limit(100)):
+            d = serialize(j)
+            if d["status"] == "completed":
+                try:
+                    d["representations"] = get_job_representations(j.id, d)
+                except Exception:
+                    d["representations"] = []
+            res.append(d)
+        return res
 
 import re as _re
 _JID_RE = _re.compile(r'^[a-zA-Z0-9_-]{1,64}$')
 
-
-def get_job(jid):
+def get_job(jid, include_reps=True):
     if not jid or not _JID_RE.match(jid):
         raise HTTPException(404, "Unknown job")
     with Session() as s:
@@ -390,6 +396,11 @@ def get_job(jid):
             pass
     if data["status"] == "running" and time.time() - data["updated"] > 90:
         data["message"] = "Worker heartbeat is stale. Check worker container; the job may have been interrupted."
+    if include_reps and data["status"] == "completed":
+        try:
+            data["representations"] = get_job_representations(jid, data)
+        except Exception:
+            data["representations"] = []
     return data
 
 
@@ -440,7 +451,7 @@ async def events(jid: str, request: Request):
 
 @app.get("/api/jobs/{jid}/files")
 def files(jid: str):
-    data = get_job(jid)
+    data = get_job(jid, include_reps=False)
     if data["status"] != "completed":
         return []
     out = DATA / jid / "work" / "outputs"
@@ -457,7 +468,9 @@ def files(jid: str):
 
 @app.get("/api/jobs/{jid}/files/{filename:path}")
 def artifact(jid: str, filename: str):
-    data = get_job(jid)
+    if not jid or not _JID_RE.match(jid):
+        raise HTTPException(404, "Unknown job")
+    data = get_job(jid, include_reps=False)
     if data["status"] != "completed":
         raise HTTPException(409, "Artifacts are available after the job finishes")
     out = (DATA / jid / "work" / "outputs").resolve()
@@ -469,6 +482,9 @@ def artifact(jid: str, filename: str):
 
 @app.get("/api/jobs/{jid}/representations")
 def representations(jid: str):
+    return get_job_representations(jid, get_job(jid, include_reps=False))
+
+def get_job_representations(jid: str, data: dict):
     """
     Return a canonical descriptor of all 6 viewer representations.
     Availability is derived from:
@@ -477,7 +493,6 @@ def representations(jid: str):
       3. Direct file existence checks
     No reconstruction is triggered.
     """
-    data = get_job(jid)
     if data["status"] != "completed":
         raise HTTPException(409, "Representations are available after the job finishes")
 
@@ -549,6 +564,8 @@ def representations(jid: str):
     # --- Mesh (geometry only) ---
     glb_validation = validation.get("GLB", "")
     glb_fi = file_info("mesh/model.glb")
+    if not glb_fi["available"]:
+        glb_fi = file_info("model.glb")
     mesh_rep = {
         "available": glb_fi["available"] and "FAILED" not in glb_validation,
         "url": glb_fi.get("url"),
@@ -959,6 +976,29 @@ def _fmt(v) -> str:
     if v is None:
         return "N/A"
     return f"{v:.4f}"
+
+
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+VALID_SPA_ROUTES = {"", "projects", "new", "workspace", "analytics", "quality", "models", "exports", "settings"}
+
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc: HTTPException):
+    path = request.url.path
+    if path.startswith("/api/") or path.startswith("/assets/"):
+        return JSONResponse({"detail": "Not found"}, status_code=404)
+    
+    segments = path.strip("/").split("/")
+    root_segment = segments[0] if segments else ""
+    
+    if root_segment in VALID_SPA_ROUTES:
+        index = ROOT / "web" / "index.html"
+        if index.exists():
+            return FileResponse(index)
+            
+    return JSONResponse({"detail": "Not found"}, status_code=404)
+
+    return JSONResponse({"detail": "Frontend not built"}, status_code=404)
 
 
 app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
