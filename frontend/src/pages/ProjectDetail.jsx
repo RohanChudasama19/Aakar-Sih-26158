@@ -113,7 +113,7 @@ export default function ProjectDetail() {
           ) : (
             <div>
               {missions.map(m => (
-                <div key={m.id} className={styles.missionRow} onClick={() => navigate(`/workspace/${m.id}`)}>
+                <div key={m.id} className={styles.missionRow} onClick={() => navigate(`/missions/${m.id}`)}>
                   <div className={styles.missionInfo}>
                     <h4>{m.name}</h4>
                     <p>ID: {m.id} | Created: {new Date(m.created * 1000).toLocaleString()}</p>

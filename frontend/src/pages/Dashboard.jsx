@@ -116,7 +116,7 @@ const Dashboard = () => {
 
       <div className={styles.mainGrid}>
         {activeMission && (
-          <div className={styles.missionCard} onClick={() => navigate(`/workspace/${activeMission.id}`)} style={{ cursor: 'pointer' }}>
+          <div className={styles.missionCard} onClick={() => navigate(`/missions/${activeMission.id}`)} style={{ cursor: 'pointer' }}>
             <div className={styles.missionHeader}>
               <div>
                 <h3>{activeMission.name} {activeMission.id === "b83295bd-9419-485c-bdee-8dce65de4f7c" && <span style={{fontSize: "10px", backgroundColor: "var(--color-danger)", color: "white", padding: "2px 6px", borderRadius: "4px", marginLeft: "8px", verticalAlign: "middle"}}>DIAGNOSTIC / QUALITY FAILED</span>}</h3>
