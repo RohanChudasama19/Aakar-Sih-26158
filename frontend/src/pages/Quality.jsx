@@ -93,7 +93,7 @@ const Quality = () => {
             <li style={{ display: 'flex', justifyContent: 'space-between' }}><span>Largest Component</span> <span style={{ color: 'var(--text-primary)' }}>{numOr(r.mesh?.largest_component_area_fraction * 100)}%</span></li>
             <li style={{ display: 'flex', justifyContent: 'space-between' }}><span>Weak Faces</span> <span style={{ color: 'var(--text-primary)' }}>{numOr(r.mesh?.weak_face_ratio * 100)}%</span></li>
             <li style={{ display: 'flex', justifyContent: 'space-between' }}><span>Texture Coverage</span> <span style={{ color: 'var(--text-primary)' }}>{numOr(r.mesh?.textured_face_fraction * 100)}%</span></li>
-            <li style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-warning)' }}><span>Status</span> <span>{valOr(r.mesh?.surface_quality)}</span></li>
+            <li style={{ display: 'flex', justifyContent: 'space-between', color: valOr(r.mesh?.surface_quality) === 'PASS' ? 'var(--color-success)' : 'var(--color-warning)' }}><span>Status</span> <span>{valOr(r.mesh?.surface_quality)}</span></li>
           </ul>
         </div>
 
@@ -146,3 +146,4 @@ const Quality = () => {
 };
 
 export default Quality;
+
