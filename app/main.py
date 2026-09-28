@@ -147,6 +147,28 @@ def favicon():
     return Response(content=b"", media_type="image/x-icon", status_code=204)
 
 
+import psutil
+import shutil
+import platform
+
+@app.get('/api/system/info')
+def system_info():
+    try:
+        disk = shutil.disk_usage(DATA.as_posix())
+        return {
+            'disk_total': disk.total,
+            'disk_used': disk.used,
+            'disk_free': disk.free,
+            'data_dir': DATA.as_posix(),
+            'cpu_percent': psutil.cpu_percent(interval=0.1),
+            'mem_percent': psutil.virtual_memory().percent,
+            'version': '1.0.0 (Phase 5)',
+            'colmap_path': shutil.which('colmap') or 'Not Found',
+            'python_version': platform.python_version()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/api/health")
 def health():
     return {
@@ -1121,3 +1143,4 @@ async def custom_404_handler(request: Request, exc: HTTPException):
 
 
 app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
+

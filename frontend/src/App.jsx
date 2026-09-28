@@ -6,6 +6,7 @@ import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import NewMission from './pages/NewMission';
 import Exports from './pages/Exports';
+import Quality from './pages/Quality';
 import ProjectList from './pages/ProjectList';
 import ProjectDetail from './pages/ProjectDetail';
 import MissionDetail from './pages/MissionDetail';
@@ -36,7 +37,7 @@ function App() {
           <Route path="workspace/:jobId" element={<Workspace />} />
           
           <Route path="quality" element={<MissionSelector toolName="Quality Intelligence" toolRoute="quality" />} />
-          <Route path="quality/:jobId" element={<Placeholder title="Quality Intelligence" />} />
+          <Route path="quality/:jobId" element={<Quality />} />
           
           <Route path="exports" element={<MissionSelector toolName="Exports" toolRoute="exports" />} />
           <Route path="exports/:jobId" element={<Exports />} />
@@ -51,3 +52,4 @@ function App() {
 }
 
 export default App;
+
