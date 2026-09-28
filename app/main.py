@@ -1123,6 +1123,38 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 VALID_SPA_ROUTES = {"", "projects", "new", "workspace", "analytics", "quality", "models", "exports", "settings"}
 
+@app.get('/api/jobs/{jid}/heatmaps/{metric}')
+def get_heatmap_artifact(jid: str, metric: str):
+    get_job(jid)  # Validate job format/exists
+    # Prevent traversal
+    if '..' in metric or '/' in metric or '\\\\' in metric:
+        raise HTTPException(400, 'Invalid metric name')
+        
+    base_dir = DATA / jid / 'work' / 'outputs' / 'heatmaps'
+    json_path = base_dir / f"{metric}.json"
+    bin_path = base_dir / f"{metric}.bin"
+    
+    if not json_path.exists() or not bin_path.exists():
+        raise HTTPException(404, 'Heatmap artifact not found')
+        
+    return FileResponse(bin_path, media_type='application/octet-stream', headers={
+        "X-Heatmap-Metadata": str(json_path.name) # Simple way to indicate metadata is available
+    })
+
+@app.get('/api/jobs/{jid}/heatmaps/{metric}/metadata')
+def get_heatmap_metadata(jid: str, metric: str):
+    get_job(jid)
+    if '..' in metric or '/' in metric or '\\\\' in metric:
+        raise HTTPException(400, 'Invalid metric name')
+        
+    json_path = DATA / jid / 'work' / 'outputs' / 'heatmaps' / f"{metric}.json"
+    if not json_path.exists():
+        raise HTTPException(404, 'Heatmap metadata not found')
+        
+    import json
+    with open(json_path, 'r') as f:
+        return json.load(f)
+
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: HTTPException):
     path = request.url.path
@@ -1143,4 +1175,6 @@ async def custom_404_handler(request: Request, exc: HTTPException):
 
 
 app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
+
+
 
