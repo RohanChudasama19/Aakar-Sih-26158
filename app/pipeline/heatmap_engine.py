@@ -25,7 +25,6 @@ def compute_point_density(mesh_centroids, dense_pts, k=50):
 def generate_mission_heatmaps(jid: str, data_dir: str):
     work_dir = os.path.join(data_dir, jid, "work", "outputs")
     
-    # Try multiple common dense paths
     dense_path = None
     for p in ["scene_dense.ply", "dense_relative.ply", "cloud_relative.ply", "dense_raw.ply"]:
         cand = os.path.join(work_dir, p)
@@ -33,9 +32,9 @@ def generate_mission_heatmaps(jid: str, data_dir: str):
             dense_path = cand
             break
             
-    # Try multiple mesh paths
+    # Always match the viewer's geometry (model.glb if it exists, otherwise representations/scene_textured.glb)
     mesh_path = None
-    for p in ["scene_mesh.ply", "mesh_analysis.ply", "mesh_display.ply", "model.glb"]:
+    for p in ["representations/scene_textured.glb", "model.glb", "scene_mesh.ply"]:
         cand = os.path.join(work_dir, p)
         if os.path.exists(cand):
             mesh_path = cand
@@ -56,15 +55,17 @@ def generate_mission_heatmaps(jid: str, data_dir: str):
     
     d_norm = np.clip(support / (np.percentile(support, 95) + 1e-6), 0, 1)
     inv_dens = np.clip(1.0 / (density + 1e-6), 0, 1)
-    risk = (d_norm + inv_dens) / 2.0
+    
+    # Risk calculation
+    if len(dense_pts) == 0:
+        risk = np.zeros_like(support) # Unavailable
+    else:
+        risk = (d_norm + inv_dens) / 2.0
     
     out_dir = os.path.join(work_dir, "heatmaps")
     os.makedirs(out_dir, exist_ok=True)
     
-    def save_artifact(name, values, units, limitations):
-        values = np.array(values, dtype=np.float32)
-        with open(os.path.join(out_dir, f"{name}.bin"), "wb") as f:
-            f.write(values.tobytes())
+    def save_artifact(name, values, units, limitations, status="AVAILABLE"):
         manifest = {
             "schema_version": 1,
             "mission_id": jid,
@@ -72,19 +73,34 @@ def generate_mission_heatmaps(jid: str, data_dir: str):
             "metric_units": units,
             "coordinate_state": "RELATIVE",
             "scientific_limitations": limitations,
-            "num_faces": len(values),
-            "min": float(np.min(values)),
-            "max": float(np.max(values)),
-            "median": float(np.median(values))
+            "status": status
         }
+        
+        if status == "AVAILABLE":
+            values = np.array(values, dtype=np.float32)
+            with open(os.path.join(out_dir, f"{name}.bin"), "wb") as f:
+                f.write(values.tobytes())
+            manifest["num_faces"] = len(values)
+            manifest["valid_count"] = len(values)
+            manifest["min"] = float(np.min(values))
+            manifest["max"] = float(np.max(values))
+            manifest["median"] = float(np.median(values))
+        else:
+            manifest["num_faces"] = len(face_centroids)
+            manifest["valid_count"] = 0
+            
         with open(os.path.join(out_dir, f"{name}.json"), "w") as f:
             json.dump(manifest, f, indent=2)
 
     save_artifact("SURFACE_SUPPORT", support, "relative_distance", "Noise may falsify support")
     save_artifact("POINT_DENSITY", density, "points_per_cubic_unit", "Spherical approximation")
-    save_artifact("RECONSTRUCTION_RISK", risk, "normalized_0_1", "Diagnostic heuristic only")
+    
+    risk_status = "AVAILABLE" if len(dense_pts) > 0 else "UNAVAILABLE"
+    save_artifact("RECONSTRUCTION_RISK", risk, "normalized_0_1", "Diagnostic heuristic only", status=risk_status)
     save_artifact("POTENTIAL_CAMERA_VISIBILITY", np.ones_like(support), "count", "Mocked uniform visibility")
-    save_artifact("GEOMETRIC_ERROR", np.zeros_like(support), "meters", "GEOMETRIC_ERROR_AVAILABLE = FALSE")
+    
+    # DO NOT serialize zero-filled array for unavailable geometric error.
+    save_artifact("GEOMETRIC_ERROR", [], "meters", "Independent reference requirements not met (missing GCPs).", status="NOT_VERIFIED")
 
     t1 = time.time()
     return {
