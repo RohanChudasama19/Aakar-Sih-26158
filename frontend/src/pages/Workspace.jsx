@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
-  Maximize, Minimize, MousePointer2, Move, BoxSelect, 
-  MapPin, Layers, Video, Share2, Layers as LayerIcon,
-  Ruler, Navigation, SplitSquareVertical, Navigation2, Square, X
+  MousePointer2, Ruler, Navigation, SplitSquareVertical, Navigation2, Square, X,
+  Video, MapPin, Layers, Share2, Expand, Shrink, LocateFixed, PersonStanding, 
+  Plane, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCcw, RotateCw,
+  Gauge, Maximize, Orbit, Crosshair, Box, BoxSelect
 } from 'lucide-react';
 import { AeroReconViewer } from '../components/viewer/AeroReconViewer';
 import styles from './Workspace.module.css';
@@ -11,11 +12,13 @@ import { fetchJob } from '../api/jobs';
 
 const Workspace = () => {
   const { jobId } = useParams();
-  const [activeTool, setActiveTool] = useState('orbit');
+  const [activeTool, setActiveTool] = useState('ORBIT');
   const [activeLayer, setActiveLayer] = useState('textured');
   const [mission, setMission] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [measureData, setMeasureData] = useState([]);
+  const [speed, setSpeed] = useState(1.0);
+  const [showNav, setShowNav] = useState(false);
+  const [wireframe, setWireframe] = useState(false);
 
   useEffect(() => {
     const loadMission = async () => {
@@ -31,70 +34,34 @@ const Workspace = () => {
     };
 
     loadMission();
-    
-    if (!jobId || jobId === "undefined" || jobId === "null") return;
-    
-    let es = null;
-    const token = sessionStorage.getItem("aerorecon-token") || "";
-    const url = token ? `/api/jobs/${jobId}/events?token=${token}` : `/api/jobs/${jobId}/events`;
-    
-    try {
-      es = new EventSource(url);
-      es.onmessage = (e) => {
-          try {
-              const data = JSON.parse(e.data);
-              if(data.type === "job_update") setMission(data.job);
-          } catch(err){}
-      };
-    } catch (e) {
-      console.error("SSE Error:", e);
-    }
-    
-    const interval = setInterval(loadMission, 30000); // Polling as fallback only
-    return () => { 
-      if (es) es.close(); 
-      clearInterval(interval); 
-    };
   }, [jobId]);
 
-  if (!jobId || jobId === "undefined" || jobId === "null") {
-    return (
-      <div className={styles.container} style={{ padding: "24px", color: "var(--color-danger)" }}>
-        <h2>Invalid Mission ID</h2>
-        <p>The requested mission ID is invalid.</p>
-        <button onClick={() => window.location.href = "/"} className={styles.primaryBtn}>Return to Dashboard</button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <div className={styles.container} style={{ padding: '24px', color: 'var(--text-primary)' }}>Loading Workspace...</div>;
-  }
+  if (loading) return <div className={styles.container} style={{ padding: "24px" }}>Loading...</div>;
 
   if (!mission) {
     return (
       <div className={styles.container} style={{ padding: "24px", color: "var(--text-primary)" }}>
         <h2>Mission Not Found</h2>
-        <p>The mission could not be loaded. It may have been deleted or the ID is incorrect.</p>
-        <button onClick={() => window.location.href = "/"} className={styles.primaryBtn}>Return to Dashboard</button>
       </div>
     );
   }
 
-  const getStepIcon = (name) => {
-    if (name.includes('VIDEO') || name.includes('FRAME')) return <Video size={14} />;
-    if (name.includes('CAMERA') || name.includes('ESTIMATION')) return <MapPin size={14} />;
-    if (name.includes('DEPTH')) return <LayerIcon size={14} />;
-    return <Layers size={14} />;
-  };
-
-  const handleMeasureUpdate = (points, mode) => {
-    // Viewer handles internal measurement state, we just trigger UI updates if necessary.
-    // In legacy viewer, it displays values on the canvas, we could also capture them here if we wanted side-panel display.
-  };
-
   const metric = mission.report?.metric_state || 'RELATIVE';
   const metricSafe = metric !== 'RELATIVE';
+
+  const handleNavPress = (f, r, u) => {
+    if (window.setViewerJoystick) window.setViewerJoystick(f, r, u);
+  };
+  
+  const setCamSpeed = (s) => {
+    setSpeed(s);
+    if (window.setViewerSpeed) window.setViewerSpeed(s);
+  };
+  
+  const resetCam = () => {
+    setActiveTool('ORBIT');
+    if (window.resetView) window.resetView(); 
+  };
 
   return (
     <div className={styles.container}>
@@ -104,124 +71,85 @@ const Workspace = () => {
           <span className={styles.crumbSeparator}>/</span>
           <span className={styles.crumbActive}>{mission.name}</span>
         </div>
-        <div className={styles.actionButtons}>
-          <button className={styles.iconBtn}><Share2 size={16} /> Share</button>
-          <button className={styles.primaryBtn}>Export Options</button>
-        </div>
       </div>
 
       <div className={styles.workspaceArea}>
         
-        <div className={styles.sidePanel}>
-          <div className={styles.panelHeader}>
-            <h3>Reconstruction Pipeline</h3>
-            <span className={`${styles.status} ${styles[mission.status]}`}>{mission.status}</span>
-          </div>
-          
-          <div className={styles.pipeline}>
-            <div className={`${styles.pipeStep} ${['completed','failed'].includes(mission.status) ? styles.done : styles.active}`}>
-              <div className={styles.pipeIcon}>{getStepIcon('ESTIMATION')}</div>
-              <div className={styles.pipeText}>
-                <span className={styles.pipeText}>Processing</span>
-                <span className={styles.stepTime}>{mission.runtime}s</span>
-              </div>
-            </div>
-            
-            <div className={`${styles.pipeStep} ${mission.status === 'completed' ? styles.done : styles.pending}`}>
-              <div className={styles.pipeIcon}>{getStepIcon('MESH')}</div>
-              <div className={styles.pipeText}>
-                <span className={styles.pipeText}>Mesh Generation</span>
-                <span className={styles.stepTime}>-</span>
-              </div>
-            </div>
-          </div>
+        {/* Left Toolbar */}
+        <div className={styles.leftToolbar}>
+           <div className={styles.toolGroup}>
+             <span className={styles.toolGroupLabel}>CAMERA MODES</span>
+             <button className={`${styles.toolBtn} ${activeTool === 'ORBIT' ? styles.active : ''}`} onClick={() => setActiveTool('ORBIT')} title="Orbit"><Orbit size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'FOCUS' ? styles.active : ''}`} onClick={() => setActiveTool('FOCUS')} title="Focus"><Crosshair size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'WALK' ? styles.active : ''}`} onClick={() => {setActiveTool('WALK'); setShowNav(true);}} title="Walk"><PersonStanding size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'FLY' ? styles.active : ''}`} onClick={() => {setActiveTool('FLY'); setShowNav(true);}} title="Fly"><Plane size={16} /></button>
+           </div>
+           
+           <div className={styles.toolGroup}>
+             <span className={styles.toolGroupLabel}>ANALYSIS</span>
+             <button className={`${styles.toolBtn} ${activeTool === 'distance' ? styles.active : ''}`} onClick={() => setActiveTool('distance')} title="Distance"><Ruler size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'horizontal' ? styles.active : ''}`} onClick={() => setActiveTool('horizontal')} title="Horizontal Distance"><Navigation size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'vertical' ? styles.active : ''}`} onClick={() => setActiveTool('vertical')} title="Vertical Difference"><SplitSquareVertical size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'xyz' ? styles.active : ''}`} onClick={() => setActiveTool('xyz')} title="XYZ"><Navigation2 size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeTool === 'area' ? styles.active : ''}`} onClick={() => setActiveTool('area')} title="Surface Area"><Square size={16} /></button>
+           </div>
+
+           <div className={styles.toolGroup}>
+             <span className={styles.toolGroupLabel}>SCENE</span>
+             <button className={`${styles.toolBtn} ${activeLayer === 'textured' && !wireframe ? styles.active : ''}`} onClick={() => {setActiveLayer('textured'); setWireframe(false); if(window.setWireframe)window.setWireframe(false);}} title="Textured"><Box size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeLayer === 'mesh' && !wireframe ? styles.active : ''}`} onClick={() => {setActiveLayer('mesh'); setWireframe(false); if(window.setWireframe)window.setWireframe(false);}} title="Solid Mesh"><Layers size={16} /></button>
+             <button className={`${styles.toolBtn} ${wireframe ? styles.active : ''}`} onClick={() => {setWireframe(true); if(window.setWireframe)window.setWireframe(true);}} title="Wireframe"><BoxSelect size={16} /></button>
+             <button className={`${styles.toolBtn} ${activeLayer === 'dense' ? styles.active : ''}`} onClick={() => {setActiveLayer('dense'); setWireframe(false); if(window.setWireframe)window.setWireframe(false);}} title="Point Cloud"><MapPin size={16} /></button>
+           </div>
+
+           <div className={styles.toolGroup}>
+             <span className={styles.toolGroupLabel}>ACTIONS</span>
+             <button className={styles.toolBtn} onClick={() => { if(window.viewerZoom) window.viewerZoom(1); }} title="Zoom In"><Expand size={16} /></button>
+             <button className={styles.toolBtn} onClick={() => { if(window.viewerZoom) window.viewerZoom(-1); }} title="Zoom Out"><Shrink size={16} /></button>
+             <button className={styles.toolBtn} onClick={() => { resetCam(); }} title="Reset / Fit Model"><LocateFixed size={16} /></button>
+           </div>
         </div>
 
         <div className={styles.viewport}>
-          {mission.status === 'completed' ? (
+          {mission.status === 'completed' || mission.status === 'degraded' ? (
             <AeroReconViewer 
               mission={mission}
               activeLayer={activeLayer}
               activeTool={activeTool}
-              onMeasureUpdate={handleMeasureUpdate}
+              onMeasureUpdate={() => {}}
             />
           ) : (
-            <div className={styles.viewportMockup}>
-              <div className={styles.pointCloudContainer}>
-                <div className={styles.gridPlane}></div>
-                <div className={styles.dronePath}>
-                  <div className={styles.droneMarker}></div>
-                </div>
-                <div className={styles.geometryMockup}>
-                  <div className={styles.building}></div>
-                </div>
-                <div className={styles.progressOverlay}>
-                  <span>{mission.progress || 0}% Complete</span>
-                  <div className={styles.progressBar}>
-                    <div className={styles.progressFill} style={{ width: `${mission.progress || 0}%` }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+             <div className={styles.viewportMockup}>Processing...</div>
           )}
 
-          <div className={styles.viewportOverlay}>
-            <div className={styles.tools}>
-            <button className={`${styles.toolBtn} ${activeTool === 'orbit' ? styles.active : ''}`} onClick={() => setActiveTool('orbit')} title="Orbit Tool"><MousePointer2 size={16} /></button>
-            <div className={styles.toolsDivider}></div>
-            <button className={`${styles.toolBtn} ${activeTool === 'distance' ? styles.active : ''}`} onClick={() => setActiveTool('distance')} title="3D Distance"><Ruler size={16} /></button>
-            <button className={`${styles.toolBtn} ${activeTool === 'horizontal' ? styles.active : ''}`} onClick={() => setActiveTool('horizontal')} title="Horizontal Distance"><Navigation size={16} /></button>
-            <button className={`${styles.toolBtn} ${activeTool === 'vertical' ? styles.active : ''}`} onClick={() => setActiveTool('vertical')} title="Vertical Difference"><SplitSquareVertical size={16} /></button>
-            <button className={`${styles.toolBtn} ${activeTool === 'xyz' ? styles.active : ''}`} onClick={() => setActiveTool('xyz')} title="XYZ Delta"><Navigation2 size={16} /></button>
-            <button className={`${styles.toolBtn} ${activeTool === 'area' ? styles.active : ''}`} onClick={() => setActiveTool('area')} title="Surface Area"><Square size={16} /></button>
-            <div className={styles.toolsDivider}></div>
-            <button className={styles.toolBtn} onClick={() => setActiveTool('orbit')} title="Clear Measurement"><X size={16} /></button>
-          </div>
-          </div>
-        </div>
+          {/* Nav Overlay */}
+          {showNav && (
+            <div className={styles.navOverlay}>
+               <div className={styles.navHeader}>
+                 <span>Navigation</span>
+                 <button onClick={() => {setShowNav(false); setActiveTool('ORBIT');}}><X size={14}/></button>
+               </div>
+               
+               <div className={styles.navSpeed}>
+                  <button onClick={() => setCamSpeed(0.5)} className={speed === 0.5 ? styles.active : ''}>Slow</button>
+                  <button onClick={() => setCamSpeed(1.0)} className={speed === 1.0 ? styles.active : ''}>Norm</button>
+                  <button onClick={() => setCamSpeed(3.0)} className={speed === 3.0 ? styles.active : ''}>Fast</button>
+               </div>
 
-        <div className={styles.sidePanel}>
-          <div className={styles.panelHeader}>
-            <h3>Intelligence</h3>
-          </div>
-          
-          <div className={styles.panelBody}>
-              <div className={styles.viewModes}>
-                <button className={`${styles.modeBtn} ${activeLayer === 'textured' ? styles.active : ''}`} onClick={() => setActiveLayer('textured')}>Textured Mesh</button>
-                <button className={`${styles.modeBtn} ${activeLayer === 'mesh' ? styles.active : ''}`} onClick={() => setActiveLayer('mesh')}>Geometry (Wireframe)</button>
-                <button className={`${styles.modeBtn} ${activeLayer === 'dense' ? styles.active : ''}`} onClick={() => setActiveLayer('dense')}>Dense Point Cloud</button>
-              </div>
-
-            <div className={styles.telemetryGrid}>
-              <span className={styles.panelHeader}>QUALITY METRICS</span>
-              
-              <div className={styles.telemetryCard}>
-                <div className={styles.telemetryLabel}>
-                  <span>Georeference</span>
-                  <span className={`${styles.badge} ${metricSafe ? styles.badgeSuccess : styles.badgeWarning}`}>{metricSafe ? 'VERIFIED' : 'RELATIVE'}</span>
-                </div>
-                <div className={styles.telemetryValue}>{mission.report?.metric_state || 'UNKNOWN'}</div>
-              </div>
-
-              <div className={styles.telemetryCard}>
-                <div className={styles.telemetryLabel}>
-                  <span>Cameras Registered</span>
-                </div>
-                <div className={styles.telemetryValue}>
-                  {mission.report?.sfm?.registered_cameras || 0} / {mission.report?.sfm?.input_frames || 0}
-                </div>
-              </div>
-              
-              <div className={styles.telemetryCard}>
-                <div className={styles.telemetryLabel}>
-                  <span>Dense Points</span>
-                </div>
-                <div className={styles.telemetryValue}>
-                  {mission.report?.dense?.filtered_points?.toLocaleString() || '-'}
-                </div>
-              </div>
+               <div className={styles.dpadGroup}>
+                 <div className={styles.dpadRow}>
+                   <button onPointerDown={()=>handleNavPress(0,0,1)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Ascend">U</button>
+                   <button onPointerDown={()=>handleNavPress(1,0,0)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Forward"><ChevronUp/></button>
+                   <button onPointerDown={()=>handleNavPress(0,0,-1)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Descend">D</button>
+                 </div>
+                 <div className={styles.dpadRow}>
+                   <button onPointerDown={()=>handleNavPress(0,-1,0)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Left"><ChevronLeft/></button>
+                   <button onPointerDown={()=>handleNavPress(-1,0,0)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Backward"><ChevronDown/></button>
+                   <button onPointerDown={()=>handleNavPress(0,1,0)} onPointerUp={()=>handleNavPress(0,0,0)} onPointerLeave={()=>handleNavPress(0,0,0)} title="Right"><ChevronRight/></button>
+                 </div>
+               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

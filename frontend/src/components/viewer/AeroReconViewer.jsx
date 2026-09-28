@@ -24,6 +24,8 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
           viewer.dispose();
         } else {
           viewerRef.current = viewer;
+          window.setWireframe = (s) => viewer.wireframe(s);
+          window.resetView = () => viewer.resetView();
           // Apply initial layer and tool if viewer is ready
           viewer.loadMode(activeLayer);
           viewer.setMode(activeTool);
@@ -76,3 +78,4 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
     </div>
   );
 };
+

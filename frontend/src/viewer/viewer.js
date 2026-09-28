@@ -1,30 +1,31 @@
-﻿/**
- * viewer.js Ã¢â‚¬â€ AeroRecon Multi-Mode 3D Viewer
+/**
+ * viewer.js â€” AeroRecon Multi-Mode 3D Viewer
  *
  * Supports 6 representation modes:
- *   sparse       Ã¢â‚¬â€ Sparse SfM point cloud (PLY)
- *   dense        Ã¢â‚¬â€ Dense filtered point cloud (PLY, display artifact)
- *   mesh         Ã¢â‚¬â€ Geometry-only mesh (GLB, neutral material)
- *   textured     Ã¢â‚¬â€ Textured mesh (GLB, original materials)
- *   semantic     Ã¢â‚¬â€ Semantic colored mesh (PLY, class palette)
- *   confidence   Ã¢â‚¬â€ Surface support mesh (PLY, support palette)
+ *   sparse       â€” Sparse SfM point cloud (PLY)
+ *   dense        â€” Dense filtered point cloud (PLY, display artifact)
+ *   mesh         â€” Geometry-only mesh (GLB, neutral material)
+ *   textured     â€” Textured mesh (GLB, original materials)
+ *   semantic     â€” Semantic colored mesh (PLY, class palette)
+ *   confidence   â€” Surface support mesh (PLY, support palette)
  *
  * Mode switching:
  *   - Loads existing artifacts only; no reconstruction triggered
  *   - Disposes GPU resources before loading next representation
- *   - Falls back through textured Ã¢â€ â€™ mesh Ã¢â€ â€™ dense Ã¢â€ â€™ sparse
+ *   - Falls back through textured â†’ mesh â†’ dense â†’ sparse
  *
  * Architecture:
  *   createViewer(container, jid, representations, metric, options)
- *   Ã¢â€ â€™ { loadMode, setMode, clear, dispose, resetView }
+ *   â†’ { loadMode, setMode, clear, dispose, resetView }
  */
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CameraController } from './CameraController.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Semantic class palette (mirrors semantic.py SEMANTIC_PALETTE) Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€ Semantic class palette (mirrors semantic.py SEMANTIC_PALETTE) â”€â”€
 const SEMANTIC_PALETTE = {
   0: { name: 'UNKNOWN',        color: '#808080' },
   1: { name: 'GROUND',         color: '#8B4513' },
@@ -36,14 +37,14 @@ const SEMANTIC_PALETTE = {
   7: { name: 'OBSTACLE',       color: '#FFFF00' },
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Confidence/support palette Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€ Confidence/support palette â”€â”€
 const CONFIDENCE_PALETTE = {
   SUPPORTED:   { color: '#22C55E', label: 'Supported'   },
   WEAK:        { color: '#EAB308', label: 'Weak'        },
   UNOBSERVED:  { color: '#EF4444', label: 'Unobserved'  },
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ API helpers Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€ API helpers â”€â”€
 let _token = '';
 export function setViewerToken(t) { _token = t; }
 async function fetchBuf(url) {
@@ -61,14 +62,14 @@ async function fetchJSON(url) {
 /**
  * Create and return a multi-mode 3D viewer.
  *
- * @param {HTMLElement} container  Ã¢â‚¬â€ The viewer container element
- * @param {string}      jid        Ã¢â‚¬â€ Job ID (for API calls)
- * @param {object}      reps       Ã¢â‚¬â€ representations descriptor from /api/jobs/{jid}/representations
- * @param {boolean}     metric     Ã¢â‚¬â€ true if metric coordinates available
- * @param {object}      options    Ã¢â‚¬â€ { measureLabel: HTMLElement }
+ * @param {HTMLElement} container  â€” The viewer container element
+ * @param {string}      jid        â€” Job ID (for API calls)
+ * @param {object}      reps       â€” representations descriptor from /api/jobs/{jid}/representations
+ * @param {boolean}     metric     â€” true if metric coordinates available
+ * @param {object}      options    â€” { measureLabel: HTMLElement }
  */
 export async function createViewer(container, jid, reps, metric, options = {}) {
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Three.js setup Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Three.js setup â”€â”€
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(container.clientWidth, container.clientHeight);
@@ -82,6 +83,10 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
+  const camController = new CameraController(camera, renderer.domElement, controls, () => currentRepObject ? [currentRepObject] : [], msg => { measureLabel.textContent = msg; });
+  // Expose virtual joystick
+  window.setViewerJoystick = (f, r, u) => camController.setJoystick(f, r, u);
+  window.setViewerSpeed = (s) => camController.setSpeed(s);
 
   // Lights (needed for mesh/textured modes)
   scene.add(new THREE.HemisphereLight(0xffffff, 0x627361, 2.4));
@@ -98,13 +103,13 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   const onMeasureUpdate = options.onMeasureUpdate || (() => {});
   const measureLabel = options.measureLabel || { textContent: '' };
   
-  // Ã¢â€â‚¬Ã¢â€â‚¬ State Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ State â”€â”€
   let currentRepObject = null;   // current scene object (Points or Group/Mesh)
   let currentMode = null;
   let disposed = false;
   let cameraSize = 10;           // used for marker scaling
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Overlay elements Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Overlay elements â”€â”€
   const loadingEl = _createOverlay(container, 'viewer-loading', '');
   const legendEl  = _createOverlay(container, 'viewer-legend', '');
   legendEl.style.cssText += 'bottom:8px;right:8px;top:auto;left:auto;max-width:180px;';
@@ -114,7 +119,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   // Grid placeholder (updated per representation)
   let gridHelper = null;
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Resize observer Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Resize observer â”€â”€
   const resizeObs = new ResizeObserver(() => {
     if (disposed) return;
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -123,7 +128,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   });
   resizeObs.observe(container);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Measurement event listeners Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Measurement event listeners â”€â”€
   renderer.domElement.addEventListener('pointerdown', e => { _measureStart = [e.clientX, e.clientY]; });
   let _measureStart = null;
 
@@ -165,9 +170,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   });
 
   // Animation loop
-  renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+  renderer.setAnimationLoop(() => { camController.update(); renderer.render(scene, camera); });
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Internal helpers Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Internal helpers â”€â”€
 
   function _createOverlay(parent, cls, html) {
     const el = document.createElement('div');
@@ -229,9 +234,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     scene.add(gridHelper);
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ PLY loader Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ PLY loader â”€â”€
   async function _loadPLY(url, label, options = {}) {
-    setLoading(`Loading ${label}Ã¢â‚¬Â¦`);
+    setLoading(`Loading ${label}â€¦`);
     const buf = await fetchBuf(url);
     const loader = new PLYLoader();
     const geometry = loader.parse(buf);
@@ -272,16 +277,16 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     return { object, mat };
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ GLB mesh loader Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ GLB mesh loader â”€â”€
   async function _loadGLB(url) {
-    setLoading('Loading meshÃ¢â‚¬Â¦');
+    setLoading('Loading meshâ€¦');
     const buf = await fetchBuf(url);
     const gltf = await new GLTFLoader().parseAsync(buf, '');
     clearLoading();
     return gltf.scene;
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Representation loaders Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Representation loaders â”€â”€
 
   async function loadSparse(repsData) {
     if (!repsData.sparse?.available) throw new Error('Sparse cloud not available');
@@ -342,7 +347,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
 
   async function loadMesh(repsData) {
     if (!repsData.mesh?.available) throw new Error('Mesh not available');
-    setLoading('Loading geometry meshÃ¢â‚¬Â¦');
+    setLoading('Loading geometry meshâ€¦');
     const model = await _loadGLB(repsData.mesh.url);
     // Replace all materials with neutral geometry-only material
     const geoMat = new THREE.MeshStandardMaterial({
@@ -365,12 +370,12 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     currentRepObject = model;
     fitCamera(model);
     clearLoading();
-    setLegend(`<div class="legend-title">Geometry Mesh</div><div class="legend-note">Neutral shading Ã‚Â· no texture</div>`);
+    setLegend(`<div class="legend-title">Geometry Mesh</div><div class="legend-note">Neutral shading Â· no texture</div>`);
   }
 
   async function loadTexturedMesh(repsData) {
     if (!repsData.textured?.available) throw new Error('Textured mesh not available');
-    setLoading('Loading textured meshÃ¢â‚¬Â¦');
+    setLoading('Loading textured meshâ€¦');
     const model = await _loadGLB(repsData.textured.url);
     model.traverse(o => {
       if (o.isMesh) {
@@ -391,7 +396,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   async function loadSemantic(repsData) {
     if (!repsData.semantic?.available) throw new Error('Semantic model not available');
     const { object } = await _loadPLY(repsData.semantic.url, 'Semantic Model', { asMesh: true });
-    // Override point material Ã¢â‚¬â€ colors embedded in PLY vertex colors
+    // Override point material â€” colors embedded in PLY vertex colors
     if (object.material && !object.isMesh) {
       object.material.vertexColors = true;
       object.material.size = 0.015;
@@ -418,9 +423,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     currentRepObject = object; window.__viewer_debug_obj = object;
     fitCamera(object);
 
-    const sup   = repsData.confidence.supported_face_ratio   != null ? (repsData.confidence.supported_face_ratio   * 100).toFixed(1) + '%' : 'Ã¢â‚¬â€';
-    const weak  = repsData.confidence.weak_face_ratio        != null ? (repsData.confidence.weak_face_ratio        * 100).toFixed(1) + '%' : 'Ã¢â‚¬â€';
-    const unobs = repsData.confidence.unobserved_face_ratio  != null ? (repsData.confidence.unobserved_face_ratio  * 100).toFixed(1) + '%' : 'Ã¢â‚¬â€';
+    const sup   = repsData.confidence.supported_face_ratio   != null ? (repsData.confidence.supported_face_ratio   * 100).toFixed(1) + '%' : 'â€”';
+    const weak  = repsData.confidence.weak_face_ratio        != null ? (repsData.confidence.weak_face_ratio        * 100).toFixed(1) + '%' : 'â€”';
+    const unobs = repsData.confidence.unobserved_face_ratio  != null ? (repsData.confidence.unobserved_face_ratio  * 100).toFixed(1) + '%' : 'â€”';
 
     const items = Object.entries(CONFIDENCE_PALETTE)
       .map(([k, v]) => `<div class="legend-item"><span class="legend-swatch" style="background:${v.color}"></span>${v.label}</div>`)
@@ -434,7 +439,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
       <div class="legend-note" style="color:#aaa;font-size:10px;">Support evidence, not accuracy</div>`);
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Point size control Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Point size control â”€â”€
   let _pointSizeSlider = null;
   function _showPointSizeControl(mat, pointCount) {
     _removePointSizeControl();
@@ -452,7 +457,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     if (_pointSizeSlider) { _pointSizeSlider.remove(); _pointSizeSlider = null; }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Measurement helpers Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”€â”€ Measurement helpers â”€â”€
   function _clearMeasure() {
     for (const o of [...annotations.children]) {
       annotations.remove(o);
@@ -548,7 +553,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
 
   window.getCurrentViewerType = () => { if (!currentRepObject) return 'None'; let type = currentRepObject.type; if (type === 'Group' || type === 'Scene') { currentRepObject.traverse(o => { if (o.isMesh) type = 'Mesh'; else if (o.isPoints && type !== 'Mesh') type = 'Points'; }); } return type; };
   
-  // ── Fallback chain ──
+  // -- Fallback chain --
   const FALLBACK_ORDER = ['textured', 'mesh', 'dense', 'sparse'];
 
   async function loadWithFallback(preferredMode, repsData) {
@@ -568,7 +573,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
         console.warn(`Representation '${mode}' failed: ${err.message}`);
         disposeCurrentRepresentation();
         if (mode !== order[order.length - 1]) {
-          setLoading(`${mode} failed. Trying next representation…`);
+          setLoading(`${mode} failed. Trying next representation�`);
           await new Promise(r => setTimeout(r, 500));
         }
       }
@@ -576,7 +581,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     throw new Error('No representation could be loaded');
   }
 
-  // ── Public API ──
+  // -- Public API --
 
   async function loadMode(mode) {
     if (disposed) return;
@@ -591,7 +596,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
       currentMode = mode;
     } catch (err) {
       if (mode === 'semantic' || mode === 'confidence') throw err;
-      setLoading(`${mode} failed: ${err.message}. Trying fallback…`);
+      setLoading(`${mode} failed: ${err.message}. Trying fallback�`);
       await new Promise(r => setTimeout(r, 600));
       await loadWithFallback(mode, reps);
     }
@@ -612,6 +617,8 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   }
 
   function setMode(v) {
+    if (['ORBIT','FOCUS','WALK','FLY'].includes(v.toUpperCase())) { camController.setMode(v.toUpperCase()); measureMode = 'orbit'; _clearMeasure(); return; }
+    camController.setMode('ORBIT');
     measureMode = v;
     _clearMeasure();
     measureLabel.textContent =
@@ -626,6 +633,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     resizeObs.disconnect();
     renderer.setAnimationLoop(null);
     controls.dispose();
+    camController.dispose();
     scene.traverse(o => {
       o.geometry?.dispose();
       if (o.material) {
@@ -642,11 +650,13 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
     _removePointSizeControl();
   }
 
-  // Initial load Ã¢â‚¬â€ fallback chain starting from textured
+  // Initial load â€” fallback chain starting from textured
   await loadWithFallback('textured', reps);
 
   return { loadMode, setMode, clear: _clearMeasure, wireframe, resetView, dispose };
 }
+
+
 
 
 
