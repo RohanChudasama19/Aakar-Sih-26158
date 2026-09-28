@@ -1,10 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { createViewer } from '../../viewer/viewer.js';
+import { HeatmapPanel } from './HeatmapPanel.jsx';
 
 export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpdate }) => {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
   const labelRef = useRef(null);
+  
+  const [clickedFaceIndex, setClickedFaceIndex] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current || !mission) return;
@@ -18,7 +21,12 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
       try {
         const viewer = await createViewer(containerRef.current, mission.id, representations, metric, {
           onMeasureUpdate: onMeasureUpdate,
-          measureLabel: labelRef.current
+          measureLabel: labelRef.current,
+          onCanvasClick: (hit) => {
+            if (hit && hit.faceIndex !== undefined) {
+               setClickedFaceIndex(hit.faceIndex);
+            }
+          }
         });
         if (isDisposed) {
           viewer.dispose();
@@ -44,7 +52,7 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
         viewerRef.current = null;
       }
     };
-  }, [mission.id]); // Re-init if mission ID changes
+  }, [mission.id]);
 
   useEffect(() => {
     if (viewerRef.current) {
@@ -75,7 +83,11 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
           pointerEvents: 'none'
         }}
       ></div>
+      <HeatmapPanel 
+         missionId={mission.id} 
+         viewer={viewerRef.current}
+         clickedFaceIndex={clickedFaceIndex}
+      />
     </div>
   );
 };
-
