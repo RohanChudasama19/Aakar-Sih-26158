@@ -23,9 +23,9 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
 
   useEffect(() => {
     if (viewer) {
-      viewer.setHeatmapOpacity(opacity);
+      viewer.setHeatmapOpacity(activeMetric === 'ORIGINAL' ? 0.0 : opacity);
     }
-  }, [opacity, viewer]);
+  }, [opacity, viewer, activeMetric]);
 
   useEffect(() => {
     async function loadHeatmap() {
@@ -107,17 +107,30 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
      }
   }, [clickedFaceIndex, metadata, cache, activeMetric]);
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
   return (
     <div style={{
-      position: 'absolute', top: 16, right: 16, width: 320,
-      backgroundColor: '#1e2420', border: '1px solid #4a5c50', 
-      borderRadius: 8, padding: 16, color: '#e0e0e0',
-      maxHeight: 'calc(100% - 32px)', overflowY: 'auto',
-      zIndex: 100, display: 'flex', flexDirection: 'column', gap: 12
+      width: isCollapsed ? 48 : 320,
+      minWidth: isCollapsed ? 48 : 320,
+      backgroundColor: '#1e2420', borderLeft: '1px solid #4a5c50', 
+      padding: isCollapsed ? 12 : 16, color: '#e0e0e0',
+      height: '100%', overflowY: 'auto', overflowX: 'hidden',
+      display: 'flex', flexDirection: 'column', gap: 12,
+      transition: 'width 0.3s ease, min-width 0.3s ease'
     }}>
-      <h3 style={{ margin: 0, fontSize: 16, borderBottom: '1px solid #333', paddingBottom: 8 }}>
-        Scientific Intelligence
-      </h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: 8 }}>
+        {!isCollapsed && <h3 style={{ margin: 0, fontSize: 16 }}>Scientific Intelligence</h3>}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          style={{ background: 'none', border: 'none', color: '#4CAF50', cursor: 'pointer', fontSize: 18, fontWeight: 'bold' }}
+        >
+          {isCollapsed ? '<' : '>'}
+        </button>
+      </div>
+      
+      {!isCollapsed && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {METRICS.map(m => (
@@ -194,6 +207,8 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
             <strong>Value:</strong> {inspectData.value !== undefined ? inspectData.value.toFixed(6) : 'N/A'}<br/>
             <strong>Status:</strong> {inspectData.status}
          </div>
+      )}
+        </div>
       )}
     </div>
   );

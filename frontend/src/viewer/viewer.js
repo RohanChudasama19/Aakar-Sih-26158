@@ -628,21 +628,33 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   }
 
   // HEATMAP INTEGRATION
-  function applyHeatmapColors(colorsBuffer) {
+      function applyHeatmapColors(colorsBuffer) {
     if (!currentRepObject) return;
+    let globalVertexOffset = 0;
     currentRepObject.traverse(o => {
       if (o.isMesh && o.geometry) {
         if (!o.geometry.isNonIndexed && o.geometry.index) {
           o.geometry = o.geometry.toNonIndexed();
         }
         
-        if (colorsBuffer && o.geometry.attributes.position.count * 3 === colorsBuffer.length) {
-            o.geometry.setAttribute('heatmapColor', new THREE.BufferAttribute(colorsBuffer, 3));
-        } else if (colorsBuffer) {
-            console.warn(`Face mapping mismatch! Vertices: ${o.geometry.attributes.position.count}, Colors: ${colorsBuffer.length/3}`);
-            const errColors = new Float32Array(o.geometry.attributes.position.count * 3);
-            for(let i=0; i<errColors.length; i+=3) { errColors[i] = 1; errColors[i+2] = 1; }
-            o.geometry.setAttribute('heatmapColor', new THREE.BufferAttribute(errColors, 3));
+        let numVerts = o.geometry.attributes.position.count;
+        let numFloats = numVerts * 3;
+        
+        if (colorsBuffer) {
+            if (globalVertexOffset * 3 + numFloats <= colorsBuffer.length) {
+                let slice = colorsBuffer.subarray(globalVertexOffset * 3, globalVertexOffset * 3 + numFloats);
+                o.geometry.setAttribute('heatmapColor', new THREE.BufferAttribute(slice, 3));
+            } else {
+                console.warn(`Face mapping mismatch! Vertices: ${numVerts}, Expected Floats: ${numFloats}, Remaining buffer: ${colorsBuffer.length - globalVertexOffset*3}`);
+                const errColors = new Float32Array(numFloats);
+                for(let i=0; i<errColors.length; i+=3) { errColors[i] = 1; errColors[i+2] = 1; }
+                o.geometry.setAttribute('heatmapColor', new THREE.BufferAttribute(errColors, 3));
+            }
+            globalVertexOffset += numVerts;
+        } else {
+            if (o.geometry.attributes.heatmapColor) {
+                o.geometry.deleteAttribute('heatmapColor');
+            }
         }
         
         if (!o.material.isHeatmapPatched) {
@@ -652,61 +664,39 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
             shader.uniforms.heatmapOpacity = o.material.userData.heatmapOpacity;
             
             shader.vertexShader = `
+              #ifdef USE_HEATMAP
               attribute vec3 heatmapColor;
               varying vec3 vHeatmapColor;
+              #endif
             ` + shader.vertexShader.replace(
               'void main() {',
-              'void main() {\n  vHeatmapColor = heatmapColor;'
+              'void main() {\n#ifdef USE_HEATMAP\n  vHeatmapColor = heatmapColor;\n#endif'
             );
             
             shader.fragmentShader = `
               uniform float heatmapOpacity;
+              #ifdef USE_HEATMAP
               varying vec3 vHeatmapColor;
+              #endif
             ` + shader.fragmentShader.replace(
               '#include <dithering_fragment>',
-              `#include <dithering_fragment>
-               gl_FragColor = mix(gl_FragColor, vec4(vHeatmapColor, gl_FragColor.a), heatmapOpacity);
-              `
+              `#include <dithering_fragment>\n#ifdef USE_HEATMAP\ngl_FragColor = mix(gl_FragColor, vec4(vHeatmapColor, gl_FragColor.a), heatmapOpacity);\n#endif`
             );
             
             if (originalOnBeforeCompile) originalOnBeforeCompile(shader);
           };
+          
+          o.material.customProgramCacheKey = function() {
+              return 'heatmap_patched_v2';
+          };
+          o.material.defines = o.material.defines || {};
+          o.material.defines.USE_HEATMAP = "";
+          
           o.material.isHeatmapPatched = true;
           o.material.needsUpdate = true;
         }
       }
     });
-  }
-
-  function setHeatmapOpacity(opacity) {
-    if (!currentRepObject) return;
-    currentRepObject.traverse(o => {
-      if (o.isMesh && o.material && o.material.userData.heatmapOpacity) {
-        o.material.userData.heatmapOpacity.value = opacity;
-      }
-    });
-  }
-  function dispose() {
-    disposed = true;
-    _removePointSizeControl();
-    resizeObs.disconnect();
-    renderer.setAnimationLoop(null);
-    controls.dispose();
-    camController.dispose();
-    scene.traverse(o => {
-      o.geometry?.dispose();
-      if (o.material) {
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
-          m.map?.dispose();
-          m.dispose();
-        }
-      }
-    });
-    renderer.dispose();
-    renderer.domElement.remove();
-    loadingEl.remove();
-    legendEl.remove();
-    _removePointSizeControl();
   }
 
   // Initial load â€” fallback chain starting from textured

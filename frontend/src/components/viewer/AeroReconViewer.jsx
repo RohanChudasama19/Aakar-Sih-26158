@@ -67,7 +67,8 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
   }, [activeTool]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'row', position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', minWidth: 0, height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
       <div 
         ref={labelRef} 
@@ -83,6 +84,7 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
           pointerEvents: 'none'
         }}
       ></div>
+      </div>
       <HeatmapPanel 
          missionId={mission.id} 
          viewer={viewerRef.current}
