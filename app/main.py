@@ -221,6 +221,25 @@ async def submit(
         raise HTTPException(422, "Frame budget must be 3â€“1500")
     if not 1 <= len(name.strip()) <= 160:
         raise HTTPException(422, "Mission name must be 1â€“160 characters")
+    # PRE-FLIGHT DISK CHECK
+    from app.config import DATA
+    import shutil
+    try:
+        video.file.seek(0, 2)
+        video_size = video.file.tell()
+        video.file.seek(0)
+    except:
+        video_size = 50 * 1024 * 1024 # 50 MB fallback
+        
+    estimated_need_bytes = video_size * 3 + (max_frames * 12 * 1024 * 1024) + (2 * 1024**3)
+    
+    total, used, free = shutil.disk_usage(DATA)
+    if free < estimated_need_bytes:
+        raise HTTPException(
+            413, 
+            f"INSUFFICIENT_DISK_SPACE: Estimated requirement ~{estimated_need_bytes/(1024**3):.2f} GB, but only {free/(1024**3):.2f} GB available on volume."
+        )
+
     health = queue_health()
     if not health["available"]:
         raise HTTPException(503, health["message"])
