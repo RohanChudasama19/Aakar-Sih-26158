@@ -8,6 +8,7 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
   const labelRef = useRef(null);
   
   const [clickedFaceIndex, setClickedFaceIndex] = useState(null);
+  const [viewerState, setViewerState] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current || !mission) return;
@@ -32,6 +33,7 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
           viewer.dispose();
         } else {
           viewerRef.current = viewer;
+          setViewerState(viewer);
           window.setWireframe = (s) => viewer.wireframe(s);
           window.resetView = () => viewer.resetView();
           // Apply initial layer and tool if viewer is ready
@@ -87,7 +89,7 @@ export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpd
       </div>
       <HeatmapPanel 
          missionId={mission.id} 
-         viewer={viewerRef.current}
+         viewer={viewerState}
          clickedFaceIndex={clickedFaceIndex}
       />
     </div>

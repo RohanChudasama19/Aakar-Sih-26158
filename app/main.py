@@ -97,14 +97,32 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def protect(request: Request, call_next):
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id
-    if API_TOKEN and request.url.path.startswith("/api/"):
+    if API_TOKEN:
         import secrets
+        import base64
+        from fastapi.responses import Response
 
-        token = request.headers.get("authorization", "").removeprefix("Bearer ")
-        if not secrets.compare_digest(token, API_TOKEN):
-            from fastapi.responses import JSONResponse
+        auth_header = request.headers.get("authorization", "")
+        authorized = False
+        
+        if auth_header.startswith("Bearer "):
+            token = auth_header.removeprefix("Bearer ")
+            if secrets.compare_digest(token, API_TOKEN):
+                authorized = True
+                
+        elif auth_header.startswith("Basic "):
+            try:
+                encoded = auth_header.removeprefix("Basic ")
+                decoded = base64.b64decode(encoded).decode("utf-8")
+                username, password = decoded.split(":", 1)
+                if secrets.compare_digest(password, API_TOKEN):
+                    authorized = True
+            except Exception:
+                pass
+                
+        if not authorized:
+            return Response("Authentication required", status_code=401, headers={"WWW-Authenticate": "Basic realm=\"AeroRecon\""})
 
-            return JSONResponse({"detail": "Authentication required"}, status_code=401)
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "same-origin"
@@ -202,8 +220,8 @@ async def save(upload, target, budget):
 @app.post("/api/jobs", status_code=202)
 async def submit(
     video: UploadFile = File(...),
-    gps: UploadFile = File(...),
-    flight: UploadFile = File(...),
+    gps: UploadFile | None = File(None),
+    flight: UploadFile | None = File(None),
     name: str = Form("Drone mission"),
     engine: str = Form("cpu"),
     max_frames: int = Form(180),
@@ -555,7 +573,35 @@ def get_job(jid, include_reps=True):
         except Exception:
             pass
     if data["status"] == "running" and time.time() - data["updated"] > 90:
+        data["status"] = "failed"
         data["message"] = "Worker heartbeat is stale. Check worker container; the job may have been interrupted."
+        # Update DB persistently
+        try:
+            with Session() as s:
+                db_j = s.get(Job, jid)
+                if db_j and db_j.status == "running":
+                    db_j.status = "failed"
+                    db_j.message = data["message"]
+                    s.commit()
+        except:
+            pass
+
+    if data["status"] == "completed":
+        # Physically verify artifacts exist
+        work_dir = Path(DATA) / jid / "work"
+        if not (work_dir / "outputs" / "model.glb").exists() and not (work_dir / "outputs" / "mesh.glb").exists() and not (Path(DATA) / jid / "model.glb").exists():
+            data["status"] = "failed"
+            data["message"] = "Job marked completed but physical GLB artifact is missing."
+            try:
+                with Session() as s:
+                    db_j = s.get(Job, jid)
+                    if db_j and db_j.status == "completed":
+                        db_j.status = "failed"
+                        db_j.message = data["message"]
+                        s.commit()
+            except:
+                pass
+
     if include_reps and data["status"] == "completed":
         try:
             data["representations"] = get_job_representations(jid, data)

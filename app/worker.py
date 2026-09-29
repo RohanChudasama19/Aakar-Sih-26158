@@ -41,7 +41,9 @@ def process_job(job_id):
                                 child.kill()
                             except psutil.NoSuchProcess:
                                 pass
-                        os._exit(1)
+                        # Instead of killing the worker process, raise a special exception in the main thread
+                        # But since we are in heartbeat thread, we can just kill children and let main thread fail
+                        # The main thread will catch the exception from subprocess
             except Exception:
                 pass
 
@@ -97,6 +99,12 @@ def process_job(job_id):
             # Upload artifacts so the report is accessible
             upload_job(job_id, directory / "work" / "outputs")
             return report
+        with Session() as s:
+            j = s.get(Job, job_id)
+            if j and j.status == "cancelled":
+                (directory / "error.log").write_text("Cancelled by user")
+                # Do not raise, just return to allow worker to continue
+                return
         (directory / "error.log").write_text(traceback.format_exc())
         update(job_id, status="failed", message=str(exc)[:1900])
         raise

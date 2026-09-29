@@ -20,6 +20,24 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
   
   // Cache for loaded values
   const [cache, setCache] = useState({});
+  const [allMetadata, setAllMetadata] = useState({});
+
+  useEffect(() => {
+    async function fetchAll() {
+      const results = {};
+      for (const m of METRICS) {
+        if (m.id === 'ORIGINAL') continue;
+        try {
+          const res = await fetch(`/api/jobs/${missionId}/heatmaps/${m.id}/metadata`);
+          if (res.ok) {
+            results[m.id] = await res.json();
+          }
+        } catch(e) {}
+      }
+      setAllMetadata(results);
+    }
+    fetchAll();
+  }, [missionId]);
 
   useEffect(() => {
     if (viewer) {
@@ -39,12 +57,16 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
       }
 
       setLoading(true);
+      console.log("loadHeatmap running for metric:", activeMetric);
       try {
-        const metaRes = await fetch(`/api/jobs/${missionId}/heatmaps/${activeMetric}/metadata`);
-        if (!metaRes.ok) {
-          throw new Error(metaRes.status === 404 ? 'Artifact not found' : 'Failed to fetch metadata');
+        let meta = allMetadata[activeMetric];
+        if (!meta) {
+            const metaRes = await fetch(`/api/jobs/${missionId}/heatmaps/${activeMetric}/metadata`);
+            if (!metaRes.ok) {
+              throw new Error(metaRes.status === 404 ? 'Artifact not found' : 'Failed to fetch metadata');
+            }
+            meta = await metaRes.json();
         }
-        const meta = await metaRes.json();
         
         if (meta.status === 'NOT_VERIFIED' || meta.status === 'UNAVAILABLE') {
           viewer.applyHeatmapColors(null);
@@ -79,6 +101,7 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
             colors[i*9 + 6] = rgb[0]; colors[i*9 + 7] = rgb[1]; colors[i*9 + 8] = rgb[2];
         }
 
+        console.log("Calling applyHeatmapColors with colors:", !!colors);
         viewer.applyHeatmapColors(colors);
         viewer.setHeatmapOpacity(opacity);
         setMetadata(meta);
@@ -133,21 +156,25 @@ export const HeatmapPanel = ({ missionId, viewer, onInspectModeChange, clickedFa
 
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {METRICS.map(m => (
+        {METRICS.map(m => {
+          const meta = allMetadata[m.id];
+          const isInvalid = meta && (meta.status === 'NOT_VERIFIED' || meta.status === 'UNAVAILABLE');
+          return (
           <button 
             key={m.id}
-            onClick={() => setActiveMetric(m.id)}
+            onClick={() => { if (!isInvalid) setActiveMetric(m.id) }}
+            disabled={isInvalid}
             style={{
               padding: '6px 12px', textAlign: 'left',
-              backgroundColor: activeMetric === m.id ? '#2e4c3a' : '#2a2a2a',
-              color: activeMetric === m.id ? '#fff' : '#ccc',
+              backgroundColor: activeMetric === m.id ? '#2e4c3a' : (isInvalid ? '#1a1a1a' : '#2a2a2a'),
+              color: activeMetric === m.id ? '#fff' : (isInvalid ? '#555' : '#ccc'),
               border: '1px solid #4a5c50', borderRadius: 4,
-              cursor: 'pointer'
+              cursor: isInvalid ? 'not-allowed' : 'pointer'
             }}
           >
-            {m.label}
+            {m.label} {isInvalid && '(Unavailable)'}
           </button>
-        ))}
+        )})}
       </div>
 
       {loading && <div style={{ color: '#aaa', fontStyle: 'italic' }}>Loading artifact...</div>}

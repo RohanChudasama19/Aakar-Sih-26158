@@ -44,7 +44,7 @@ CONFIG: Dict[str, Any] = {
         "warning_proxy": 5.0,  # Pixels (normalized space)
     },
     "connectivity": {
-        "block_largest_cc_ratio": 0.5,  # Block if the largest connected component is < 50% of sampled frames
+        "block_largest_cc_ratio": 0.25,  # Block if the largest connected component is < 25% of sampled frames
     },
     "motion": {
         "jump_threshold_px": 100,  # LK flow abrupt jump
@@ -185,7 +185,7 @@ def compute_pair_geometry(kp1, kp2, des1, des2, K: np.ndarray) -> Dict:
 def analyze_telemetry(gps_rows: List[Dict], meta: Dict, config: Dict) -> Dict:
     res = {"warnings": [], "blocking_reasons": []}
     if not gps_rows:
-        res["blocking_reasons"].append("Missing mandatory GPS telemetry.")
+        res["warnings"].append("No GPS telemetry provided. Reconstruction will use RELATIVE coordinates.")
         return res
 
     gaps, stationary, outliers = 0, 0, 0

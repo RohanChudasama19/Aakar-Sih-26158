@@ -178,3 +178,4 @@ def sparse(directory, info, camera, notify):
         "reprojection_rmse_px": float(np.sqrt(np.mean(np.square(errors)))),
         "engine": "colmap_cuda",
     }
+

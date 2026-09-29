@@ -199,7 +199,9 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   function disposeCurrentRepresentation() {
     if (currentRepObject) {
       scene.remove(currentRepObject);
+      console.log("Traversing currentRepObject:", currentRepObject);
       currentRepObject.traverse(o => {
+          console.log("Child:", o.type, o.isMesh, !!o.geometry, !!o.material);
         o.geometry?.dispose();
         if (o.material) {
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
@@ -628,11 +630,11 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   }
 
   // HEATMAP INTEGRATION
-      function applyHeatmapColors(colorsBuffer) {
+      function applyHeatmapColors(colorsBuffer) { console.log("INSIDE applyHeatmapColors! currentRepObject is:", !!currentRepObject);
     if (!currentRepObject) return;
     let globalVertexOffset = 0;
     currentRepObject.traverse(o => {
-      if (o.isMesh && o.geometry) {
+      if (o.isMesh && o.geometry) { window.__viewer_debug_obj = o;
         if (!o.geometry.isNonIndexed && o.geometry.index) {
           o.geometry = o.geometry.toNonIndexed();
         }
@@ -680,7 +682,7 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
               #endif
             ` + shader.fragmentShader.replace(
               '#include <dithering_fragment>',
-              `#include <dithering_fragment>\n#ifdef USE_HEATMAP\ngl_FragColor = mix(gl_FragColor, vec4(vHeatmapColor, gl_FragColor.a), heatmapOpacity);\n#endif`
+              `#include <dithering_fragment>\n#ifdef USE_HEATMAP\ngl_FragColor = mix(vec4(0.0, 1.0, 1.0, 1.0), vec4(vHeatmapColor, gl_FragColor.a), heatmapOpacity);\n#endif`
             );
             
             if (originalOnBeforeCompile) originalOnBeforeCompile(shader);
@@ -702,6 +704,20 @@ export async function createViewer(container, jid, reps, metric, options = {}) {
   // Initial load â€” fallback chain starting from textured
   await loadWithFallback('textured', reps);
 
+  function setHeatmapOpacity(opacity) {
+    if (!currentRepObject) return;
+    currentRepObject.traverse(o => {
+      if (o.isMesh && o.material && o.material.userData && o.material.userData.heatmapOpacity) {
+        o.material.userData.heatmapOpacity.value = opacity;
+      }
+    });
+  }
+  function dispose() {
+    disposed = true;
+    if (renderer) renderer.dispose();
+    if (controls) controls.dispose();
+    if (camController) camController.dispose();
+  }
   return { loadMode, setMode, clear: _clearMeasure, wireframe, resetView, applyHeatmapColors, setHeatmapOpacity, dispose };
 }
 

@@ -26,20 +26,24 @@
 }
 
 .logoMark {
-  width: 32px;
-  height: 32px;
-  position: relative;
-  border: 1px solid var(--accent-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+  background-color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: rotate(45deg);
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(0, 168, 255, 0.25);
 }
 
-.cube {
-  width: 12px;
-  height: 12px;
-  background-color: var(--accent-primary);
+.logoImg {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .logoText h2 {

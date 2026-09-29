@@ -34,10 +34,10 @@ const MainLayout = () => {
       <aside className={styles.sidebar}>
         <div className={styles.logoContainer}>
           <div className={styles.logoMark}>
-            <div className={styles.cube}></div>
+            <img src="/aakar-logo.png" alt="AAKAR Logo" className={styles.logoImg} />
           </div>
           <div className={styles.logoText}>
-            <h2>AERORECON</h2>
+            <h2>AAKAR</h2>
             <span>SIH26158</span>
           </div>
         </div>
