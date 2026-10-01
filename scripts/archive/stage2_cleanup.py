@@ -33,7 +33,7 @@ def read_colmap_map(path):
 
 free_before = get_free_space("C:\\")
 
-p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon")
+p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar")
 work_dir = p / "data/95f51b12-b771-47bf-9201-c3700f9475a7/work"
 
 diag_dir = work_dir / "preserved_dense_diagnostics"

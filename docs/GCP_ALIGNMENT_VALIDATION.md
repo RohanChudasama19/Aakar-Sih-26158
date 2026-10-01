@@ -1,6 +1,6 @@
 # GCP Alignment Validation
 
-AeroRecon correctly separates CONTROL points from CHECKPOINT points at the architecture level.
+AAKAR correctly separates CONTROL points from CHECKPOINT points at the architecture level.
 
 ## CONTROL Alignment
 - `CONTROL` points are used to establish Metric Scale and Georeferencing.

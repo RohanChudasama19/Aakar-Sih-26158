@@ -6,7 +6,7 @@ js = requests.get("http://127.0.0.1:8000/assets/index-Cux3IcQU.js").text
 checks = [
     ("result.id",          "should exist for correct navigation"),
     ("result.job_id",      "OLD BUG - should NOT exist"),
-    ("AeroRecon",          "branding"),
+    ("AAKAR",          "branding"),
     ("Dashboard",          "Dashboard page"),
     ("Workspace",          "Workspace page"),
     ("Settings",           "Settings page"),

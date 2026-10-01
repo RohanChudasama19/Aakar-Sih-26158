@@ -1,13 +1,13 @@
-# AeroRecon Frontend V2 Architecture
+# AAKAR Frontend V2 Architecture
 
 ## Overview
-AeroRecon Frontend V2 is an architectural evolution of the existing React application. The primary goal is to introduce a strict Project -> Mission -> Reconstruction Outputs data hierarchy while preserving the friend-designed dark theme, React visual identity, existing scientific thresholds, and validated reconstruction artifacts.
+AAKAR Frontend V2 is an architectural evolution of the existing React application. The primary goal is to introduce a strict Project -> Mission -> Reconstruction Outputs data hierarchy while preserving the friend-designed dark theme, React visual identity, existing scientific thresholds, and validated reconstruction artifacts.
 
 ## Technology Stack
 - **Frontend Framework:** React (Vite build system)
 - **Routing:** React Router v6
 - **Styling:** CSS Modules with plain CSS (preserving existing theme variables)
-- **3D Engine:** Three.js (raw engine wrapper via iewer.js, bridging to React via AeroReconViewer.jsx)
+- **3D Engine:** Three.js (raw engine wrapper via iewer.js, bridging to React via AAKARViewer.jsx)
 - **Backend:** FastAPI (Python)
 - **Database:** SQLite (via SQLAlchemy)
 
@@ -20,5 +20,5 @@ AeroRecon Frontend V2 is an architectural evolution of the existing React applic
 ## Component Strategy
 - **Layouts:** MainLayout provides the global sidebar and header.
 - **Pages:** Top-level route components map directly to the global sidebar navigation.
-- **Viewer:** The Three.js canvas remains isolated in iewer.js to prevent React rendering cycle leaks, while AeroReconViewer.jsx handles mount/unmount and ResizeObserver integration.
+- **Viewer:** The Three.js canvas remains isolated in iewer.js to prevent React rendering cycle leaks, while AAKARViewer.jsx handles mount/unmount and ResizeObserver integration.
 

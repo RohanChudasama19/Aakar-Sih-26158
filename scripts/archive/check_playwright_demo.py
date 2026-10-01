@@ -21,8 +21,8 @@ async def run():
 
         mars_visible = 'MARS HKairport01' in content or 'mars_hkairport01' in content
         colorado_visible = '95f51b12' in content or 'Colorado' in content or 'degraded' in content.lower()
-        aerorecon_visible = 'AERORECON' in content
-        print(f'  AERORECON branding: {aerorecon_visible}')
+        aakar_visible = 'AAKAR' in content
+        print(f'  AAKAR branding: {aakar_visible}')
         print(f'  MARS mission visible: {mars_visible}')
         print(f'  Colorado job visible: {colorado_visible}')
 

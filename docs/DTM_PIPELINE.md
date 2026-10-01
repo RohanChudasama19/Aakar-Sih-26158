@@ -1,4 +1,4 @@
-# AeroRecon DTM Pipeline
+# AAKAR DTM Pipeline
 
 ## Architecture
 The Digital Terrain Model (DTM) pipeline produces bare-earth rasters from raw or classified point clouds. The engine relies solely on **geometric ground filtering**, ensuring true generalization without mandatory dependence on semantic deep learning predictions.

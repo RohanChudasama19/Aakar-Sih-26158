@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Implementation Plan
+# AAKAR Frontend V2 Implementation Plan
 
 ## Phase 2 Roadmap
 
@@ -31,7 +31,7 @@
 2. Verify deep links (/workspace/mars_hkairport01_quality) bypass the selector.
 
 ### Step 7: 3D Exploration Engine (Phase 3 Prep)
-1. Add state hooks to AeroReconViewer.jsx for cameraMode.
+1. Add state hooks to AAKARViewer.jsx for cameraMode.
 2. Plumb cameraMode into iewer.js and stub out the teardown logic.
 
 ## Acceptance Criteria

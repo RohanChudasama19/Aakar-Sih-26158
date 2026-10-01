@@ -50,7 +50,7 @@ manifest = {
     "sequence": "HKairport01",
     "reconstruction_mode": "FRAME-BASED",
     "provenance": "ROS bag /left_camera/image/compressed (pre-extracted frames, original bag not on disk)",
-    "aerorecon_release": "v1.1-sih-rc8",
+    "aakar_release": "v1.1-sih-rc8",
     "sfm": {
         "total_frames_available": 567,
         "selected_frames": 200,
@@ -96,7 +96,7 @@ print("manifest.json saved")
 # Print final report
 print()
 print("=" * 60)
-print("AERORECON MARS FULL-QUALITY VALIDATION REPORT")
+print("AAKAR MARS FULL-QUALITY VALIDATION REPORT")
 print("=" * 60)
 print(f"Dataset:              MARS-LVIG HKairport01")
 print(f"Mode:                 FRAME-BASED RECONSTRUCTION")

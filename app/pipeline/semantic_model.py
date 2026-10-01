@@ -15,7 +15,7 @@ class SemanticBackendState(str, Enum):
     MODEL_LOAD_FAILED = "MODEL_LOAD_FAILED"
 
 
-class AeroReconClass(str, Enum):
+class AAKARClass(str, Enum):
     BUILDING = "BUILDING"
     ROAD = "ROAD"
     VEGETATION = "VEGETATION"
@@ -35,15 +35,15 @@ class UAVidClass(int, Enum):
     MOVING_CAR = 7  # [64, 0, 128]
 
 
-UAVID_TO_AERORECON = {
-    UAVidClass.BUILDING: AeroReconClass.BUILDING,
-    UAVidClass.ROAD: AeroReconClass.ROAD,
-    UAVidClass.TREE: AeroReconClass.VEGETATION,
-    UAVidClass.LOW_VEGETATION: AeroReconClass.VEGETATION,
-    UAVidClass.STATIC_CAR: AeroReconClass.OBSTACLE,
-    UAVidClass.MOVING_CAR: AeroReconClass.DYNAMIC_OBJECT,
-    UAVidClass.HUMAN: AeroReconClass.DYNAMIC_OBJECT,
-    UAVidClass.CLUTTER: AeroReconClass.UNKNOWN,
+UAVID_TO_AAKAR = {
+    UAVidClass.BUILDING: AAKARClass.BUILDING,
+    UAVidClass.ROAD: AAKARClass.ROAD,
+    UAVidClass.TREE: AAKARClass.VEGETATION,
+    UAVidClass.LOW_VEGETATION: AAKARClass.VEGETATION,
+    UAVidClass.STATIC_CAR: AAKARClass.OBSTACLE,
+    UAVidClass.MOVING_CAR: AAKARClass.DYNAMIC_OBJECT,
+    UAVidClass.HUMAN: AAKARClass.DYNAMIC_OBJECT,
+    UAVidClass.CLUTTER: AAKARClass.UNKNOWN,
 }
 
 

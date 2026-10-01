@@ -1,6 +1,6 @@
-﻿# Step 3: Georeferenced Map Verification
+# Step 3: Georeferenced Map Verification
 
-This document verifies the real-world functionality of the Map tab inside the AeroRecon UI for both GEOREFERENCED_METRIC and RELATIVE missions.
+This document verifies the real-world functionality of the Map tab inside the AAKAR UI for both GEOREFERENCED_METRIC and RELATIVE missions.
 
 ## 1. Environment Details
 - **Browser:** Chromium (Playwright Automation)

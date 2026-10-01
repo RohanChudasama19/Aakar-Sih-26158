@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 API Gap Matrix
+# AAKAR Frontend V2 API Gap Matrix
 
 | Required Capability | Frontend Route Context | Backend API Endpoint | Status | Notes |
 |---|---|---|---|---|

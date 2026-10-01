@@ -1,6 +1,6 @@
 # Dataset Adapter Report
 
-This document reports the status of dataset adapters for external datasets integrated into AeroRecon.
+This document reports the status of dataset adapters for external datasets integrated into AAKAR.
 
 ## Summary Status
 
@@ -37,8 +37,8 @@ This document reports the status of dataset adapters for external datasets integ
 
 ### UAVid
 - **Real Sample**: No, requires account and signed usage terms.
-- **Next Phase Readiness**: Taxonomy mapping (UAVid to AeroRecon) is recorded. Ready for semantic model training once user manually provides the dataset.
+- **Next Phase Readiness**: Taxonomy mapping (UAVid to AAKAR) is recorded. Ready for semantic model training once user manually provides the dataset.
 
 ### H3D Hessigheim
 - **Real Sample**: No, requires institutional form submission.
-- **Next Phase Readiness**: Ready for reference DTM and point cloud validation against standard AeroRecon outputs once data is provided.
+- **Next Phase Readiness**: Ready for reference DTM and point cloud validation against standard AAKAR outputs once data is provided.

@@ -1,8 +1,8 @@
 # SIH Final Readiness Report
-## Product: AeroRecon (SIH 26158)
+## Product: AAKAR (SIH 26158)
 
 ### Product Status: READY FOR SUBMISSION
-AeroRecon successfully transforms single-pass drone video and telemetry into high-fidelity spatial intelligence. The complete pipeline (Phases 0 through 9) is implemented, thoroughly tested, and integrated into a robust, web-based platform.
+AAKAR successfully transforms single-pass drone video and telemetry into high-fidelity spatial intelligence. The complete pipeline (Phases 0 through 9) is implemented, thoroughly tested, and integrated into a robust, web-based platform.
 
 ### Core Capabilities Assured
 1. **Unconstrained Processing:** Runs natively on CPU or leveraging CUDA via COLMAP.

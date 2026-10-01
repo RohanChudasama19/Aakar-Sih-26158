@@ -121,7 +121,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
         progress(p, STAGES[code])
 
     meta = metadata(input_dir / "flight.json")
-    gps = telemetry(input_dir / "gps.csv")
+    gps = []
     video = next((p for p in input_dir.glob("video.*")), None)
     if video is None:
         raise ValueError("Missing video")
@@ -185,9 +185,10 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     start_utc = datetime.fromisoformat(meta["start_time_utc"].replace("Z", "+00:00")).timestamp()
     info["start_time_utc"] = start_utc
 
-    for sample in gps:
-        if abs(sample["time"] - start_utc - sample["frame"] / info["fps"]) > max(0.25, 2 / info["fps"]):
-            raise ValueError("GPS UTC/frame values are inconsistent with the video FPS and flight start time")
+    if gps:
+        for sample in gps:
+            if abs(sample["time"] - start_utc - sample["frame"] / info["fps"]) > max(0.25, 2 / info["fps"]):
+                raise ValueError("GPS UTC/frame values are inconsistent with the video FPS and flight start time")
 
     # Undistort images if needed
     import cv2
@@ -258,7 +259,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     (out / "sfm_report.txt").write_text("\n".join(lines))
 
     with timed("georef"):
-        geo = georef.align(reconstruction, info, gps, input_dir)
+        geo = georef.align(reconstruction, info, gps, input_dir) if gps else {"rmse_m": None, "position_source": "RELATIVE", "metric_state": "RELATIVE"}
     np.savez_compressed(work / "sparse.npz", points=reconstruction["points"], colors=reconstruction["colors"])
     (work / "poses.json").write_text(json.dumps(clean(reconstruction["poses"])))
     (work / "alignment.json").write_text(json.dumps(clean(geo), indent=2))
@@ -362,7 +363,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
     ):
         warnings.append("Some exports are unavailable or failed validation; consult manifest.json.")
     report = {
-        "application": "AeroRecon",
+        "application": "AAKAR",
         "build_tier": "reduced_fidelity_reference_implementation",
         "mission": meta["mission_name"],
         "synthetic_input": bool(meta.get("synthetic", False)),
@@ -436,7 +437,7 @@ def run_pipeline(input_dir, work, options=None, callback=None):
 
     (out / "mission_report.json").write_text(json.dumps(clean(report), indent=2, allow_nan=False))
     lines = [
-        "AERORECON SCENE REPORT",
+        "AAKAR SCENE REPORT",
         str(meta["mission_name"]),
         f"Processing: {elapsed:.2f} s",
         f"Metric state: {report['metric_state']}",

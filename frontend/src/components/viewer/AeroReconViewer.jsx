@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { createViewer } from '../../viewer/viewer.js';
 import { HeatmapPanel } from './HeatmapPanel.jsx';
 
-export const AeroReconViewer = ({ mission, activeLayer, activeTool, onMeasureUpdate }) => {
+export const AAKARViewer = ({ mission, activeLayer, activeTool, onMeasureUpdate }) => {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
   const labelRef = useRef(null);

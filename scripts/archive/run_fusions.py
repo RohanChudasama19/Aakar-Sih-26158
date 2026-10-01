@@ -8,7 +8,7 @@ sys.path.append(str(Path.cwd()))
 from app.pipeline.colmap import resolve_colmap_executable, get_colmap_env
 from app.pipeline.mesh import build_mesh
 
-root = Path("C:/Users/ATHARAV/Documents/sih 26/gpt 6 astra/AeroRecon-SIH26158-Surface-Fix/aerorecon")
+root = Path("C:/Users/ATHARAV/Documents/sih 26/gpt 6 astra/AAKAR-SIH26158-Surface-Fix/aakar")
 work_dir = root / "data/95f51b12-b771-47bf-9201-c3700f9475a7/work"
 exp_dir = work_dir / "dense_experiment"
 colmap_exe = resolve_colmap_executable() or r"C:\Tools\COLMAP\COLMAP.bat"

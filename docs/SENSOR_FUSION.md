@@ -1,6 +1,6 @@
 # Sensor Fusion Architecture
 
-AeroRecon enforces strict separation between visual estimation geometry and prior constraints to maintain mathematically defensible local-metric consistency.
+AAKAR enforces strict separation between visual estimation geometry and prior constraints to maintain mathematically defensible local-metric consistency.
 
 ## Phase E1: Frame-Agnostic Fusion
 Extracts useful constraints that do not depend on unresolved hardware orientation frames.

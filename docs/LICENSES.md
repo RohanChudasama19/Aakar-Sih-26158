@@ -1,6 +1,6 @@
 # Software and Model License Inventory
 
-This document tracks the licenses of third-party dependencies, binaries, and ML models used in AeroRecon.
+This document tracks the licenses of third-party dependencies, binaries, and ML models used in AAKAR.
 
 ## Python Dependencies (Backend)
 - **FastAPI, Uvicorn, Starlette, Pydantic**: MIT License

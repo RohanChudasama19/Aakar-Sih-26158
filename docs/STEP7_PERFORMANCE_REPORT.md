@@ -1,4 +1,4 @@
-# Step 7: Performance Report — AeroRecon SIH26158
+# Step 7: Performance Report — AAKAR SIH26158
 
 ## Git Commit
 (Recorded at end of this step)

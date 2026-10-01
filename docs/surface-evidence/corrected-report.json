@@ -1,5 +1,5 @@
 {
-  "application": "AeroRecon",
+  "application": "AAKAR",
   "build_tier": "reduced_fidelity_reference_implementation",
   "mission": "Zurich real Fotokite flight \u2014 first 350 frames",
   "synthetic_input": false,

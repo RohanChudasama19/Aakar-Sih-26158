@@ -5,8 +5,8 @@ import os
 
 async def test_first_time():
     # backup and clear db
-    if os.path.exists('app/aerorecon.db'):
-        os.rename('app/aerorecon.db', 'app/aerorecon.db.tmp')
+    if os.path.exists('app/aakar.db'):
+        os.rename('app/aakar.db', 'app/aakar.db.tmp')
     
     # restart server here or just rely on API? The server creates tables on startup
     import subprocess
@@ -52,10 +52,10 @@ async def test_first_time():
     finally:
         proc.terminate()
         # restore db
-        if os.path.exists('app/aerorecon.db'):
-            os.remove('app/aerorecon.db')
-        if os.path.exists('app/aerorecon.db.tmp'):
-            os.rename('app/aerorecon.db.tmp', 'app/aerorecon.db')
+        if os.path.exists('app/aakar.db'):
+            os.remove('app/aakar.db')
+        if os.path.exists('app/aakar.db.tmp'):
+            os.rename('app/aakar.db.tmp', 'app/aakar.db')
 
 if __name__ == '__main__':
     asyncio.run(test_first_time())

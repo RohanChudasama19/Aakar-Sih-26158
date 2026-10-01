@@ -23,7 +23,7 @@ Phase 2 focused on creating a robust, unified, and traceable Camera Model to han
 4. **Offline Calibration (`scripts/calibrate_camera.py`)**:
     - Utility script added for processing folder paths containing standard checkerboards.
     - Computes focal lengths, principal points, and distortion parameters for PINHOLE, RADIAL, or full OPENCV models.
-    - Exports directly to the standard `camera_intrinsics.json` format used by the AeroRecon ingest endpoints.
+    - Exports directly to the standard `camera_intrinsics.json` format used by the AAKAR ingest endpoints.
 
 5. **Test Coverage (`tests/test_camera.py`)**:
     - Complete suite for geometric bounds checking, sub-pixel image coordinate scaling, non-uniform resolution adaptations, and OpenCV/COLMAP parameter serializers.

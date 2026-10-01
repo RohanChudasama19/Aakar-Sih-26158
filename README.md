@@ -1,8 +1,8 @@
 
 <div align="center">
-  <img src="frontend/public/aakar-logo.png" alt="AeroRecon Logo" width="150" />
+  <img src="frontend/public/aakar-logo.png" alt="AAKAR Logo" width="150" />
 
-  # AeroRecon ??
+  # AAKAR ??
   
   **Fully Automated UAV 3D Reconstruction & Photogrammetry Pipeline**
 
@@ -17,9 +17,9 @@
 
 ---
 
-## ?? What AeroRecon Does
+## ?? What AAKAR Does
 
-AeroRecon is a fully automated, end-to-end 3D reconstruction pipeline designed to process UAV (drone) video and GPS telemetry into highly accurate metric 3D models and orthomosaics. 
+AAKAR is a fully automated, end-to-end 3D reconstruction pipeline designed to process UAV (drone) video and GPS telemetry into highly accurate metric 3D models and orthomosaics. 
 
 It implements robust **readiness validation**, **Structure-from-Motion (SfM)**, **dense Multi-View Stereo (MVS)**, **surface meshing**, **texturing**, and **scientific heatmap visualization** directly in the browser.
 
@@ -66,7 +66,7 @@ It implements robust **readiness validation**, **Structure-from-Motion (SfM)**, 
 4. **Start the web API & Frontend:**
    ```bash
    # Run the provided start script to launch everything automatically
-   ./scripts/start-aerorecon.ps1
+   ./scripts/start-aakar.ps1
    ```
 
 5. **Access the application:**
@@ -75,7 +75,7 @@ It implements robust **readiness validation**, **Structure-from-Motion (SfM)**, 
 ## ?? Repository Structure
 
 ```text
-AeroRecon/
+AAKAR/
 +-- app/                  # FastAPI Backend & Core Pipeline Engine
 +-- frontend/             # React SPA Source Code
 +-- web/                  # Compiled Production Frontend Build

@@ -9,7 +9,7 @@ with Session() as s:
         r['_provenance'] = 'IMPORTED_FRAME_BASED_RECONSTRUCTION'
         r['_import_note'] = (
             'Executed via standalone COLMAP CLI phases (SfM+PatchMatch+Fusion+Poisson+Texture). '
-            'NOT through the AeroRecon production upload/worker lifecycle. '
+            'NOT through the AAKAR production upload/worker lifecycle. '
             'Seeded into application database post-hoc for demonstration.'
         )
         r['_import_time'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())

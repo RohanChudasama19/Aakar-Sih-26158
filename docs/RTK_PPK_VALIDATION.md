@@ -1,6 +1,6 @@
 # RTK / PPK Validation
 
-AeroRecon parses GNSS states to assign intelligent statistical weight to trajectory priors.
+AAKAR parses GNSS states to assign intelligent statistical weight to trajectory priors.
 
 ## Quality Enums
 - `RTK_FIXED` / `PPK_FIXED` (Default sigma approx 0.02m)

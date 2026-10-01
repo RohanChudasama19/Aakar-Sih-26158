@@ -1,7 +1,7 @@
 # Viewer Integration
 
 ## 1. Architecture
-- Extend AeroReconViewer to load the .json numerical artifact asynchronously.
+- Extend AAKARViewer to load the .json numerical artifact asynchronously.
 - Inject vertex colors using BufferAttribute('color') on the existing THREE.Mesh.
 
 ## 2. UI Contract

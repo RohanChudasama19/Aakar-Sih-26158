@@ -19,8 +19,8 @@ patterns = [
     "canvas",
     "viewer",
     "sih",
-    "aerorecon",
-    "AERORECON",
+    "aakar",
+    "AAKAR",
 ]
 
 for pat in patterns:

@@ -1,6 +1,6 @@
-﻿# AeroRecon Deployment Guide
+# AAKAR Deployment Guide
 
-AeroRecon consists of three main components: a FastAPI server, an RQ worker, and a Redis message broker.
+AAKAR consists of three main components: a FastAPI server, an RQ worker, and a Redis message broker.
 
 ## System Requirements
 - **Storage:** 50 MB per processed frame (e.g. 500 frames = 25 GB free workspace required).
@@ -23,5 +23,5 @@ AeroRecon consists of three main components: a FastAPI server, an RQ worker, and
 5. Start Server: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ## Docker Deployment (Unsupported / Not Verified)
-*AeroRecon provides a Dockerfile, but Docker GPU passthrough for COLMAP CUDA has not been actively validated in this release cycle.* 
+*AAKAR provides a Dockerfile, but Docker GPU passthrough for COLMAP CUDA has not been actively validated in this release cycle.* 
 If using Docker, map a large volume to /app/data to ensure sufficient disk space.

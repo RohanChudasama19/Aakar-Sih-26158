@@ -1,6 +1,6 @@
 # Dataset Licensing and Redistribution
 
-This document details the licensing, terms of use, and redistribution restrictions for the external datasets utilized in the AeroRecon Dataset-Driven Completion Program.
+This document details the licensing, terms of use, and redistribution restrictions for the external datasets utilized in the AAKAR Dataset-Driven Completion Program.
 
 ## 1. UseGeo
 - **dataset name**: UseGeo
@@ -57,4 +57,4 @@ This document details the licensing, terms of use, and redistribution restrictio
 - **citation requirement**: Required if published.
 
 ---
-**Note:** Do not redistribute datasets inside the AeroRecon source ZIP unless explicitly permitted.
+**Note:** Do not redistribute datasets inside the AAKAR source ZIP unless explicitly permitted.

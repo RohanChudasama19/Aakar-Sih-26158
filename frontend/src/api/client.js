@@ -4,7 +4,7 @@ export async function fetchApi(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   
   const headers = { ...options.headers };
-  const token = sessionStorage.getItem('aerorecon-token');
+  const token = sessionStorage.getItem('aakar-token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(url, { ...options, headers });

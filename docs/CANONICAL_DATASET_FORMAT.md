@@ -1,4 +1,4 @@
-# Canonical AeroRecon Dataset Format
+# Canonical AAKAR Dataset Format
 
 All external datasets must be converted into this documented canonical mission layout before processing.
 

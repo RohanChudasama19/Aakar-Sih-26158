@@ -1,4 +1,4 @@
-# AeroRecon Dataset Inventory
+# AAKAR Dataset Inventory
 
 This document catalogs the external datasets used for the Dataset-Driven Completion Program.
 
@@ -33,7 +33,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: UNKNOWN
-- **AeroRecon validation uses**: reconstruction accuracy, LiDAR/reference geometry comparison, dense cloud validation, mesh validation
+- **AAKAR validation uses**: reconstruction accuracy, LiDAR/reference geometry comparison, dense cloud validation, mesh validation
 - **known limitations**: Image-based rather than a continuous single-pass video. Do NOT use to claim video-processing performance.
 
 ## 2. MARS-LVIG
@@ -67,7 +67,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: ROS Time (Unix epoch)
-- **AeroRecon validation uses**: long-flight processing, ~10-minute benchmark, RTK/GNSS, IMU, LiDAR reference, trajectory evaluation, scalability, sensor synchronization
+- **AAKAR validation uses**: long-flight processing, ~10-minute benchmark, RTK/GNSS, IMU, LiDAR reference, trajectory evaluation, scalability, sensor synchronization
 - **known limitations**: Requires robust ROS Bag extraction logic to adapt to canonical format.
 
 ## 3. PPPH-UAV Example Data
@@ -101,7 +101,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: GPS Time / Unix
-- **AeroRecon validation uses**: PPK / PPP integration, raw RINEX handling, GNSS timestamp handling, precise orbit / clock / bias products, antenna calibration
+- **AAKAR validation uses**: PPK / PPP integration, raw RINEX handling, GNSS timestamp handling, precise orbit / clock / bias products, antenna calibration
 - **known limitations**: No full matching drone video imagery. Use primarily for GNSS processing validation.
 
 ## 4. Zurich Urban MAV
@@ -135,7 +135,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: UNKNOWN
-- **AeroRecon validation uses**: IMU fusion development, barometer fusion, timestamp synchronization, sensor coordinate-frame validation, pose priors, trajectory evaluation
+- **AAKAR validation uses**: IMU fusion development, barometer fusion, timestamp synchronization, sensor coordinate-frame validation, pose priors, trajectory evaluation
 - **known limitations**: Do not use it alone as proof of modern high-altitude mapping performance.
 
 ## 5. UAVid
@@ -169,7 +169,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: UNKNOWN
-- **AeroRecon validation uses**: real semantic segmentation model, training/fine-tuning, validation, IoU / mIoU, precision / recall, confusion matrix
+- **AAKAR validation uses**: real semantic segmentation model, training/fine-tuning, validation, IoU / mIoU, precision / recall, confusion matrix
 - **known limitations**: Requires login and explicit data usage agreement.
 
 ## 6. H3D Hessigheim
@@ -203,7 +203,7 @@ This document catalogs the external datasets used for the Dataset-Driven Complet
 - **EPSG where applicable**: UNKNOWN
 - **vertical datum where documented**: UNKNOWN
 - **timestamp format/timebase**: UNKNOWN
-- **AeroRecon validation uses**: LiDAR reference, DTM validation, ground classification, terrain accuracy, mesh / point-cloud comparison, 3D semantic reference where appropriate
+- **AAKAR validation uses**: LiDAR reference, DTM validation, ground classification, terrain accuracy, mesh / point-cloud comparison, 3D semantic reference where appropriate
 - **known limitations**: Do not use it for video-speed benchmarking.
 
 ## UAVid-v1

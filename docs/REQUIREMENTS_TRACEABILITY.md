@@ -1,6 +1,6 @@
-# AeroRecon Requirements Traceability Matrix
+# AAKAR Requirements Traceability Matrix
 
-This document maps official system requirements to their implementation, tests, and evidence within the AeroRecon project.
+This document maps official system requirements to their implementation, tests, and evidence within the AAKAR project.
 
 ## Core Requirements
 

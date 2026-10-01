@@ -1,4 +1,4 @@
-# AERORECON DEMONSTRATION QUICK START
+# AAKAR DEMONSTRATION QUICK START
 
 ## Prerequisites
 1. Redis running (edis-server)

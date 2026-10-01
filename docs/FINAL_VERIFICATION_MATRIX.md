@@ -1,5 +1,5 @@
 # Final Verification Matrix
-## AeroRecon - SIH 26158
+## AAKAR - SIH 26158
 
 | Requirement | Phase | Status | Evidence / Notes |
 |---|---|---|---|

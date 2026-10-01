@@ -1,4 +1,4 @@
-﻿# AeroRecon User Guide
+# AAKAR User Guide
 
 ## Dashboard
 The main screen lists all missions (completed, failed, or running). 

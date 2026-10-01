@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 import os
 
-dense_dir = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\b3198000-1dd2-4a74-95ee-937f56510279\work\dense_balanced")
+dense_dir = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\b3198000-1dd2-4a74-95ee-937f56510279\work\dense_balanced")
 colmap_exe = r"C:\Tools\COLMAP\bin\colmap.exe"
 
 env = {**os.environ, 'QT_QPA_PLATFORM': 'offscreen'}

@@ -1,7 +1,7 @@
 # 8-MINUTE SIH PRESENTATION SCRIPT
 
 ## 0:00 - 1:00: Problem & Solution
-"Welcome judges. Today we present AeroRecon (SIH26158), a robust, offline-first 3D reconstruction intelligence platform. We solve the problem of opaque, black-box photogrammetry by exposing deterministic scientific heatmaps and explicit geometric quality data directly to the user."
+"Welcome judges. Today we present AAKAR (SIH26158), a robust, offline-first 3D reconstruction intelligence platform. We solve the problem of opaque, black-box photogrammetry by exposing deterministic scientific heatmaps and explicit geometric quality data directly to the user."
 
 ## 1:00 - 2:00: Project & Mission Management
 [Click through Dashboard -> Project List -> New Mission]
@@ -27,7 +27,7 @@ I can Orbit, Walk, or Fly through the scene."
 
 ## 6:00 - 7:00: Colorado (Degraded Case)
 [Open 95f51b12-b771-47bf-9201-c3700f9475a7]
-"AeroRecon doesn't just display perfect datasets. Here is the Colorado degraded case. Notice how the heatmaps perfectly align with the shattered topology, proving our rendering isn't faked or baked into the texture—it maps dynamically to any 3D structure."
+"AAKAR doesn't just display perfect datasets. Here is the Colorado degraded case. Notice how the heatmaps perfectly align with the shattered topology, proving our rendering isn't faked or baked into the texture—it maps dynamically to any 3D structure."
 
 ## 7:00 - 8:00: Conclusion
-"AeroRecon guarantees offline continuity, deterministic metric mapping, and rigorous scientific transparency. Thank you."
+"AAKAR guarantees offline continuity, deterministic metric mapping, and rigorous scientific transparency. Thank you."

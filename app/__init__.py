@@ -1,1 +1,1 @@
-"""AeroRecon: evidence-aware video photogrammetry."""
+"""AAKAR: evidence-aware video photogrammetry."""

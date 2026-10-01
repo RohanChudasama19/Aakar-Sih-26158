@@ -1,6 +1,6 @@
 # 3-MINUTE SIH EXECUTIVE PITCH
 
-"Welcome judges. This is AeroRecon (SIH26158). We provide offline-first, mathematically transparent 3D photogrammetry."
+"Welcome judges. This is AAKAR (SIH26158). We provide offline-first, mathematically transparent 3D photogrammetry."
 
 [Open MARS]
 "Here is a 355k face reconstruction. Instead of trusting a black box, we provide Heatmap Intelligence."
@@ -10,4 +10,4 @@
 [Open Colorado]
 "Even in degraded reconstructions, our shaders natively map to the broken topology, proving real-time WebGL integration."
 
-"AeroRecon is fully offline, scientifically defensible, and ready for deployment."
+"AAKAR is fully offline, scientifically defensible, and ready for deployment."

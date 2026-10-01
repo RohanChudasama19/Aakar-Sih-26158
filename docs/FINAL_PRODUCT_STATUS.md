@@ -20,7 +20,7 @@
 
 ## KNOWN TECHNICAL LIMITATIONS
 1. Long-range/global SfM drift on the 10-minute MARS-LVIG single-pass mission remains unresolved (12.34 m trajectory RMSE).
-2. RTK data is synchronized and accepted, but reconstruction-time RTK position constraints are not implemented in the current COLMAP/AeroRecon BA path.
+2. RTK data is synchronized and accepted, but reconstruction-time RTK position constraints are not implemented in the current COLMAP/AAKAR BA path.
 3. MARS relative surface shape is WEAK due to the global trajectory bowing.
 4. Semantic dynamic masking effects remain INCONCLUSIVE and are OFF by default.
 5. Volume measurement functionality may be partial or missing.

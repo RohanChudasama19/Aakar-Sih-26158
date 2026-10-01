@@ -48,7 +48,7 @@ The old sample report, sample-result ZIP and earlier screenshots are historical 
 
 Extract this update into a new folder. Stop the old server before starting the replacement. Preserve old data separately if you need its jobs.
 
-Docker: run `docker compose up --build` inside the new `aerorecon` folder. Rebuild is required for Open3D. Docker startup was not tested here.
+Docker: run `docker compose up --build` inside the new `aakar` folder. Rebuild is required for Open3D. Docker startup was not tested here.
 
 Local Windows: run `.\.venv\Scripts\python -m pip install -r requirements.txt` in an existing compatible virtual environment, then `.\.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`. For a new environment follow README.md.
 

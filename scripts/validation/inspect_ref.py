@@ -5,7 +5,7 @@ import open3d as o3d
 import numpy as np
 from pathlib import Path
 
-path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\mars_lvig\raw\HKairport01\reference\cloud_merged.ply")
+path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\mars_lvig\raw\HKairport01\reference\cloud_merged.ply")
 if not path.exists():
     print(f"NOT FOUND: {path}")
     sys.exit(1)

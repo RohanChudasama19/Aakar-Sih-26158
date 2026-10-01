@@ -1,15 +1,15 @@
-﻿# AeroRecon Accuracy Validation Documentation
+# AAKAR Accuracy Validation Documentation
 
 ## Overview
 
-AeroRecon performs two separate accuracy-related computations. **These must never be conflated.**
+AAKAR performs two separate accuracy-related computations. **These must never be conflated.**
 
 ### 1. GPS Alignment Residual (NOT accuracy validation)
 
 Computed in `app/pipeline/georef.py`.
 Measures how well reconstructed camera positions fit the GPS trajectory **after**
 the Sim(3) transform is fitted to those same GPS/camera pairs.
-This is a **fit residual** — by definition, it cannot be used as proof of absolute accuracy.
+This is a **fit residual** � by definition, it cannot be used as proof of absolute accuracy.
 
 Reported as: `alignment.rmse_m` in `mission_report.json`
 
@@ -34,8 +34,8 @@ checkpoint_id,latitude,longitude,elevation,role[,recon_x,recon_y,recon_z,vertica
 | Column | Type | Description |
 |---|---|---|
 | `checkpoint_id` | string | Unique identifier. No duplicates. |
-| `latitude` | float | WGS84 latitude in decimal degrees (±90) |
-| `longitude` | float | WGS84 longitude in decimal degrees (±180) |
+| `latitude` | float | WGS84 latitude in decimal degrees (�90) |
+| `longitude` | float | WGS84 longitude in decimal degrees (�180) |
 | `elevation` | float | Height (in metres). Datum specified via `vertical_datum`. |
 | `role` | enum | `CHECKPOINT` = independent validation only. `CONTROL` = excluded from RMSE (alignment placeholder for future use). |
 
@@ -62,7 +62,7 @@ GCP01,47.3765,8.5411,407.8,CONTROL,,,ELLIPSOIDAL,0.02,0.03,RTK_FIXED
 
 ## Correspondence Methods
 
-### Method A — Explicit Correspondence (Preferred)
+### Method A � Explicit Correspondence (Preferred)
 
 If `recon_x`, `recon_y`, `recon_z` are provided in the CSV, they are used directly
 as the reconstructed surface location corresponding to that checkpoint.
@@ -70,15 +70,15 @@ as the reconstructed surface location corresponding to that checkpoint.
 This is the most reliable method. It requires the user to identify the corresponding
 reconstructed point (e.g., via interactive mesh picking or photogrammetric image marking).
 
-### Method B — Closest Surface Point (Fallback)
+### Method B � Closest Surface Point (Fallback)
 
 If no explicit coordinates are given, the system finds the **closest point on the
 reconstructed triangle surface** (not nearest vertex) within a configurable search radius.
 
 **Search radius**: `DEFAULT_CHECKPOINT_SEARCH_RADIUS_M = 2.0 m`
-This conservative default is appropriate for a ≤1 m accuracy target.
+This conservative default is appropriate for a =1 m accuracy target.
 
-**Warning threshold**: `> 0.5 × search_radius` (1.0 m) → `WEAK_CORRESPONDENCE`
+**Warning threshold**: `> 0.5 � search_radius` (1.0 m) ? `WEAK_CORRESPONDENCE`
 
 **Limitation**: Closest-surface matching is appropriate only when the surveyed
 checkpoint physically corresponds to a visible reconstructed surface. It is NOT
@@ -91,12 +91,12 @@ equivalent to manually identified feature correspondence in all situations.
 All checkpoint coordinates are converted using `pyproj`:
 
 ```
-WGS84 (lat/lon) → UTM EPSG:XXXXX (same as reconstruction)
+WGS84 (lat/lon) ? UTM EPSG:XXXXX (same as reconstruction)
 ```
 
 The UTM origin is subtracted to produce local UTM frame coordinates matching the
 reconstruction frame. Latitude/longitude degrees are never compared directly
-to metric XYZ — this would be physically meaningless.
+to metric XYZ � this would be physically meaningless.
 
 ---
 
@@ -105,22 +105,22 @@ to metric XYZ — this would be physically meaningless.
 For each valid CHECKPOINT:
 
 ```
-ΔX = local_x_checkpoint - match_x_reconstruction
-ΔY = local_y_checkpoint - match_y_reconstruction
-ΔZ = local_z_checkpoint - match_z_reconstruction
+?X = local_x_checkpoint - match_x_reconstruction
+?Y = local_y_checkpoint - match_y_reconstruction
+?Z = local_z_checkpoint - match_z_reconstruction
 
-Horizontal Error = sqrt(ΔX² + ΔY²)
-3D Error = sqrt(ΔX² + ΔY² + ΔZ²)
+Horizontal Error = sqrt(?X� + ?Y�)
+3D Error = sqrt(?X� + ?Y� + ?Z�)
 ```
 
 ### Aggregate metrics
 
 ```
-RMSE_X = sqrt(mean(ΔX²))
-RMSE_Y = sqrt(mean(ΔY²))
-RMSE_Z = sqrt(mean(ΔZ²))    [only if vertical datums are compatible]
-RMSE_HORIZONTAL = sqrt(mean(Horizontal²))
-RMSE_3D = sqrt(mean(3D²))   [only if vertical datums are compatible]
+RMSE_X = sqrt(mean(?X�))
+RMSE_Y = sqrt(mean(?Y�))
+RMSE_Z = sqrt(mean(?Z�))    [only if vertical datums are compatible]
+RMSE_HORIZONTAL = sqrt(mean(Horizontal�))
+RMSE_3D = sqrt(mean(3D�))   [only if vertical datums are compatible]
 mean_3D_error
 median_3D_error
 max_3D_error
@@ -138,7 +138,7 @@ datums are explicitly known, `RMSE_Z` and `RMSE_3D` are marked as
 Horizontal RMSE is still computed and reported.
 
 Do not assume GPS altitude, barometric altitude, RTK height, and surveyed
-elevation all use the same vertical reference — they do not.
+elevation all use the same vertical reference � they do not.
 
 ---
 
@@ -152,7 +152,7 @@ PASSED  iff:  RMSE_3D <= 1.0 m
 
 The UI always reports **Horizontal RMSE, Vertical RMSE, and 3D RMSE** regardless
 of the pass rule outcome, because the SIH problem statement specifies
-"spatial accuracy ≤ 1 m" without prescribing a single metric.
+"spatial accuracy = 1 m" without prescribing a single metric.
 
 ---
 
@@ -160,7 +160,7 @@ of the pass rule outcome, because the SIH problem statement specifies
 
 | State | Meaning |
 |---|---|
-| `PASSED` | RMSE_3D ≤ 1.0 m with ≥ 4 valid independent checkpoints |
+| `PASSED` | RMSE_3D = 1.0 m with = 4 valid independent checkpoints |
 | `FAILED` | RMSE_3D > 1.0 m |
 | `NOT_AVAILABLE` | No independent checkpoint CSV provided |
 | `NOT_ENOUGH_CHECKPOINTS` | Fewer than 4 valid CHECKPOINT rows |
@@ -182,7 +182,7 @@ of the pass rule outcome, because the SIH problem statement specifies
 Outliers are **not silently removed** to improve accuracy metrics.
 All checkpoint residuals are computed and reported.
 If weak correspondence is detected, it is flagged with `WEAK_CORRESPONDENCE`
-and a warning is issued — but the checkpoint remains in the RMSE unless
+and a warning is issued � but the checkpoint remains in the RMSE unless
 explicitly outside coverage.
 
 Raw metrics are always reported. If filtering is ever applied in future,
@@ -198,7 +198,7 @@ Synthetic tests only verify engine correctness.
 **For the Zurich GPU mission (Step 5):**
 - GPS alignment residual: AVAILABLE (0.8244 m fit residual)
 - Independent spatial accuracy: `NOT_AVAILABLE` (no survey-grade GCPs supplied)
-- SIH ≤1 m claim: `NOT_AVAILABLE`
+- SIH =1 m claim: `NOT_AVAILABLE`
 
 This is the correct and honest result. The claim can only be made with
 genuine independent survey data.

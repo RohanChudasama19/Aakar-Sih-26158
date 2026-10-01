@@ -5,7 +5,7 @@ from pathlib import Path
 import open3d as o3d
 import cv2
 
-work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\b3198000-1dd2-4a74-95ee-937f56510279\work")
+work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\b3198000-1dd2-4a74-95ee-937f56510279\work")
 mesh = trimesh.load(str(work / "outputs" / "mesh_raw.ply"))
 geo = json.loads((work / "alignment.json").read_text())
 sfm = {"poses": {}}

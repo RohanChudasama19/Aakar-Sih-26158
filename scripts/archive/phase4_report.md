@@ -1,9 +1,9 @@
-# AeroRecon Phase 4 Report
+# AAKAR Phase 4 Report
 
 ## Implementation Details
 
 ### Viewer Engine
-The core viewer engine (`viewer.js`) and its React wrapper (`AeroReconViewer.jsx`) have been augmented with a bespoke `CameraController.js`. This central controller implements a mutually-exclusive state machine orchestrating four critical exploration modes:
+The core viewer engine (`viewer.js`) and its React wrapper (`AAKARViewer.jsx`) have been augmented with a bespoke `CameraController.js`. This central controller implements a mutually-exclusive state machine orchestrating four critical exploration modes:
 - **ORBIT**: Inherits robust rotation, panning, and zoom from standard `OrbitControls`. Focuses strictly on bounding box centers or explicitly clicked points.
 - **FOCUS**: Computes double-click surface hits securely via Raycasting. Performs tweened interpolation of the camera along the local sightline while dynamically translating the orbit target to the precise `(x, y, z)` surface coordinates.
 - **WALK**: Evaluates downward raycasting to identify walkable geometry. Enforces eye-level height in coordinate-accurate scene limits. Successfully blocks initialization with a user-facing warning if terrain is undetectable (e.g. invalid bounds or sparse clouds).

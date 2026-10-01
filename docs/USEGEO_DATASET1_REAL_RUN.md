@@ -7,7 +7,7 @@
 - **PyTorch**: 2.14.0+cpu (CUDA disabled). This is acceptable for UseGeo geometry if COLMAP CUDA is available.
 
 ## Native Tool Paths Configuration
-AeroRecon now supports explicit tool paths via environment variables or configuration to avoid relying solely on global `PATH`:
+AAKAR now supports explicit tool paths via environment variables or configuration to avoid relying solely on global `PATH`:
 - `COLMAP_BIN`
 - `OPENMVS_INTERFACECOLMAP`, `OPENMVS_DENSIFYPOINTCLOUD`, etc.
 

@@ -13,7 +13,7 @@ const Settings = () => {
 
   useEffect(() => {
     // Load persisted processing defaults from localStorage
-    const savedDefaults = localStorage.getItem('aerorecon_defaults');
+    const savedDefaults = localStorage.getItem('aakar_defaults');
     if (savedDefaults) {
       try { setDefaults(JSON.parse(savedDefaults)); } catch(e){}
     }
@@ -26,7 +26,7 @@ const Settings = () => {
   const saveDefaults = (key, val) => {
     const newDefaults = { ...defaults, [key]: val };
     setDefaults(newDefaults);
-    localStorage.setItem('aerorecon_defaults', JSON.stringify(newDefaults));
+    localStorage.setItem('aakar_defaults', JSON.stringify(newDefaults));
   };
 
   const formatBytes = (bytes) => {

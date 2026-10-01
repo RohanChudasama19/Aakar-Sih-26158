@@ -35,7 +35,7 @@ You are GPT-6 Astra, working with full coding, computer-use, and agentic capabil
 
 ## 2. What to build
 
-A full-stack web application (working name: **AeroRecon** — rename if you have a better one) that:
+A full-stack web application (working name: **AAKAR** — rename if you have a better one) that:
 
 1. Accepts one drone video plus mandatory GPS + flight metadata, and optional IMU / barometric altitude / camera intrinsics / RTK-PPK corrections, and optional **custom model checkpoints** (advanced users can plug in their own fine-tuned segmentation, depth, or pose-estimation weights instead of the defaults).
 2. Runs an automated reconstruction pipeline end-to-end with live progress reporting.

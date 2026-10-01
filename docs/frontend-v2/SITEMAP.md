@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Sitemap
+# AAKAR Frontend V2 Sitemap
 
 This sitemap reflects the user journey through the global sidebar and nested workflows.
 

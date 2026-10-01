@@ -213,7 +213,7 @@ export class CameraController {
   
   _snapToGround() {
     // Cast ray down from current x,y
-    this.raycaster.set(this.camera.position, new THREE.Vector3(0, 0, -1)); // assuming Z is up? Wait, Z is up in AeroRecon.
+    this.raycaster.set(this.camera.position, new THREE.Vector3(0, 0, -1)); // assuming Z is up? Wait, Z is up in AAKAR.
     // Let's check scene up
     const down = new THREE.Vector3(0, -1, 0);
     if (this.camera.up.z > 0.5) down.set(0, 0, -1);

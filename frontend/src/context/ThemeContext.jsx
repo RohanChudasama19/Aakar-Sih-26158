@@ -6,13 +6,13 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('aerorecon-theme');
+    const savedTheme = localStorage.getItem('aakar-theme');
     return savedTheme || 'dark'; // Default is dark
   });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('aerorecon-theme', theme);
+    localStorage.setItem('aakar-theme', theme);
   }, [theme]);
 
   const availableThemes = [

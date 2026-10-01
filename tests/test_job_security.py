@@ -63,7 +63,7 @@ def test_valid_custom_id_format_not_found():
     "filename",
     [
         "../../../etc/passwd",
-        "../../aerorecon.db",
+        "../../aakar.db",
         "%2e%2e%2fetc%2fpasswd",
     ],
 )

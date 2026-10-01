@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 API Contracts
+# AAKAR Frontend V2 API Contracts
 
 ## Overview
 This document defines the schemas and validation requirements for the new Project management endpoints to be implemented in Phase 2.

@@ -4,9 +4,9 @@ import shutil
 import json
 from pathlib import Path
 
-source_work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\b3198000-1dd2-4a74-95ee-937f56510279\work")
-target_work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\1ae9eba0-28ce-45d7-ada7-ed98679e8463\work")
-inputs_dir = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\1ae9eba0-28ce-45d7-ada7-ed98679e8463\inputs")
+source_work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\b3198000-1dd2-4a74-95ee-937f56510279\work")
+target_work = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\1ae9eba0-28ce-45d7-ada7-ed98679e8463\work")
+inputs_dir = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\1ae9eba0-28ce-45d7-ada7-ed98679e8463\inputs")
 
 if target_work.exists():
     shutil.rmtree(target_work, ignore_errors=True)

@@ -1,5 +1,5 @@
 /**
- * viewer.js â€” AeroRecon Multi-Mode 3D Viewer
+ * viewer.js â€” AAKAR Multi-Mode 3D Viewer
  *
  * Supports 6 representation modes:
  *   sparse       â€” Sparse SfM point cloud (PLY)

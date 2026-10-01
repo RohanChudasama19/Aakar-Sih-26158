@@ -1,8 +1,8 @@
 # Final Product Completion Report
-## AeroRecon SIH 26158
+## AAKAR SIH 26158
 
 ### Project Conclusion
-AeroRecon has completed all 9 phases of engineering. The product transitions successfully from a raw research pipeline into a hardened, deployable application.
+AAKAR has completed all 9 phases of engineering. The product transitions successfully from a raw research pipeline into a hardened, deployable application.
 
 ### Phase Summary
 * **Phase 0:** Code Hygiene & Infrastructure

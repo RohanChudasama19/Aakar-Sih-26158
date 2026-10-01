@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Project Data Model
+# AAKAR Frontend V2 Project Data Model
 
 ## SQLite Schema Additions
 
@@ -44,7 +44,7 @@ class Job(Base):
 Set-Content docs/frontend-v2/PROJECT_DATA_MODEL.md 
 
  = @"
-# AeroRecon Frontend V2 Migration Plan
+# AAKAR Frontend V2 Migration Plan
 
 ## Objective
 Safely introduce the projects table and the project_id foreign key on the jobs table without losing or altering any existing jobs, reports, or file artifacts (specifically preserving the validated MARS and Colorado reconstructions).

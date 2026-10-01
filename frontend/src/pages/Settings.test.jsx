@@ -51,7 +51,7 @@ describe('System Settings', () => {
     const select = await screen.findByRole('combobox');
     fireEvent.change(select, { target: { value: 'FAST' } });
     
-    expect(localStorage.getItem('aerorecon_defaults')).toContain('"profile":"FAST"');
+    expect(localStorage.getItem('aakar_defaults')).toContain('"profile":"FAST"');
   });
 });
 

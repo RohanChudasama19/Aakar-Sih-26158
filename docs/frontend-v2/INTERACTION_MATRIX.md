@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Interaction Matrix
+# AAKAR Frontend V2 Interaction Matrix
 
 | Control Name | Source Component | Expected Action | Required API | State Behaviors |
 |---|---|---|---|---|

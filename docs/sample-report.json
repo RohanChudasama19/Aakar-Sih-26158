@@ -1,5 +1,5 @@
 {
-  "application": "AeroRecon",
+  "application": "AAKAR",
   "build_tier": "reduced_fidelity_reference_implementation",
   "mission": "Synthetic campus \u00b7 smoke test",
   "synthetic_input": true,

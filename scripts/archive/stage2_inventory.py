@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data\95f51b12-b771-47bf-9201-c3700f9475a7\work")
+p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data\95f51b12-b771-47bf-9201-c3700f9475a7\work")
 
 stereo_dirs = ["dense_full_ref2/stereo", "dense_10_source_full/stereo", "dense_fast_quality/stereo"]
 

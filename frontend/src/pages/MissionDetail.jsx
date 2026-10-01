@@ -128,7 +128,7 @@ export default function MissionDetail() {
               </div>
               <div>
                 <label>Provenance</label>
-                <div>{job.report?._provenance || 'AeroRecon Worker pipeline'}</div>
+                <div>{job.report?._provenance || 'AAKAR Worker pipeline'}</div>
               </div>
             </div>
           </div>

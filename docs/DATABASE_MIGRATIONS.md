@@ -1,6 +1,6 @@
 # Database Migrations
 
-AeroRecon uses [Alembic](https://alembic.sqlalchemy.org/) to manage database schema migrations for both SQLite and PostgreSQL.
+AAKAR uses [Alembic](https://alembic.sqlalchemy.org/) to manage database schema migrations for both SQLite and PostgreSQL.
 
 ## Fresh Installation
 
@@ -13,7 +13,7 @@ For a fresh deployment where the database does not exist:
 
 ## Upgrading an Existing Installation
 
-If you already have an existing database (e.g., SQLite `data/jobs.db`) created by older versions of AeroRecon using `Base.metadata.create_all()`:
+If you already have an existing database (e.g., SQLite `data/jobs.db`) created by older versions of AAKAR using `Base.metadata.create_all()`:
 
 1. **Do not** run `alembic upgrade head` immediately as the table already exists.
 2. Tell Alembic to consider the current state as already synchronized with the initial schema baseline by running:
@@ -42,7 +42,7 @@ By default, the application uses an SQLite database located at `data/jobs.db`.
 
 ## PostgreSQL Workflow
 
-If `DATABASE_URL` points to a PostgreSQL database (e.g., `postgresql://user:pass@localhost:5432/aerorecon`):
+If `DATABASE_URL` points to a PostgreSQL database (e.g., `postgresql://user:pass@localhost:5432/aakar`):
 - Ensure `psycopg2-binary` or `asyncpg` is installed (as needed by your SQLAlchemy engine URL).
 - The migration commands (`alembic upgrade head`, `alembic stamp head`) work the same way. Alembic automatically handles PostgreSQL's dialect-specific types and syntax.
 

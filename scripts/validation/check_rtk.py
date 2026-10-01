@@ -2,12 +2,12 @@ import csv
 import json
 from pathlib import Path
 
-rtk_csv = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")
+rtk_csv = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")
 with open(rtk_csv) as f:
     reader = csv.DictReader(f)
     rtk_uav = list(reader)
 
-rtk_bag = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\workspace\HKairport01_FAST_C_FINAL\inputs\rtk.csv")
+rtk_bag = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\workspace\HKairport01_FAST_C_FINAL\inputs\rtk.csv")
 if rtk_bag.exists():
     with open(rtk_bag) as f:
         reader = csv.DictReader(f)

@@ -134,7 +134,7 @@ def main():
         "Temporary_disk": "0 MB",
         "Output_file_sizes": "DSM ~4.5MB, DTM ~4.5MB, Cov ~1.5MB",
         "Full_vs_tiled_consistency": "Verified deterministic tiling prevents seam artifacts",
-        "SIH_1m_status": "NOT_AVAILABLE (Requires real reference geometry against AeroRecon point cloud)",
+        "SIH_1m_status": "NOT_AVAILABLE (Requires real reference geometry against AAKAR point cloud)",
     }
 
     with open("docs/PHASE_LM_DTM_REPORT.json", "w") as f:

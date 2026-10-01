@@ -2,8 +2,8 @@ import json
 import csv
 import numpy as np
 
-uav = json.load(open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json"))
-rtk_data = list(csv.DictReader(open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")))
+uav = json.load(open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json"))
+rtk_data = list(csv.DictReader(open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")))
 
 def get_rtk(t):
     for r in rtk_data:

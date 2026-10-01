@@ -214,7 +214,7 @@ def texture_mesh(mesh, geo, sfm, k, directory, options=None):
     if options is None:
         options = {}
 
-    backend_choice = options.get("texture_backend", "AERORECON_TEXTURE")
+    backend_choice = options.get("texture_backend", "AAKAR_TEXTURE")
     if backend_choice == "COLMAP_MESH_TEXTURER":
         backend = ColmapMeshTexturerBackend()
     else:

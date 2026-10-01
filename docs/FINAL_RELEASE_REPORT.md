@@ -1,4 +1,4 @@
-﻿# AeroRecon SIH 26158 - Final Release Report
+# AAKAR SIH 26158 - Final Release Report
 
 ## Version Identification
 * **Git Commit**: `b85d0c21babd2ab61c7b5edb18ff36f8842d8e97`
@@ -56,7 +56,7 @@ This is a **single-tenant deployment**. Multi-tenant path isolation, strict file
 | Semantic AI | NOT_AVAILABLE | Heuristic fallback in use |
 
 ## Release Artifacts
-* **Source Bundle**: `AeroRecon_SIH_Final_Source.zip`
+* **Source Bundle**: `AAKAR_SIH_Final_Source.zip`
 * **Checksum File**: `FINAL_RELEASE_SHA256.txt` 
   * Source: 733570A821EB06E2EF930C31BF43F921E3C92E64EA004AB94A95DD6B6D59AEA8
   * Demo: 51F6FC3598CD52D8CDBB71A59EF0246129099273F0163EAB934DE91468C9417B

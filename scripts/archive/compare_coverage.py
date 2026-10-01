@@ -2,7 +2,7 @@ import numpy as np
 import open3d as o3d
 from pathlib import Path
 
-root = Path("C:/Users/ATHARAV/Documents/sih 26/gpt 6 astra/AeroRecon-SIH26158-Surface-Fix/aerorecon")
+root = Path("C:/Users/ATHARAV/Documents/sih 26/gpt 6 astra/AAKAR-SIH26158-Surface-Fix/aakar")
 exp_dir = root / "data/95f51b12-b771-47bf-9201-c3700f9475a7/work/dense_experiment"
 
 pcd4 = o3d.io.read_point_cloud(str(exp_dir / "fused_min4.ply"))

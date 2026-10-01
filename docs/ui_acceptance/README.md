@@ -1,4 +1,4 @@
-# AeroRecon UI Acceptance Manifest
+# AAKAR UI Acceptance Manifest
 
 ## Screenshots Verified and Captured
 

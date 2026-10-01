@@ -1,7 +1,7 @@
 # Surface Reference Validation Protocol
 
 ## 1. Geometric Separation
-AeroRecon enforces strict architectural separation between reconstruction and validation. The reference LiDAR/mesh must be configured as `REFERENCE_ONLY`. It cannot be fed into SfM, GCP scaling, or mesh texturing. No post-hoc ICP alignment is permitted prior to distance computation, preventing the artificial reduction of residuals.
+AAKAR enforces strict architectural separation between reconstruction and validation. The reference LiDAR/mesh must be configured as `REFERENCE_ONLY`. It cannot be fed into SfM, GCP scaling, or mesh texturing. No post-hoc ICP alignment is permitted prior to distance computation, preventing the artificial reduction of residuals.
 
 ## 2. Common Frame Constraints
 Before evaluation, coordinate reference systems (CRS) and vertical datums are verified. Mismatched or unknown frames will strictly flag `INVALID_REFERENCE_FRAME` rather than failing silently or fabricating an alignment. 

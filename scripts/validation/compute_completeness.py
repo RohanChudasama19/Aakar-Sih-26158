@@ -10,7 +10,7 @@ from app.pipeline.surface_validation import voxel_downsample
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compute LiDAR to AeroRecon footprint completeness.")
+    parser = argparse.ArgumentParser(description="Compute LiDAR to AAKAR footprint completeness.")
     parser.add_argument("--dense", required=True, type=str, help="Path to reconstructed dense PLY.")
     parser.add_argument("--ref", required=True, type=str, help="Path to reference LAS/LAZ.")
     parser.add_argument("--res", default=2.0, type=float, help="Grid resolution for footprint (m).")

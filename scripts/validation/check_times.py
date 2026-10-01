@@ -2,16 +2,16 @@ import json
 import csv
 from pathlib import Path
 
-path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json")
+path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json")
 with open(path) as f:
     uav = json.load(f)
 uav_times = [float(d["OriginalImageName"].replace(".jpg", "")) for d in uav]
 
-bag_path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\workspace\HKairport01_FAST_C_FINAL\inputs\images")
+bag_path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\workspace\HKairport01_FAST_C_FINAL\inputs\images")
 bag_images = [f.name for f in bag_path.glob("*.jpg")]
 bag_times = []
 
-with open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\mars_lvig\processed\HKairport01\FAST\frames.csv") as f:
+with open(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\mars_lvig\processed\HKairport01\FAST\frames.csv") as f:
     reader = csv.DictReader(f)
     frame_times = {r["filename"]: float(r["timestamp"]) for r in reader}
 
@@ -28,7 +28,7 @@ print(f"UAVScenes start: {min(uav_times):.3f}, end: {max(uav_times):.3f}, count:
 print(f"Bag start: {start_time_utc + min(bag_times_raw):.3f}, end: {start_time_utc + max(bag_times_raw):.3f}, count: {len(bag_times_raw)}")
 
 # Check RTK csv
-rtk_path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")
+rtk_path = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar\data_external\uavscenes\raw\HKairport01\metadata\rtk_positions_raw.csv")
 if rtk_path.exists():
     with open(rtk_path) as f:
         reader = csv.reader(f)

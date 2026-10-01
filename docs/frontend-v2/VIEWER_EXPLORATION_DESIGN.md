@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Viewer Exploration Design
+# AAKAR Frontend V2 Viewer Exploration Design
 
 ## Overview
 To fulfill the requirement of advanced 3D camera navigation (Orbit, Focus, Walk, Fly) while preserving the core Three.js implementation (iewer.js), we must architect a mutually exclusive controller manager.

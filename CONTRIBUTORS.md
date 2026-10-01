@@ -1,7 +1,7 @@
 
-# AeroRecon Contributors ??
+# AAKAR Contributors ??
 
-We are incredibly proud of the collaborative effort that brought the AeroRecon project to life for the Smart India Hackathon (SIH 26158). This repository represents exactly 15 days of continuous, intense, and dedicated work from our entire six-person team.
+We are incredibly proud of the collaborative effort that brought the AAKAR project to life for the Smart India Hackathon (SIH 26158). This repository represents exactly 15 days of continuous, intense, and dedicated work from our entire six-person team.
 
 ## The Team
 

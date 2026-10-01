@@ -1,4 +1,4 @@
-# AeroRecon Frontend V2 Component Map
+# AAKAR Frontend V2 Component Map
 
 ## Core Layouts
 - layouts/MainLayout.jsx
@@ -22,7 +22,7 @@
 - components/ui/StatusBadge.jsx (Pipeline status indicators)
 
 ## 3D Viewer Architecture
-- components/viewer/AeroReconViewer.jsx
+- components/viewer/AAKARViewer.jsx
   - React lifecycle bridge. Handles container refs, mount/dismount, and ResizeObserver.
 - iewer/viewer.js
   - Pure JavaScript Three.js implementation. Handles scene graph, loaders (GLTFLoader), camera controls, and raycasting.

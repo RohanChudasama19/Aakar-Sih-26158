@@ -63,4 +63,4 @@ no changes added to commit (use "git add" and/or "git commit -a")
 dca9b2f feat: complete Phase 1 Reconstruction Readiness and Input Quality Gate
 2e60957 Phase 0: Engineering Hygiene Baseline
 b2e5113 Replace facade-collapsing mesher with supported 3D Poisson surfaces
-1738665 Build tested AeroRecon reference application and sample workflow
+1738665 Build tested AAKAR reference application and sample workflow

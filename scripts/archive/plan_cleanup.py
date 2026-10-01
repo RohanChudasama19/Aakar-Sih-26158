@@ -5,10 +5,10 @@ import hashlib
 from pathlib import Path
 
 # 1. Backup DB
-db_path = Path("app/aerorecon.db")
+db_path = Path("app/aakar.db")
 if db_path.exists():
-    shutil.copy2(db_path, "app/aerorecon.db.cleanup.bak")
-    print("DB Backed up to app/aerorecon.db.cleanup.bak")
+    shutil.copy2(db_path, "app/aakar.db.cleanup.bak")
+    print("DB Backed up to app/aakar.db.cleanup.bak")
 
 # 2. Inventory Storage
 data_dir = Path("data").resolve()

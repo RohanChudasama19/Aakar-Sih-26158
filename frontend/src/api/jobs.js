@@ -9,7 +9,7 @@ export async function fetchJob(id) {
 }
 
 export async function createJob(formData) {
-  const token = sessionStorage.getItem('aerorecon-token');
+  const token = sessionStorage.getItem('aakar-token');
   const headers = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
 

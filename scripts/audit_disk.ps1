@@ -16,7 +16,7 @@ Write-Host "C: Total: 0 GB"
 Write-Host "C: Used: 0 GB"
 Write-Host "C: Free: 0 GB"
 
- = "C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon"
+ = "C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar"
  = @("data", "demo", "frontend", "web", "web_legacy_rc5", "tests", "logs", "imports")
 Write-Host "
 PROJECT DIRECTORIES:"

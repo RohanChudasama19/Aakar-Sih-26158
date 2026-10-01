@@ -1,8 +1,8 @@
 # JUDGE CLAIMS
 
 ## SAFE TO SAY
-- "AeroRecon processed a continuous 10-minute MARS-LVIG UAV mission into a dense, meshed and textured model in 12.05 minutes."
-- "AeroRecon achieved 0.777 m 3D RMSE against an independent 105.9-million-point LiDAR reference on UseGeo Dataset-1, without post-hoc ICP."
+- "AAKAR processed a continuous 10-minute MARS-LVIG UAV mission into a dense, meshed and textured model in 12.05 minutes."
+- "AAKAR achieved 0.777 m 3D RMSE against an independent 105.9-million-point LiDAR reference on UseGeo Dataset-1, without post-hoc ICP."
 - "The system supports standard automated exports including PLY, OBJ, and GLB."
 - "Our semantic engine maps 2D segmentation into 3D using real UAV telemetry."
 

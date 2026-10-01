@@ -1,6 +1,6 @@
 # Phase 0 Baseline Report
 
-This document records the baseline state of the AeroRecon project before Phase 0 hygiene changes were applied.
+This document records the baseline state of the AAKAR project before Phase 0 hygiene changes were applied.
 
 ## 1. Test Suite Verification
 **Command Executed:** `python -m pytest tests/`

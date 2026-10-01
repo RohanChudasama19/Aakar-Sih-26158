@@ -168,7 +168,7 @@ def main():
         with open(f"{demo_dir}/screenshots/{f}", "w") as fp: fp.write("")
     
     with open(f"{demo_dir}/README.txt", "w") as f:
-        f.write("AeroRecon Precomputed SIH Demo Mission\n\nThis is a previously completed reconstruction maintained for instant\njudge demonstration.\nIt is NOT the currently running live mission.\n\nSource input:\n201.7-second 3840x2160 UAV video\n\nProfile:\nFAST_QUALITY V1\n\nState whether this package came from:\nNEW production reconstruction\n")
+        f.write("AAKAR Precomputed SIH Demo Mission\n\nThis is a previously completed reconstruction maintained for instant\njudge demonstration.\nIt is NOT the currently running live mission.\n\nSource input:\n201.7-second 3840x2160 UAV video\n\nProfile:\nFAST_QUALITY V1\n\nState whether this package came from:\nNEW production reconstruction\n")
         
     with open(f"{demo_dir}/manifest.json", "w") as f:
         json.dump([{"file": "dummy"}], f)

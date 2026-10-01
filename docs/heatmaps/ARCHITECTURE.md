@@ -1,7 +1,7 @@
 # Heatmap Architecture
 
 ## 1. Goal
-Provide a non-destructive, scientifically grounded mechanism to visualize 3D metrics directly atop the accepted AeroRecon reconstruction geometries in the Three.js viewer.
+Provide a non-destructive, scientifically grounded mechanism to visualize 3D metrics directly atop the accepted AAKAR reconstruction geometries in the Three.js viewer.
 
 ## 2. Components
 - **Metrics Computation Engine**: Backend service interfacing with 	rimesh, 

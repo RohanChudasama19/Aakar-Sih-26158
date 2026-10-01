@@ -20,7 +20,7 @@ def dir_size(path):
                 except: pass
     return total
 
-p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon")
+p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar")
 data_dir = p / "data"
 
 free_before = get_free_space("C:\\")

@@ -18,7 +18,7 @@ def dir_size(path):
                 except: pass
     return total
 
-p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AeroRecon-SIH26158-Surface-Fix\aerorecon")
+p = Path(r"C:\Users\ATHARAV\Documents\sih 26\gpt 6 astra\AAKAR-SIH26158-Surface-Fix\aakar")
 
 tot, used, free = get_free_space("C:\\")
 print(f"C: Total: {tot/1e9:.2f} GB")

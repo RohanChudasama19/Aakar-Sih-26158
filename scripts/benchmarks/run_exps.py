@@ -97,14 +97,14 @@ def run_experiment(name, overlap, quad_overlap, refine_focal, refine_extra):
     geo = align(sfm, info, gps, input_dir)
     origin = np.array(geo["origin"])
     
-    aerorecon_centers = {}
+    aakar_centers = {}
     for cname, P in poses.items():
         C_sfm = -P[:,:3].T @ P[:,3]
         C_abs = C_sfm * geo["scale"]
         C_abs = geo["rotation"] @ C_abs
         C_abs += geo["translation"]
         C_enu = C_abs - origin
-        aerorecon_centers[times[cname]] = C_enu
+        aakar_centers[times[cname]] = C_enu
 
     uav = json.load(open(r"data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json"))
     map_centers = {}
@@ -114,7 +114,7 @@ def run_experiment(name, overlap, quad_overlap, refine_focal, refine_extra):
         map_centers[t] = np.array([mx, my, mz])
 
     pts_A, pts_M = [], []
-    for t_A, c_A in aerorecon_centers.items():
+    for t_A, c_A in aakar_centers.items():
         for t_M, c_M in map_centers.items():
             if abs(t_A - t_M) < 0.1:
                 pts_A.append(c_A)

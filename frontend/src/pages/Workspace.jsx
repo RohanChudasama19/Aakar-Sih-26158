@@ -6,7 +6,7 @@ import {
   Plane, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCcw, RotateCw,
   Gauge, Maximize, Orbit, Crosshair, Box, BoxSelect
 } from 'lucide-react';
-import { AeroReconViewer } from '../components/viewer/AeroReconViewer';
+import { AAKARViewer } from '../components/viewer/AAKARViewer';
 import styles from './Workspace.module.css';
 import { fetchJob } from '../api/jobs';
 
@@ -112,7 +112,7 @@ const Workspace = () => {
 
         <div className={styles.viewport}>
           {mission.status === 'completed' || mission.status === 'degraded' ? (
-            <AeroReconViewer 
+            <AAKARViewer 
               mission={mission}
               activeLayer={activeLayer}
               activeTool={activeTool}

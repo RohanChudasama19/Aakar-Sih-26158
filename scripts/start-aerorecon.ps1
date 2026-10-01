@@ -69,7 +69,7 @@ Write-Host "Opening UI in default browser..."
 Start-Process "http://127.0.0.1:8000"
 
 Write-Host "`n================================================"
-Write-Host "AERORECON READY" -ForegroundColor Cyan
+Write-Host "AAKAR READY" -ForegroundColor Cyan
 Write-Host "Redis: OK"
 Write-Host "Worker: STARTED"
 Write-Host "API: STARTED"

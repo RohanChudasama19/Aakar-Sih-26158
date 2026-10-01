@@ -1,19 +1,19 @@
 import numpy as np
 import pytest; torch = pytest.importorskip("torch")
 
-from app.pipeline.semantic_model import UAVID_TO_AERORECON, AeroReconClass, SemanticPipeline, UAVidClass
+from app.pipeline.semantic_model import UAVID_TO_AAKAR, AAKARClass, SemanticPipeline, UAVidClass
 from scripts.semantic.train import build_model, compute_iou, rgb_to_mask
 
 
 def test_class_mapping():
-    assert UAVID_TO_AERORECON[UAVidClass.BUILDING] == AeroReconClass.BUILDING
-    assert UAVID_TO_AERORECON[UAVidClass.ROAD] == AeroReconClass.ROAD
-    assert UAVID_TO_AERORECON[UAVidClass.TREE] == AeroReconClass.VEGETATION
-    assert UAVID_TO_AERORECON[UAVidClass.LOW_VEGETATION] == AeroReconClass.VEGETATION
-    assert UAVID_TO_AERORECON[UAVidClass.STATIC_CAR] == AeroReconClass.OBSTACLE
-    assert UAVID_TO_AERORECON[UAVidClass.MOVING_CAR] == AeroReconClass.DYNAMIC_OBJECT
-    assert UAVID_TO_AERORECON[UAVidClass.HUMAN] == AeroReconClass.DYNAMIC_OBJECT
-    assert UAVID_TO_AERORECON[UAVidClass.CLUTTER] == AeroReconClass.UNKNOWN
+    assert UAVID_TO_AAKAR[UAVidClass.BUILDING] == AAKARClass.BUILDING
+    assert UAVID_TO_AAKAR[UAVidClass.ROAD] == AAKARClass.ROAD
+    assert UAVID_TO_AAKAR[UAVidClass.TREE] == AAKARClass.VEGETATION
+    assert UAVID_TO_AAKAR[UAVidClass.LOW_VEGETATION] == AAKARClass.VEGETATION
+    assert UAVID_TO_AAKAR[UAVidClass.STATIC_CAR] == AAKARClass.OBSTACLE
+    assert UAVID_TO_AAKAR[UAVidClass.MOVING_CAR] == AAKARClass.DYNAMIC_OBJECT
+    assert UAVID_TO_AAKAR[UAVidClass.HUMAN] == AAKARClass.DYNAMIC_OBJECT
+    assert UAVID_TO_AAKAR[UAVidClass.CLUTTER] == AAKARClass.UNKNOWN
 
 
 def test_semantic_pipeline_fallback():

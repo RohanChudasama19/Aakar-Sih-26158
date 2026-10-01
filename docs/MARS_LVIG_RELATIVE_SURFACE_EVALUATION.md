@@ -1,18 +1,18 @@
 # MARS-LVIG RELATIVE SURFACE EVALUATION
 
 ## 1. OBJECTIVE
-This evaluation is a diagnostic, alignment-assisted comparison between the AeroRecon FAST_C dense reconstruction and the HKairport `cloud_merged.ply`.
+This evaluation is a diagnostic, alignment-assisted comparison between the AAKAR FAST_C dense reconstruction and the HKairport `cloud_merged.ply`.
 **IMPORTANT:** This evaluation measures relative shape/geometry quality only. It is NOT an independent absolute accuracy metric.
 
 ## 2. ALIGNMENT SOURCE
-- **Source:** Trajectory correspondence (AeroRecon vs UAVScenes metadata)
+- **Source:** Trajectory correspondence (AAKAR vs UAVScenes metadata)
 - **Matched cameras:** 147
 - **Type:** Umeyama (Sim3)
 - **Scale:** 1.001
 - **Trajectory fit RMSE:** 12.34 m
 
 ## 3. TRAJECTORY-ALIGNED SURFACE METRICS
-(AeroRecon -> Reference distances)
+(AAKAR -> Reference distances)
 - **RMSE_3D:** 11.67 m
 - **MAE:** 10.31 m
 - **Median:** 9.97 m
@@ -21,7 +21,7 @@ This evaluation is a diagnostic, alignment-assisted comparison between the AeroR
 - **Max:** 32.86 m
 
 ## 4. BBOX_CROPPED_REFERENCE_TO_RECONSTRUCTION_COVERAGE
-(Reference -> AeroRecon, footprint: 3D bounding box + 20m buffer)
+(Reference -> AAKAR, footprint: 3D bounding box + 20m buffer)
 - **Within 0.25m:** 0.04%
 - **Within 0.50m:** 0.15%
 - **Within 1.00m:** 0.47%

@@ -1,9 +1,9 @@
-﻿# AeroRecon - Judge Demo Guide
+# AAKAR - Judge Demo Guide
 
 This document outlines the standard 5-8 minute live demonstration flow for SIH 26158 evaluators.
 
 ## 1. What to Click
-1. **Open AeroRecon:** Navigate to the local host URL.
+1. **Open AAKAR:** Navigate to the local host URL.
 2. **Create Mission:** Click New Mission, upload the dataset (video, GPS, metadata).
 3. **Show Readiness:** Expand the "Upload progress" logs to show the readiness gate actively rejecting blurry/unusable frames.
 4. **Live Pipeline:** Point out the Server-Sent Events (SSE) updating the visual pipeline stages in real-time.

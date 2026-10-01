@@ -1,6 +1,6 @@
 # Semantic Model License
 
-AeroRecon integrates a semantic segmentation model based on the LRASPP MobileNetV3-Large architecture.
+AAKAR integrates a semantic segmentation model based on the LRASPP MobileNetV3-Large architecture.
 
 ## 1. Source Code & Architecture
 - **Framework**: PyTorch / Torchvision

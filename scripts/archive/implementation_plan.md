@@ -1,6 +1,6 @@
-# Implementation Plan: AeroRecon Dataset-Driven Completion Program
+# Implementation Plan: AAKAR Dataset-Driven Completion Program
 
-This document details the architectural specifications, empirical evaluation protocols, and validation pipelines to complete the remaining capabilities of AeroRecon using real external UAV datasets.
+This document details the architectural specifications, empirical evaluation protocols, and validation pipelines to complete the remaining capabilities of AAKAR using real external UAV datasets.
 
 ---
 
@@ -56,7 +56,7 @@ This document details the architectural specifications, empirical evaluation pro
 - **Two Distinct Modes**:
   1. *Trajectory Ingestion*: Parsing and ingesting pre-computed RTK/PPK solution CSVs, extracting solution quality flags (`RTK_FIXED`, `RTK_FLOAT`, `DGPS`, `PPK_FIXED`, `PPK_FLOAT`, `GNSS_SINGLE`, `UNKNOWN`), satellite count, and standard deviations / covariance matrices ($\sigma_x, \sigma_y, \sigma_z$).
   2. *Raw RINEX Processing*: Ingestion of raw RINEX observation and navigation files.
-- **External Solvers**: AeroRecon will not implement a bespoke GNSS carrier-phase ambiguity solver from scratch. Ingestion and execution will wrap established external engines (such as RTKLIB / PPPH) where accessible, strictly documenting the solver name, version, configuration, and solution states.
+- **External Solvers**: AAKAR will not implement a bespoke GNSS carrier-phase ambiguity solver from scratch. Ingestion and execution will wrap established external engines (such as RTKLIB / PPPH) where accessible, strictly documenting the solver name, version, configuration, and solution states.
 
 ### G. Semantic Model Licensing & Taxonomy
 - Semantic model evaluation must independently verify:
@@ -65,7 +65,7 @@ This document details the architectural specifications, empirical evaluation pro
   - Pretrained foundation weights license
   - Checkpoint redistribution rights
 - If weights cannot be redistributed, support local path injection and exclude weights from the release bundle.
-- **Reporting Separation**: The system must report official UAVid class metrics (IoU, precision, recall) separately from mapped AeroRecon taxonomy metrics (Building, Road, Vegetation, Obstacle, Ground, Unknown). The two must never be conflated.
+- **Reporting Separation**: The system must report official UAVid class metrics (IoU, precision, recall) separately from mapped AAKAR taxonomy metrics (Building, Road, Vegetation, Obstacle, Ground, Unknown). The two must never be conflated.
 
 ### H. Dynamic Object Masking Protocol
 - Mask generation must distinguish between:
@@ -119,7 +119,7 @@ This document details the architectural specifications, empirical evaluation pro
 - Compile `docs/DATASET_LICENSES.md` recording ownership, academic citations, commercial/demo permissions, and redistribution terms.
 
 ### Phase B: Dataset Adapters & Canonical Conversion Framework
-- Define canonical AeroRecon mission layout in `docs/CANONICAL_DATASET_FORMAT.md`:
+- Define canonical AAKAR mission layout in `docs/CANONICAL_DATASET_FORMAT.md`:
   ```
   mission/
       video/flight.mp4

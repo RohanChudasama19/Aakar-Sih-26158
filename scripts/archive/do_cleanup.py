@@ -4,7 +4,7 @@ import sqlite3
 import hashlib
 from pathlib import Path
 
-db_path = Path("app/aerorecon.db")
+db_path = Path("app/aakar.db")
 data_dir = Path("data").resolve()
 
 # We only delete the specific approved ones

@@ -25,7 +25,7 @@ def umeyama(X, Y, estimate_scale=True):
     return c, R, t
 
 def main():
-    print("Loading AeroRecon Cameras...")
+    print("Loading AAKAR Cameras...")
     input_dir = Path("workspace/HKairport01_FAST_C_FINAL/inputs")
     
     # Load gps
@@ -63,14 +63,14 @@ def main():
     geo = align(sfm, info, gps, input_dir)
     origin = np.array(geo["origin"])
     
-    aerorecon_centers = {}
+    aakar_centers = {}
     for cname, P in poses.items():
         C_sfm = -P[:,:3].T @ P[:,3]
         C_abs = C_sfm * geo["scale"]
         C_abs = geo["rotation"] @ C_abs
         C_abs += geo["translation"]
         C_enu = C_abs - origin
-        aerorecon_centers[times[cname]] = C_enu
+        aakar_centers[times[cname]] = C_enu
 
     print("Loading UAVScenes Cameras...")
     uav = json.load(open(r"data_external\uavscenes\raw\HKairport01\metadata\sampleinfos_interpolated.json"))
@@ -83,7 +83,7 @@ def main():
     print("Matching cameras...")
     pts_A = []
     pts_M = []
-    for t_A, c_A in aerorecon_centers.items():
+    for t_A, c_A in aakar_centers.items():
         for t_M, c_M in map_centers.items():
             if abs(t_A - t_M) < 0.1:
                 pts_A.append(c_A)
@@ -101,7 +101,7 @@ def main():
     print(f"Sim3 Scale: {c:.4f}")
     print(f"Sim3 Trajectory RMSE: {rmse:.4f} m")
 
-    print("Loading AeroRecon fused.ply...")
+    print("Loading AAKAR fused.ply...")
     work = Path("workspace/HKairport01_FAST_C_FINAL/work")
     ply_path = work / "dense_fast" / "fused.ply"
     pcd_A = o3d.io.read_point_cloud(str(ply_path))
@@ -137,7 +137,7 @@ def main():
     
     pts_A_arr = np.asarray(pcd_A_down.points)
     pts_M_arr = np.asarray(pcd_M_down.points)
-    print(f"AeroRecon points: {len(pts_A_arr)}, Reference points in footprint: {len(pts_M_arr)}")
+    print(f"AAKAR points: {len(pts_A_arr)}, Reference points in footprint: {len(pts_M_arr)}")
     
     print("Computing A -> M distances...")
     tree_M = o3d.geometry.KDTreeFlann(pcd_M_down)

@@ -12,7 +12,7 @@
 
 Because the two point clouds contain precisely identical geometry (differentiated only by semantic class labels), this test acts as a **SURFACE_VALIDATION_ENGINE_REAL_DATA_TEST**. It validates the memory limits, sampling determinism, and K-D tree evaluation of the validation engine on a massive real-world dataset. 
 
-It does **NOT** represent `AERORECON_END_TO_END_ACCURACY`, as the test cloud was not photogrammetrically reconstructed from video/images by AeroRecon.
+It does **NOT** represent `AAKAR_END_TO_END_ACCURACY`, as the test cloud was not photogrammetrically reconstructed from video/images by AAKAR.
 
 ## Real Data Metrics (C2C)
 Since the geometries are identical, both accuracy and completeness converge toward 0 error.
@@ -26,4 +26,4 @@ Since the geometries are identical, both accuracy and completeness converge towa
 
 ## SIH <= 1m Decision
 **Status:** NOT_AVAILABLE
-Although the evaluation engine processed the real data seamlessly, the SIH <=1m spatial accuracy target requires an independent verification of an *AeroRecon-generated* reconstruction against independent reference data. Because we compared two identical LiDAR clouds (a semantic benchmark), this cannot be cited as photogrammetric accuracy.
+Although the evaluation engine processed the real data seamlessly, the SIH <=1m spatial accuracy target requires an independent verification of an *AAKAR-generated* reconstruction against independent reference data. Because we compared two identical LiDAR clouds (a semantic benchmark), this cannot be cited as photogrammetric accuracy.

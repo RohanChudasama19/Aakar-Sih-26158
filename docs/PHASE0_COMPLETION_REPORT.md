@@ -1,6 +1,6 @@
 # Phase 0 Completion Report
 
-This document records the completion of the engineering hygiene and baseline phase for the AeroRecon project.
+This document records the completion of the engineering hygiene and baseline phase for the AAKAR project.
 
 ## Implementation Details
 

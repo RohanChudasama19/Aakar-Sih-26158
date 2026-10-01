@@ -45,7 +45,7 @@ async def lifespan(app):
     logger.info("application_shutdown")
 
 
-app = FastAPI(title="AeroRecon", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="AAKAR", version="0.1.0", lifespan=lifespan)
 
 
 class APIError(Exception):
@@ -121,7 +121,7 @@ async def protect(request: Request, call_next):
                 pass
                 
         if not authorized:
-            return Response("Authentication required", status_code=401, headers={"WWW-Authenticate": "Basic realm=\"AeroRecon\""})
+            return Response("Authentication required", status_code=401, headers={"WWW-Authenticate": "Basic realm=\"AAKAR\""})
 
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -305,7 +305,8 @@ async def submit(
                     inputs / filename,
                     min(remaining, 10 * 1024**2) if filename.endswith((".csv", ".json")) else remaining,
                 )
-        telemetry(inputs / "gps.csv")
+        if (inputs / "gps.csv").exists():
+            telemetry(inputs / "gps.csv")
         metadata(inputs / "flight.json")
         if (inputs / "intrinsics.json").exists():
             json.loads((inputs / "intrinsics.json").read_text())
@@ -589,7 +590,7 @@ def get_job(jid, include_reps=True):
     if data["status"] == "completed":
         # Physically verify artifacts exist
         work_dir = Path(DATA) / jid / "work"
-        if not (work_dir / "outputs" / "model.glb").exists() and not (work_dir / "outputs" / "mesh.glb").exists() and not (Path(DATA) / jid / "model.glb").exists():
+        if not (work_dir / "outputs" / "model.glb").exists() and not (work_dir / "outputs" / "mesh" / "model.glb").exists() and not (work_dir / "outputs" / "mesh.glb").exists() and not (Path(DATA) / jid / "model.glb").exists():
             data["status"] = "failed"
             data["message"] = "Job marked completed but physical GLB artifact is missing."
             try:
@@ -861,7 +862,7 @@ def download(jid: str):
     p = DATA / jid / "work" / "artifacts.zip"
     if data["status"] != "completed" or not p.exists():
         raise HTTPException(409, "Result bundle not ready")
-    return FileResponse(p, filename=f"aerorecon-{jid[:8]}.zip")
+    return FileResponse(p, filename=f"aakar-{jid[:8]}.zip")
 
 
 @app.get("/api/samples/{filename}")
@@ -1129,7 +1130,7 @@ async def run_validation(jid: str):
 def _write_validation_txt(path, report: dict):
     """Write a human-readable plain-text validation summary."""
     lines = [
-        "AeroRecon Independent Spatial Accuracy Validation Report",
+        "AAKAR Independent Spatial Accuracy Validation Report",
         "=" * 60,
         f"Status          : {report.get('status')}",
         f"CRS             : {report.get('crs')}",
