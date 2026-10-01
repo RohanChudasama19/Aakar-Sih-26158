@@ -1,8 +1,7 @@
-
 <div align="center">
   <img src="frontend/public/aakar-logo.png" alt="AAKAR Logo" width="150" />
 
-  # AAKAR ??
+  # AAKAR 🛸
   
   **Fully Automated UAV 3D Reconstruction & Photogrammetry Pipeline**
 
@@ -17,23 +16,23 @@
 
 ---
 
-## ?? What AAKAR Does
+## 📖 What AAKAR Does
 
 AAKAR is a fully automated, end-to-end 3D reconstruction pipeline designed to process UAV (drone) video and GPS telemetry into highly accurate metric 3D models and orthomosaics. 
 
 It implements robust **readiness validation**, **Structure-from-Motion (SfM)**, **dense Multi-View Stereo (MVS)**, **surface meshing**, **texturing**, and **scientific heatmap visualization** directly in the browser.
 
-## ? Key Features
+## ✨ Key Features
 
-* **?? Automated Ingestion:** Extracts high-quality frames, validates GPS synchronization, and filters blurry inputs automatically.
-* **?? Geospatial Alignment:** Recovers sparse geometry via COLMAP and aligns the trajectory to GPS tracks using robust Sim(3) transforms.
-* **?? Dense Reconstruction:** Generates accurate depth maps and fuses them into dense point clouds (PatchMatchStereo).
-* **?? Meshing & Texturing:** Reconstructs Poisson surfaces and applies ray-casting occlusion texturing for photorealistic models.
-* **?? Browser-Based 3D Viewer:** Explore your missions with a 6-mode interactive 3D WebGL viewer (Textured, Mesh, Dense, Sparse, Semantic, Point Density heatmaps).
-* **?? Measurement Tools:** Perform precise Distance, Area, and Slope measurements natively in the browser.
-* **?? Standardized Exports:** Delivers automated output bundles containing `.PLY`, `.OBJ`, `.LAS`, `.GeoTIFF`, and `.GLB` artifacts.
+* **🎥 Automated Ingestion:** Extracts high-quality frames, validates GPS synchronization, and filters blurry inputs automatically.
+* **🌐 Geospatial Alignment:** Recovers sparse geometry via COLMAP and aligns the trajectory to GPS tracks using robust Sim(3) transforms.
+* **🧱 Dense Reconstruction:** Generates accurate depth maps and fuses them into dense point clouds (PatchMatchStereo).
+* **🎨 Meshing & Texturing:** Reconstructs Poisson surfaces and applies ray-casting occlusion texturing for photorealistic models.
+* **💻 Browser-Based 3D Viewer:** Explore your missions with a 6-mode interactive 3D WebGL viewer (Textured, Mesh, Dense, Sparse, Semantic, Point Density heatmaps).
+* **📏 Measurement Tools:** Perform precise Distance, Area, and Slope measurements natively in the browser.
+* **📦 Standardized Exports:** Delivers automated output bundles containing `.PLY`, `.OBJ`, `.LAS`, `.GeoTIFF`, and `.GLB` artifacts.
 
-## ?? Installation & Quick Start
+## 🚀 Installation & Quick Start
 
 ### Prerequisites
 * Windows 10/11 or Linux
@@ -72,26 +71,26 @@ It implements robust **readiness validation**, **Structure-from-Motion (SfM)**, 
 5. **Access the application:**
    Navigate to [http://localhost:8000](http://localhost:8000)
 
-## ?? Repository Structure
+## 📁 Repository Structure
 
 ```text
 AAKAR/
-+-- app/                  # FastAPI Backend & Core Pipeline Engine
-+-- frontend/             # React SPA Source Code
-+-- web/                  # Compiled Production Frontend Build
-+-- docs/                 # Audit Reports and Demonstrations
-+-- scripts/              # CI/CD, Utility, and Archive Scripts
-+-- tests/                # Automated Regression & Health Tests
-+-- models/               # AI/ML ONNX & PyTorch Models
-+-- demo/                 # Test Datasets and Offline Demo Assets
+├── app/                  # FastAPI Backend & Core Pipeline Engine
+├── frontend/             # React SPA Source Code
+├── web/                  # Compiled Production Frontend Build
+├── docs/                 # Audit Reports and Demonstrations
+├── scripts/              # CI/CD, Utility, and Archive Scripts
+├── tests/                # Automated Regression & Health Tests
+├── models/               # AI/ML ONNX & PyTorch Models
+└── demo/                 # Test Datasets and Offline Demo Assets
 ```
 
-## ?? Contributors
+## 👥 Contributors
 
 This repository represents the collaborative effort of our 6-person team over a continuous 15-day sprint for SIH 26. 
 Check out the full list of team members and their roles in the [CONTRIBUTORS.md](CONTRIBUTORS.md) file!
 
-## ?? Demo Mode
+## 🧪 Demo Mode
 
 To instantly test the pipeline without a drone:
 1. In the Web UI Dashboard, click **"Use bundled sample files"**.
@@ -102,4 +101,3 @@ To instantly test the pipeline without a drone:
 <div align="center">
   <i>Developed by Team Aakar</i>
 </div>
-

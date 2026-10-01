@@ -1,5 +1,4 @@
-
-# AAKAR Contributors ??
+# AAKAR Contributors 🚀
 
 We are incredibly proud of the collaborative effort that brought the AAKAR project to life for the Smart India Hackathon (SIH 26158). This repository represents exactly 15 days of continuous, intense, and dedicated work from our entire six-person team.
 
@@ -30,5 +29,4 @@ We are incredibly proud of the collaborative effort that brought the AAKAR proje
   * **Focus:** Automated local workflow testing, ensured database schema migrations were robust, and validated video/telemetry ingestion logic to prevent production crashes.
 
 ---
-*Built with ?? for SIH 2026*
-
+*Built with ❤️ for SIH 2026*
