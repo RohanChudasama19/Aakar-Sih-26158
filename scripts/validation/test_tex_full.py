@@ -18,9 +18,9 @@ from app.schemas import intrinsics
 cam_model = intrinsics(flight, 1600, 900)
 K = cam_model.to_matrix()
 
-from app.pipeline.texture import AeroreconTextureBackend
+from app.pipeline.texture import aakarTextureBackend
 options = {"occlusion_test": True, "exposure_normalization": True, "atlas_tile_size": 16}
-backend = AeroreconTextureBackend()
+backend = aakarTextureBackend()
 
 out_mesh = backend.run(mesh, geo, sfm, K, work / "frames", options)
 out_mesh.export(str(work / "outputs" / "mesh_textured_test.glb"))

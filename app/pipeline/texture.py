@@ -12,7 +12,7 @@ class TextureBackend(ABC):
         pass
 
 
-class AeroreconTextureBackend(TextureBackend):
+class aakarTextureBackend(TextureBackend):
     def run(self, mesh, geo, sfm, k, directory, options):
 
         xyz = mesh.vertices
@@ -207,7 +207,7 @@ class AeroreconTextureBackend(TextureBackend):
 class ColmapMeshTexturerBackend(TextureBackend):
     def run(self, mesh, geo, sfm, k, directory, options):
         # Fallback to python backend if colmap doesn't exist or isn't viable right now
-        return AeroreconTextureBackend().run(mesh, geo, sfm, k, directory, options)
+        return aakarTextureBackend().run(mesh, geo, sfm, k, directory, options)
 
 
 def texture_mesh(mesh, geo, sfm, k, directory, options=None):
@@ -218,6 +218,6 @@ def texture_mesh(mesh, geo, sfm, k, directory, options=None):
     if backend_choice == "COLMAP_MESH_TEXTURER":
         backend = ColmapMeshTexturerBackend()
     else:
-        backend = AeroreconTextureBackend()
+        backend = aakarTextureBackend()
 
     return backend.run(mesh, geo, sfm, k, directory, options)
